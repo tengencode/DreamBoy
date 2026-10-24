@@ -633,7 +633,14 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun writeExport(uri: Uri) {
-        val bytes = exportBytes ?: return
+        val bytes = exportBytes ?: run { // the app was restarted while the picker was open: the save is no longer here
+            try {
+                DocumentsContract.deleteDocument(contentResolver, uri) // the picker already made an empty file
+            } catch (e: Exception) {
+            }
+            toast("The export didn't finish. Export the save again.")
+            return
+        }
         exportBytes = null
         try {
             contentResolver.openOutputStream(uri, "wt")?.use { it.write(bytes) } ?: error("no stream")
