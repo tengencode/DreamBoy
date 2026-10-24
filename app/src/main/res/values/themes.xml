@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The window behind the app while it starts (12): the plastic, its bars to match. Compose draws everything else. -->
+    <style name="Theme.GbaEmu.Base" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/plastic</item>
+        <item name="android:statusBarColor">@color/plastic</item>
+        <item name="android:navigationBarColor">@color/plastic</item>
+        <item name="android:windowLightStatusBar">true</item>
+    </style>
+    <style name="Theme.GbaEmu" parent="Theme.GbaEmu.Base" />
+</resources>

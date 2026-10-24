@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Android 12+: the launch screen shows the cartridge icon on the plastic. -->
+    <style name="Theme.GbaEmu" parent="Theme.GbaEmu.Base">
+        <item name="android:windowSplashScreenBackground">@color/plastic</item>
+        <item name="android:windowSplashScreenIconBackgroundColor">#4B3FB8</item>
+    </style>
+</resources>

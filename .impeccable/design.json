@@ -1,0 +1,202 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-06T12:00:00Z",
+  "title": "Design System: GBA Emulator",
+  "extensions": {
+    "colorMeta": {
+      "accent-indigo": { "role": "primary", "displayName": "See-through Indigo", "canonical": "#4B3FB8", "tonalRamp": ["#120F2E", "#221C57", "#332A80", "#4B3FB8", "#6C62CB", "#928BD7", "#B9B4E6", "#E0DEF5"] },
+      "accent-indigo-bright": { "role": "primary", "displayName": "Bright Indigo (dark theme, over the game)", "canonical": "#928BD7", "tonalRamp": ["#120F2E", "#221C57", "#332A80", "#4B3FB8", "#6C62CB", "#928BD7", "#B9B4E6", "#E0DEF5"] },
+      "on-accent-bright": { "role": "primary", "displayName": "Indigo Ink", "canonical": "#19153D" },
+      "plastic-grey": { "role": "neutral", "displayName": "Grey Plastic", "canonical": "#C5C7CC", "tonalRamp": ["#141518", "#26272B", "#44464D", "#8E9097", "#A3A5AB", "#C5C7CC", "#D7D9DD", "#EEEFF1"] },
+      "cart-grey": { "role": "neutral", "displayName": "Cart Grey", "canonical": "#D7D9DD" },
+      "cart-grey-high": { "role": "neutral", "displayName": "Cart Grey High", "canonical": "#E3E4E7" },
+      "moulded-highlight-grey": { "role": "neutral", "displayName": "Moulded Highlight (day)", "canonical": "#EEEFF1" },
+      "moulded-shade-grey": { "role": "neutral", "displayName": "Moulded Shade (day)", "canonical": "#A3A5AB" },
+      "plastic-smoked": { "role": "neutral", "displayName": "Smoked Plastic", "canonical": "#141518", "tonalRamp": ["#000000", "#070708", "#0A0A0C", "#141518", "#222327", "#2C2D32", "#34353B", "#4A4C52"] },
+      "cart-smoked": { "role": "neutral", "displayName": "Smoked Cart", "canonical": "#222327" },
+      "cart-smoked-high": { "role": "neutral", "displayName": "Smoked Cart High", "canonical": "#2C2D32" },
+      "moulded-highlight-smoked": { "role": "neutral", "displayName": "Moulded Highlight (night)", "canonical": "#34353B" },
+      "moulded-shade-smoked": { "role": "neutral", "displayName": "Moulded Shade (night)", "canonical": "#070708" },
+      "slot-bay-grey": { "role": "neutral", "displayName": "Slot Bay (day)", "canonical": "#26272B" },
+      "slot-bay-smoked": { "role": "neutral", "displayName": "Slot Bay (night)", "canonical": "#0A0A0C" },
+      "slot-mouth-grey": { "role": "neutral", "displayName": "Slot Mouth (day)", "canonical": "#141518" },
+      "slot-mouth-smoked": { "role": "neutral", "displayName": "Slot Mouth (night)", "canonical": "#000000" },
+      "label-band-grey": { "role": "neutral", "displayName": "Label Band (day)", "canonical": "#141518" },
+      "label-band-smoked": { "role": "neutral", "displayName": "Label Band (night)", "canonical": "#000000" },
+      "label-band-edge-smoked": { "role": "neutral", "displayName": "Label Band Edge (night)", "canonical": "#34353A" },
+      "label-stock": { "role": "neutral", "displayName": "Label Stock", "canonical": "#F2F2F4" },
+      "ink-day": { "role": "neutral", "displayName": "Ink (day, and on label stock)", "canonical": "#16171B" },
+      "ink-soft-day": { "role": "neutral", "displayName": "Soft Ink (day)", "canonical": "#44464D" },
+      "outline-day": { "role": "neutral", "displayName": "Outline (day)", "canonical": "#8E9097" },
+      "ink-night": { "role": "neutral", "displayName": "Ink (night)", "canonical": "#ECECEF" },
+      "ink-soft-night": { "role": "neutral", "displayName": "Soft Ink (night)", "canonical": "#A6A8AF" },
+      "outline-night": { "role": "neutral", "displayName": "Outline (night)", "canonical": "#4A4C52" },
+      "label-red-day": { "role": "tertiary", "displayName": "Label Red (day)", "canonical": "#9E0E27", "tonalRamp": ["#3A0710", "#5E0A19", "#9E0E27", "#C8203C", "#E85A6D", "#FF8C98", "#F0D5D9", "#FBEFF1"] },
+      "label-red-soft-day": { "role": "tertiary", "displayName": "Label Red Soft (day)", "canonical": "#F0D5D9" },
+      "label-red-night": { "role": "tertiary", "displayName": "Label Red (night)", "canonical": "#FF8C98" },
+      "on-label-red-night": { "role": "tertiary", "displayName": "On Label Red (night)", "canonical": "#3A0710" },
+      "label-red-soft-night": { "role": "tertiary", "displayName": "Label Red Soft (night)", "canonical": "#3A1A1F" },
+      "white": { "role": "neutral", "displayName": "White (band lettering, on accent)", "canonical": "#FFFFFF" }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Slot number", "purpose": "Save-sticker slot numbers, tabular figures." },
+      "headline": { "displayName": "App name", "purpose": "The app name on the first start." },
+      "headline-small": { "displayName": "Screen title", "purpose": "Header titles; dialog titles by Material default." },
+      "title": { "displayName": "Seated band name", "purpose": "Names on the seated cart, sheet and pause-panel bands; Resume; achievement points; a score's rank stamp." },
+      "title-small": { "displayName": "Band name", "purpose": "Names on grid carts' bands; achievement and leaderboard names on the pop-up and in the lists; ranks in a score table; Continue at 17sp." },
+      "body": { "displayName": "Body", "purpose": "Rows, menu lines, explanations; names and scores in a score table." },
+      "body-small": { "displayName": "Body small", "purpose": "Summaries, help notes, times; the line under a board's name on its pop-up card." },
+      "label": { "displayName": "Button label", "purpose": "Material button labels." },
+      "tag": { "displayName": "Tag", "purpose": "Short sentence-case tags: Empty, a choice row's label, key-table heads, the speed pill, the achievement progress count, leaderboard counters, pts, rank, list progress, a score table's gap." }
+    },
+    "shadows": [
+      { "name": "moulded-highlight", "value": "inset 0 1px 0 var(--moulded-highlight)", "purpose": "Compose: the highlight colour fills the shape and the body is drawn 1dp lower, leaving a 1dp lit top edge." },
+      { "name": "moulded-shade", "value": "0 1.5px 0 var(--moulded-shade)", "purpose": "Compose: the shape drawn 1.5dp lower in the shade colour, a solid lip under raised plastic. Not a blurred drop shadow." },
+      { "name": "recessed", "value": "inset 0 1px 0 #000000, inset 0 -1px 0 rgba(238,239,241,0.5)", "purpose": "The slot bay: black rim along the top, faint highlight along the bottom." },
+      { "name": "scrim", "value": "rgba(0,0,0,0.69)", "purpose": "Behind menus over the paused game, and under overlay pills (speed, achievement challenges and progress, leaderboard counters)." }
+    ],
+    "motion": [
+      { "name": "insert", "value": "260ms cubic-bezier(0.3, 0, 0.8, 0.15)", "purpose": "The signature insert: the seated cart slides up 64dp into the slot's mouth (grid cart: up 14dp, scale 0.96), its label darkening to 60% black, then the game opens. Reset 400ms after." },
+      { "name": "menu-appear", "value": "150ms default tween; alpha 0 to 1, scale 0.96 to 1", "purpose": "The pause panel and its pages over the game." },
+      { "name": "achievement-popup", "value": "enter 220ms slide from -50% height + 160ms fade; exit 200ms slide to -33% + 200ms fade", "purpose": "The achievement pop-up cart dropping in from the top of the game and leaving upward; it takes no touches." },
+      { "name": "popup-hold", "value": "board notes 2s; notes 3s; unlock and rank card 4s; mastered 6s", "purpose": "How long each pop-up card shows. A board's newer card (rank, failed) takes its older card's place (sending, started), at once if that one is showing." },
+      { "name": "reduced-motion", "value": "instant", "purpose": "With Android's Remove animations on, every animation is a cut." }
+    ],
+    "breakpoints": [
+      { "name": "grid-column-min", "value": "152dp" },
+      { "name": "seated-landscape", "value": "560dp slot width" },
+      { "name": "seated-max", "value": "680dp" },
+      { "name": "pause-two-column", "value": "wider than tall and under 520dp tall" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Accent Button (Continue)",
+      "kind": "button",
+      "refersTo": "button-accent",
+      "description": "The pressable accent pill; Continue uses label lettering and a play icon.",
+      "html": "<button class=\"ds-btn-accent\"><svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"currentColor\"><path d=\"M8 5v14l11-7z\"/></svg><span>Continue</span></button>",
+      "css": ".ds-btn-accent { display: inline-flex; align-items: center; gap: 6px; min-height: 48px; padding: 0 24px 0 18px; border: none; border-radius: 9999px; background: #4B3FB8; color: #FFFFFF; font-family: Roboto, sans-serif; font-weight: 900; font-style: italic; font-size: 17px; cursor: pointer; transition: filter 0.15s; } .ds-btn-accent:hover { filter: brightness(1.1); } .ds-btn-accent:focus-visible { outline: 3px solid #928BD7; outline-offset: 2px; } .ds-btn-accent:active { filter: brightness(0.9); }"
+    },
+    {
+      "name": "Outlined Button",
+      "kind": "button",
+      "refersTo": "button-outlined",
+      "description": "Secondary actions on the plastic: Open one game, Restart.",
+      "html": "<button class=\"ds-btn-outlined\">Open one game</button>",
+      "css": ".ds-btn-outlined { min-height: 48px; padding: 0 24px; border: 1px solid #8E9097; border-radius: 9999px; background: #C5C7CC; color: #16171B; font-family: Roboto, sans-serif; font-weight: 700; font-size: 14px; letter-spacing: 0.1px; cursor: pointer; } .ds-btn-outlined:hover { background: #D7D9DD; } .ds-btn-outlined:focus-visible { outline: 3px solid #4B3FB8; outline-offset: 2px; }"
+    },
+    {
+      "name": "Danger Button (Quit)",
+      "kind": "button",
+      "refersTo": "button-danger",
+      "description": "Label red, danger only; set apart from safe actions.",
+      "html": "<button class=\"ds-btn-danger\">Quit</button>",
+      "css": ".ds-btn-danger { min-height: 48px; padding: 0 24px; border: none; border-radius: 9999px; background: #9E0E27; color: #FFFFFF; font-family: Roboto, sans-serif; font-weight: 700; font-size: 14px; cursor: pointer; } .ds-btn-danger:hover { filter: brightness(1.1); } .ds-btn-danger:focus-visible { outline: 3px solid #16171B; outline-offset: 2px; }"
+    },
+    {
+      "name": "Game Cartridge",
+      "kind": "card",
+      "refersTo": "cartridge",
+      "description": "A moulded cart with a top lip, a label band, a label and a grip strip.",
+      "html": "<div class=\"ds-cart\"><div class=\"ds-cart-lip\"></div><div class=\"ds-cart-body\"><div class=\"ds-band\">Sample Game</div><div class=\"ds-label\"></div><div class=\"ds-grip\"><span>Yesterday</span></div></div></div>",
+      "css": ".ds-cart { width: 170px; position: relative; padding-top: 6px; } .ds-cart-lip { position: absolute; top: 0; left: 13px; right: 13px; height: 12px; background: #D7D9DD; border-radius: 5px 5px 0 0; box-shadow: inset 0 1px 0 #EEEFF1; } .ds-cart-body { position: relative; background: #D7D9DD; border-radius: 14px; padding: 8px 8px 14px; box-shadow: inset 0 1px 0 #EEEFF1, 0 1.5px 0 #A3A5AB; cursor: pointer; transition: transform 0.26s cubic-bezier(0.3,0,0.8,0.15); } .ds-cart-body:active { transform: translateY(-14px) scale(0.96); } .ds-cart-body:focus-visible { outline: 3px solid #4B3FB8; } .ds-band { background: #141518; color: #FFFFFF; font: italic 900 15px/19px Roboto, sans-serif; padding: 10px; border-radius: 4px 4px 0 0; } .ds-label { aspect-ratio: 1; background: #F2F2F4; } .ds-grip { padding: 8px 2px 10px; font: 12px/16px Roboto, sans-serif; color: #44464D; font-variant-numeric: tabular-nums; background: repeating-linear-gradient(to top, transparent 0 6px, #A3A5AB 6px 7px, transparent 7px 9px) bottom/100% 14px no-repeat; }"
+    },
+    {
+      "name": "Slot Bay",
+      "kind": "custom",
+      "refersTo": "slot-bay",
+      "description": "The dark recessed slot that holds the seated cart; dark in both themes.",
+      "html": "<div class=\"ds-slot\"><div class=\"ds-slot-mouth\"></div><div class=\"ds-slot-empty\">Pick a game below to start</div></div>",
+      "css": ".ds-slot { background: #26272B; border-radius: 20px; padding: 10px 18px 22px; box-shadow: inset 0 1px 0 #000000, inset 0 -1px 0 rgba(238,239,241,0.5); } .ds-slot-mouth { height: 10px; border-radius: 5px; background: #141518; border-bottom: 1px solid rgba(255,255,255,0.10); } .ds-slot-empty { margin: 15px 10px 0; height: 150px; display: grid; place-items: center; border: 1.5px dashed rgba(255,255,255,0.32); border-radius: 14px; color: rgba(255,255,255,0.78); font: 14px Roboto, sans-serif; }"
+    },
+    {
+      "name": "Save Sticker",
+      "kind": "card",
+      "refersTo": "save-sticker-printed",
+      "description": "A filled save slot printed on label stock with a monumental slot number; empty slots stay bare plastic.",
+      "html": "<button class=\"ds-sticker\"><span class=\"ds-sticker-date\">10/3/26 · 8:33 PM</span><span class=\"ds-sticker-num\">1</span></button><button class=\"ds-sticker ds-sticker-empty\"><span class=\"ds-sticker-tag\">Empty</span><span class=\"ds-sticker-num\">2</span></button>",
+      "css": ".ds-sticker { display: inline-flex; flex-direction: column; width: 150px; padding: 7px 7px 2px; border: none; border-radius: 6px; background: #F2F2F4; color: #16171B; text-align: left; cursor: pointer; vertical-align: top; } .ds-sticker:focus-visible { outline: 3px solid #4B3FB8; } .ds-sticker-empty { background: #2C2D32; color: #ECECEF; } .ds-sticker-date { font: 12px/16px Roboto, sans-serif; color: #44464D; font-variant-numeric: tabular-nums; } .ds-sticker-tag { font: 700 13px/16px 'Roboto Condensed', sans-serif; color: #A6A8AF; } .ds-sticker-num { font: italic 900 84px/80px Roboto, sans-serif; letter-spacing: -1px; font-variant-numeric: tabular-nums; }"
+    },
+    {
+      "name": "Settings Group with Nav Row",
+      "kind": "nav",
+      "refersTo": "nav-row",
+      "description": "Settings rows on a moulded plastic card: icon, title, summary, chevron.",
+      "html": "<div class=\"ds-group\"><a class=\"ds-navrow\" href=\"#\"><span class=\"ds-nav-text\"><b>Sound</b><small>On · Low delay</small></span><svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"#8E9097\"><path d=\"M10 6 8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z\"/></svg></a></div>",
+      "css": ".ds-group { background: #D7D9DD; border-radius: 18px; box-shadow: inset 0 1px 0 #EEEFF1, 0 1.5px 0 #A3A5AB; overflow: hidden; } .ds-navrow { display: flex; align-items: center; min-height: 64px; padding: 10px 16px; color: #16171B; text-decoration: none; } .ds-navrow:hover { background: rgba(22,23,27,0.06); } .ds-navrow:focus-visible { outline: 3px solid #4B3FB8; outline-offset: -3px; } .ds-nav-text { flex: 1; display: flex; flex-direction: column; font-family: Roboto, sans-serif; } .ds-nav-text b { font-weight: 500; font-size: 16px; } .ds-nav-text small { font-size: 12px; color: #44464D; }"
+    },
+    {
+      "name": "Choice Row",
+      "kind": "chip",
+      "refersTo": "choice-chosen",
+      "description": "Segmented single choice; the chosen segment is the accent, no tick.",
+      "html": "<div class=\"ds-choices\"><button>2×</button><button>4×</button><button aria-pressed=\"true\">8×</button><button>Max</button></div>",
+      "css": ".ds-choices { display: flex; } .ds-choices button { flex: 1; min-height: 40px; border: 1px solid #8E9097; margin-left: -1px; background: #C5C7CC; color: #16171B; font: 500 13px Roboto, sans-serif; cursor: pointer; } .ds-choices button:first-child { border-radius: 9999px 0 0 9999px; margin-left: 0; } .ds-choices button:last-child { border-radius: 0 9999px 9999px 0; } .ds-choices button[aria-pressed=true] { background: #4B3FB8; border-color: #4B3FB8; color: #FFFFFF; } .ds-choices button:focus-visible { outline: 3px solid #4B3FB8; outline-offset: 2px; }"
+    },
+    {
+      "name": "Achievement Pop-up",
+      "kind": "card",
+      "refersTo": "achievement-card",
+      "description": "A small moulded cart over the game: the badge (or a board's mark) as its label, the name in label lettering, points or the rank stamp in ink; overlay pills and leaderboard counter pills on the scrim below.",
+      "html": "<div class=\"ds-ra\"><div class=\"ds-ra-card\"><div class=\"ds-ra-lip\"></div><div class=\"ds-ra-body\"><div class=\"ds-ra-row\"><div class=\"ds-ra-badge\"></div><div class=\"ds-ra-text\"><b>Dragon Slayer</b><small>Unlocked · Defeat the dragon</small></div><div class=\"ds-ra-pts\"><b>25</b><span>pts</span></div></div><div class=\"ds-ra-grip\"></div></div></div><div class=\"ds-ra-pills\"><span class=\"ds-ra-pill\"><i class=\"ds-ra-mini\"></i><i class=\"ds-ra-mini\"></i></span><span class=\"ds-ra-pill\"><i class=\"ds-ra-mini\"></i><em>7/10</em></span></div><div class=\"ds-ra-pills\"><span class=\"ds-ra-counter\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"#FFFFFF\"><path d=\"M4 20h4V10H4zm6 0h4V4h-4zm6 0h4v-7h-4z\"/></svg><em>0:12.34</em></span></div></div>",
+      "css": ".ds-ra { width: 360px; display: flex; flex-direction: column; align-items: center; padding: 8px; background: #3a4a3a; } .ds-ra-card { width: 100%; position: relative; padding-top: 6px; animation: ds-ra-in 0.22s ease-out; } @keyframes ds-ra-in { from { transform: translateY(-50%); opacity: 0; } to { transform: none; opacity: 1; } } .ds-ra-lip { position: absolute; top: 0; left: 13px; right: 13px; height: 12px; background: #D7D9DD; border-radius: 5px 5px 0 0; box-shadow: inset 0 1px 0 #EEEFF1; } .ds-ra-body { position: relative; background: #D7D9DD; border-radius: 14px; padding: 9px 12px 0; box-shadow: inset 0 1px 0 #EEEFF1, 0 1.5px 0 #A3A5AB; } .ds-ra-row { display: flex; align-items: center; gap: 12px; padding-bottom: 6px; } .ds-ra-badge { width: 52px; height: 52px; border-radius: 4px; background: #F2F2F4; flex: none; } .ds-ra-text { flex: 1; display: flex; flex-direction: column; } .ds-ra-text b { font: italic 900 15px/19px Roboto, sans-serif; color: #16171B; } .ds-ra-text small { font: 12px/16px Roboto, sans-serif; color: #44464D; } .ds-ra-pts { display: flex; flex-direction: column; align-items: center; min-width: 32px; } .ds-ra-pts b { font: italic 900 18px/24px Roboto, sans-serif; color: #16171B; font-variant-numeric: tabular-nums; } .ds-ra-pts span { font: 700 13px/16px 'Roboto Condensed', sans-serif; color: #44464D; } .ds-ra-grip { height: 14px; background: repeating-linear-gradient(to top, transparent 0 6px, #A3A5AB 6px 7px, transparent 7px 9px) bottom/100% 14px no-repeat; margin: 0 10px; } .ds-ra-pills { display: flex; gap: 8px; margin-top: 6px; } .ds-ra-pill { display: inline-flex; align-items: center; gap: 4px; padding: 4px; border-radius: 9999px; background: rgba(0,0,0,0.69); } .ds-ra-mini { width: 28px; height: 28px; border-radius: 4px; background: #F2F2F4; } .ds-ra-pill em { font: normal 700 13px/16px 'Roboto Condensed', sans-serif; color: #FFFFFF; font-variant-numeric: tabular-nums; padding: 0 8px 0 2px; } .ds-ra-counter { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 12px 0 10px; border-radius: 9999px; background: rgba(0,0,0,0.69); } .ds-ra-counter em { font: normal 700 13px/16px 'Roboto Condensed', sans-serif; color: #FFFFFF; font-variant-numeric: tabular-nums; }"
+    },
+    {
+      "name": "Achievements Panel",
+      "kind": "custom",
+      "refersTo": "achievement-row",
+      "description": "A pause-panel page: summary line, an ink-on-shade share bar, then rows of badge, name, description, progress and points; locked rows in soft ink.",
+      "html": "<div class=\"ds-ach\"><div class=\"ds-ach-sum\">12 of 40 unlocked · 85 of 400 points</div><div class=\"ds-ach-bar\"><i style=\"width:30%\"></i></div><button class=\"ds-ach-row\"><span class=\"ds-ach-badge\"></span><span class=\"ds-ach-text\"><b>First Steps</b><small>Leave the village</small></span><span class=\"ds-ach-pts\"><b>5</b><span>pts</span></span></button><button class=\"ds-ach-row ds-ach-locked\"><span class=\"ds-ach-badge\"></span><span class=\"ds-ach-text\"><b>Collector</b><small>Find every gem</small><em>14/50</em></span><span class=\"ds-ach-pts\"><b>25</b><span>pts</span></span></button></div>",
+      "css": ".ds-ach { width: 340px; padding: 4px 14px 12px; background: #D7D9DD; border-radius: 14px; box-shadow: inset 0 1px 0 #EEEFF1, 0 1.5px 0 #A3A5AB; font-family: Roboto, sans-serif; } .ds-ach-sum { font-size: 14px; color: #44464D; font-variant-numeric: tabular-nums; } .ds-ach-bar { height: 6px; border-radius: 9999px; background: #A3A5AB; margin: 8px 0 6px; overflow: hidden; } .ds-ach-bar i { display: block; height: 100%; border-radius: 9999px; background: #16171B; } .ds-ach-row { width: 100%; display: flex; align-items: center; gap: 12px; padding: 10px 0; border: none; border-bottom: 1px solid rgba(142,144,151,0.45); background: none; text-align: left; cursor: default; } .ds-ach-row:last-child { border-bottom: none; } .ds-ach-row:focus-visible { outline: 3px solid #4B3FB8; outline-offset: -3px; } .ds-ach-badge { width: 44px; height: 44px; border-radius: 4px; background: #F2F2F4; flex: none; } .ds-ach-locked .ds-ach-badge { background: #E3E4E7; } .ds-ach-text { flex: 1; display: flex; flex-direction: column; } .ds-ach-text b { font: italic 900 15px/19px Roboto, sans-serif; color: #16171B; } .ds-ach-locked .ds-ach-text b, .ds-ach-locked .ds-ach-pts b { color: #44464D; } .ds-ach-text small { font-size: 12px; line-height: 16px; color: #44464D; } .ds-ach-text em { font: normal 700 13px/16px 'Roboto Condensed', sans-serif; color: #44464D; font-variant-numeric: tabular-nums; margin-top: 2px; } .ds-ach-pts { display: flex; flex-direction: column; align-items: center; min-width: 32px; } .ds-ach-pts b { font: italic 900 18px/24px Roboto, sans-serif; color: #16171B; font-variant-numeric: tabular-nums; } .ds-ach-pts span { font: 700 13px/16px 'Roboto Condensed', sans-serif; color: #44464D; }"
+    },
+    {
+      "name": "Leaderboard Score Table",
+      "kind": "custom",
+      "refersTo": "score-row-you",
+      "description": "A board's page in the pause panel: the players line, rank / name / score rows, a quiet gap tag, and the user's row on cart-high with the rank printed on a label-stock sticker.",
+      "html": "<div class=\"ds-lb\"><div class=\"ds-lb-sum\">30 players</div><div class=\"ds-lb-row\"><span class=\"ds-lb-rank\">10</span><span class=\"ds-lb-name\">Player10</span><span class=\"ds-lb-score\">0:14.00</span></div><div class=\"ds-lb-gap\">Ranks 11 to 14</div><div class=\"ds-lb-row\"><span class=\"ds-lb-rank\">16</span><span class=\"ds-lb-name\">Player16</span><span class=\"ds-lb-score\">0:17.00</span></div><div class=\"ds-lb-row ds-lb-you\"><span class=\"ds-lb-rank\"><b>17</b></span><span class=\"ds-lb-name\">Tester</span><span class=\"ds-lb-score\">0:17.50</span></div></div>",
+      "css": ".ds-lb { width: 340px; padding: 4px 14px 12px; background: #D7D9DD; border-radius: 14px; box-shadow: inset 0 1px 0 #EEEFF1, 0 1.5px 0 #A3A5AB; font-family: Roboto, sans-serif; color: #16171B; } .ds-lb-sum { font-size: 16px; color: #44464D; font-variant-numeric: tabular-nums; padding: 4px 0 6px; } .ds-lb-row { display: flex; align-items: center; min-height: 44px; padding: 8px; border-top: 1px solid rgba(142,144,151,0.45); font-size: 16px; } .ds-lb-rank { min-width: 56px; font: italic 900 15px/19px Roboto, sans-serif; font-variant-numeric: tabular-nums; } .ds-lb-name { flex: 1; padding-right: 12px; } .ds-lb-score { font-variant-numeric: tabular-nums; } .ds-lb-you { background: #E3E4E7; border-radius: 4px; } .ds-lb-you .ds-lb-name { font-weight: 700; } .ds-lb-you .ds-lb-rank b { background: #F2F2F4; color: #16171B; border-radius: 3px; padding: 1px 6px; } .ds-lb-gap { border-top: 1px solid rgba(142,144,151,0.45); padding: 6px 0; text-align: center; font: 700 13px/16px 'Roboto Condensed', sans-serif; color: #44464D; font-variant-numeric: tabular-nums; } .ds-lb-gap + .ds-lb-row { border-top: none; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Game Pak Collection",
+    "overview": "The app is the player's shelf of cartridges. Every screen is moulded cartridge plastic: light grey ABS by day and smoked black by night, switching with the phone's dark mode. Cards are not floating Material sheets but raised carts standing on that plastic, each with a narrower lip along its top edge, a 1 dp moulded highlight on top, a short shade below and fine grip ridges near the bottom. Each game's label is its own picture (box art or the frame where the player left off) under a black label band that names the game in white heavy italic. The game last played sits seated in a dark recessed slot at the top of the list, and pressing Continue slides it up into the slot's mouth before the game opens.\n\nThis is an Operate-mode app. Navigation, sheets, dialogs, switches and segmented choices are standard Material 3 components with themed colours, and the world comes through in palette, lettering, shape and one signature motion. The density is calm and physical: a few large objects per screen, generous gutters, nothing tinted for decoration. Colour comes from the game art and from one see-through-plastic accent that follows the chosen console skin. It refuses the category default of a charcoal launcher with a cover grid and a single neon accent, and it never prints Nintendo's marks.\n\nThe chrome frames the game picture and never competes with it. Over a paused game, the menu is a cartridge panel on a dark scrim, headed by that game's label band.",
+    "keyCharacteristics": [
+      "Two plastics, one structure: grey by day, smoked by night, the same roles in both; the slot and label bands stay dark in both.",
+      "Games are cartridges; their labels are their pictures; names sit on black bands in white Roboto Black Italic.",
+      "One accent, derived from the console skin's plastic, marks only what can be pressed.",
+      "Label stock (pale print) is the same in both themes and appears only where something is actually printed.",
+      "Depth comes from moulding (highlight and shade lines) and recessing, not drop shadows.",
+      "The phone's own fonts only: Roboto, its Black Italic, and Roboto Condensed."
+    ],
+    "rules": [
+      { "name": "The Pressable Accent Rule", "body": "The accent marks only what can be pressed or what is switched on: filled buttons, the chosen segment, an on switch, a chosen ring, focus. Never a heading, a divider, an icon at rest or a decorative fill.", "section": "colors" },
+      { "name": "The Label Red Rule", "body": "Red means danger and errors. It is never a second accent, and danger actions sit apart from the safe ones (after a divider in sheets, last in the pause menu).", "section": "colors" },
+      { "name": "The Printed Stock Rule", "body": "Label stock appears only where something is printed: a box, a picture, a blank label, a filled save slot, a downloaded badge, and the user's own rank in a score table (a small printed sticker in day ink). An empty save slot, a badge not yet downloaded and a leaderboard's mark are bare plastic (cart-high), so those pages stay dark at night.", "section": "colors" },
+      { "name": "The Contrast Floor Rule", "body": "Every text pairing and every derived accent is at least 4.5:1, enforced by the palette and accent tests; a new colour is checked against the darkest light ground (grey plastic) and the lightest dark ground (cart-smoked-high).", "section": "colors" },
+      { "name": "The Label Lettering Rule", "body": "Roboto Black Italic is for names and numbers that would be printed on a cartridge: screen titles, game names on bands, slot numbers, achievement and leaderboard names, points and ranks, the Continue and Resume labels. Running text, settings and messages (a server problem, a score that couldn't be sent, a note) stay in upright Roboto; so do players' names and scores in a score table.", "section": "typography" },
+      { "name": "The Tabular Times Rule", "body": "Times, dates, counts, scores, ranks and slot numbers use tabular figures (tnum) so they line up and a running counter doesn't jitter; times on carts and scores in a table sit right-aligned or in the grip strip.", "section": "typography" },
+      { "name": "The Moulded Not Floating Rule", "body": "Raised pieces show depth only through their 1dp highlight and 1.5dp shade lines in the plastic's own colours. No blurred drop shadows, gradients or glass.", "section": "elevation" },
+      { "name": "The Dark Slot Rule", "body": "The slot is recessed and dark in both themes; it is where a cartridge goes in, never a generic card.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do derive every accent from the chosen skin's seed through the lightness loops, and check the result against the 4.5:1 floor in both themes.",
+      "Do put a game's name on a black label band in white Roboto Black Italic wherever the game itself is the subject (carts, the game sheet, the pause panel).",
+      "Do build new raised containers from the cart colour with the moulded highlight and shade, and new recessed areas with the slot's recess.",
+      "Do keep label stock and its day inks identical in both themes, and print it only where something is printed.",
+      "Do use standard Material 3 components with the themed colours, pill buttons and the app's shapes.",
+      "Do use tabular figures for times, dates, counts, scores and ranks.",
+      "Do show a feature that is off for a reason by fading its row to 38% in place and saying why under it, rather than hiding it."
+    ],
+    "donts": [
+      "Don't use the accent on anything that cannot be pressed or switched on.",
+      "Don't use label red for anything except danger and errors.",
+      "Don't add blurred drop shadows, gradients or glass; depth is moulding and recessing only.",
+      "Don't bundle or download a font; use the phone's Roboto, Roboto Black Italic and Roboto Condensed.",
+      "Don't print Nintendo's logos, the \"GAME BOY ADVANCE\" logotype or the seal, on screens or in the icon.",
+      "Don't make the slot light in the light theme, or put an empty save slot on label stock.",
+      "Don't use Roboto Black Italic for running text, help notes or settings rows."
+    ]
+  }
+}

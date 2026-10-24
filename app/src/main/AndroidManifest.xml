@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Rumble cartridges vibrate the phone; granted without asking. -->
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <!-- Box art and cheat files from libretro (10b); granted without asking. -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <!-- Android's own backup off (11): the app's data leaves the phone only in the user's own backups. -->
+    <application
+        android:label="GBA Emulator"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:allowBackup="false"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:theme="@style/Theme.GbaEmu">
+
+        <!-- configChanges: rotation and keyboard changes resize the surface instead of restarting the game.
+             singleTask: one game screen only. Without it, opening the app again (e.g. from its icon after it was
+             started some other way) stacks a new, empty start screen on top of the running game. -->
+        <activity
+            android:name=".MainActivity"
+            android:launchMode="singleTask"
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboard|keyboardHidden|navigation|density|uiMode"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>

@@ -1,0 +1,5 @@
+* text=auto eol=lf
+*.gba binary
+*.bin binary
+# rcheevos as released (milestone 14): committed byte for byte
+third_party/rcheevos/** -text

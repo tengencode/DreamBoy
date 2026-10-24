@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 13's themed icon: the cartridge's outline with its label cut out. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">
+    <path android:fillColor="#FFFFFFFF" android:fillType="evenOdd"
+        android:pathData="M33,30.5h42a2,2 0,0 1,2 2v2.5h1a5,5 0,0 1,5 5v34.5a5,5 0,0 1,-5 5h-48a5,5 0,0 1,-5 -5v-34.5a5,5 0,0 1,5 -5h1v-2.5a2,2 0,0 1,2 -2z M31,47h46v18.5h-46z M50,50.5l9.5,6l-9.5,6z" />
+</vector>

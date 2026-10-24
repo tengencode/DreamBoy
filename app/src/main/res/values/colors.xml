@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The plastic every screen is made of (12): grey by day; values-night has the smoked plastic. -->
+    <color name="plastic">#C5C7CC</color>
+</resources>

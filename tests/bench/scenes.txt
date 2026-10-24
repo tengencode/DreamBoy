@@ -1,0 +1,4 @@
+# Speed scenes for gbabench (tools/bench/main.c); hashes from the unchanged code. Your own games' scenes go in
+# scenes.local.txt next to this file (same format; gitignored, never in the repository); tools/dev.sh bench reads both. name | rom | save | keys | warm-up frames | timed frames | picture hash | sound hash
+m7_demo    | tonc/m7_demo.gba | - | 60:UP,400:UP+LEFT,520:UP,900:UP+RIGHT,1000:UP,1300:LEFT,1400:DOWN,1700:DOWN+RIGHT,1800:- | 60 | 1800 | 8d17421337b37d36 | 0e1ae05b39c9d605
+snd1_demo  | tonc/snd1_demo.gba | - | 100:A,110:-,300:B,310:-,500:UP,510:-,700:DOWN,710:-,900:LEFT,910:-,1100:RIGHT,1110:-,1300:A,1310:-,1500:B,1510:- | 60 | 1800 | 45a2cbd3db7573b9 | 06984b8842381435

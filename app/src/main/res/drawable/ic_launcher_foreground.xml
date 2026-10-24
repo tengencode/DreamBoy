@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The icon (12): a grey cartridge — its lip, a black label band, a pale label with a play mark, grip ridges.
+     Original artwork, no logos. Inside the 66 dp safe zone of the 108 dp adaptive icon. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">
+    <!-- shade under the body -->
+    <path android:fillColor="#2C2486"
+        android:pathData="M33,32.5h42a2,2 0,0 1,2 2v2.5h1a5,5 0,0 1,5 5v34.5a5,5 0,0 1,-5 5h-48a5,5 0,0 1,-5 -5v-34.5a5,5 0,0 1,5 -5h1v-2.5a2,2 0,0 1,2 -2z" />
+    <!-- body with its lip -->
+    <path android:fillColor="#C5C7CC"
+        android:pathData="M33,30.5h42a2,2 0,0 1,2 2v2.5h1a5,5 0,0 1,5 5v34.5a5,5 0,0 1,-5 5h-48a5,5 0,0 1,-5 -5v-34.5a5,5 0,0 1,5 -5h1v-2.5a2,2 0,0 1,2 -2z" />
+    <!-- label -->
+    <path android:fillColor="#F2F2F4" android:pathData="M31,40h46a1.5,1.5 0,0 1,1.5 1.5v24a1.5,1.5 0,0 1,-1.5 1.5h-46a1.5,1.5 0,0 1,-1.5 -1.5v-24a1.5,1.5 0,0 1,1.5 -1.5z" />
+    <!-- label band -->
+    <path android:fillColor="#141518" android:pathData="M31,40h46a1.5,1.5 0,0 1,1.5 1.5v5.5h-49v-5.5a1.5,1.5 0,0 1,1.5 -1.5z" />
+    <!-- play mark -->
+    <path android:fillColor="#4B3FB8" android:pathData="M50,50.5l9.5,6l-9.5,6z" />
+    <!-- grip ridges -->
+    <path android:fillColor="#A3A5AB" android:pathData="M37,71h34v1.2h-34z M37,74h34v1.2h-34z" />
+</vector>

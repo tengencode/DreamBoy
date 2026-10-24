@@ -1,0 +1,43 @@
+# Build outputs
+.kotlin/
+build/
+out/
+.cxx/
+.gradle/
+app/build/
+local.properties
+# The release signing key and its passwords — never commit
+keystore.properties
+*.jks
+*.keystore
+*.apk
+*.aab
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Copyrighted material — never commit
+tests/roms/
+tests/skins/
+tests/cht/
+tests/bios/
+# Your own games' test lists: they name the games you own
+tests/games/games.local.txt
+tests/bench/scenes.local.txt
+# The user's games come zipped; the PC viewer's F12 screenshots and the test runner's --wav sound show their games
+*.zip
+*.wav
+gbaview-*.png
+# Design-review screenshots from the emulator: they show the user's own games
+.impeccable/review/
+*.gba
+!tests/own_roms/*.gba
+*.bin
+*.sav
+*.state
+!tests/states/*.state
+
+# brainstorming mockups (visual companion)
+.superpowers/

@@ -1,0 +1,32 @@
+{
+  "groups": {
+    "memory": 1552,
+    "io": 130,
+    "timing": 1796,
+    "timer-countup": 690,
+    "timer-irq": 71,
+    "shifter": 140,
+    "carry": 93,
+    "multiply-long": 72,
+    "bios-math": 615,
+    "dma": 1244,
+    "sio-regs": 90,
+    "sio-timing": 4,
+    "misc": 6
+  },
+  "totals": {
+    "memory": 1552,
+    "io": 130,
+    "timing": 2020,
+    "timer-countup": 936,
+    "timer-irq": 90,
+    "shifter": 140,
+    "carry": 93,
+    "multiply-long": 72,
+    "bios-math": 615,
+    "dma": 1244,
+    "sio-regs": 90,
+    "sio-timing": 4,
+    "misc": 12
+  }
+}

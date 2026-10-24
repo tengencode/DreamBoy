@@ -1,0 +1,200 @@
+{
+  "frames": [
+    {
+      "name": "jsmolka_arm",
+      "rom": "jsmolka/arm.gba",
+      "frames": 10,
+      "hash": "ffb537b2caeb46f1"
+    },
+    {
+      "name": "jsmolka_bios",
+      "rom": "jsmolka/bios.gba",
+      "frames": 10,
+      "hash": "ffb537b2caeb46f1"
+    },
+    {
+      "name": "jsmolka_hello",
+      "rom": "jsmolka/hello.gba",
+      "frames": 10,
+      "hash": "b8039735430b468b"
+    },
+    {
+      "name": "jsmolka_memory",
+      "rom": "jsmolka/memory.gba",
+      "frames": 10,
+      "hash": "ffb537b2caeb46f1"
+    },
+    {
+      "name": "jsmolka_shades",
+      "rom": "jsmolka/shades.gba",
+      "frames": 10,
+      "hash": "06da45bf84412325"
+    },
+    {
+      "name": "jsmolka_stripes",
+      "rom": "jsmolka/stripes.gba",
+      "frames": 10,
+      "hash": "b804d1be99fc7525"
+    },
+    {
+      "name": "jsmolka_thumb",
+      "rom": "jsmolka/thumb.gba",
+      "frames": 10,
+      "hash": "ffb537b2caeb46f1"
+    },
+    {
+      "name": "own_save_eeprom512",
+      "rom": "../own_roms/save_eeprom512.gba",
+      "frames": 10,
+      "hash": "858a8cc4a8e35b25"
+    },
+    {
+      "name": "own_save_eeprom8k",
+      "rom": "../own_roms/save_eeprom8k.gba",
+      "frames": 10,
+      "hash": "858a8cc4a8e35b25"
+    },
+    {
+      "name": "own_snd_dma",
+      "rom": "../own_roms/snd_dma.gba",
+      "frames": 130,
+      "hash": "80a69197c1fb9325",
+      "audio": "d524d1367567b3c5"
+    },
+    {
+      "name": "own_snd_mix",
+      "rom": "../own_roms/snd_mix.gba",
+      "frames": 190,
+      "hash": "80a69197c1fb9325",
+      "audio": "e68189d895caabc5"
+    },
+    {
+      "name": "own_snd_psg",
+      "rom": "../own_roms/snd_psg.gba",
+      "frames": 320,
+      "hash": "80a69197c1fb9325",
+      "audio": "c36097d6c07318f5"
+    },
+    {
+      "name": "tonc_bld_demo",
+      "rom": "tonc/bld_demo.gba",
+      "frames": 60,
+      "hash": "6edb60f4d6745eb0"
+    },
+    {
+      "name": "tonc_bm_modes",
+      "rom": "tonc/bm_modes.gba",
+      "frames": 60,
+      "hash": "961b0d921dc3abf6"
+    },
+    {
+      "name": "tonc_brin_demo",
+      "rom": "tonc/brin_demo.gba",
+      "frames": 60,
+      "hash": "2fa49b7fdc05b4ff"
+    },
+    {
+      "name": "tonc_cbb_demo",
+      "rom": "tonc/cbb_demo.gba",
+      "frames": 60,
+      "hash": "a98e6eda36e5aa6c"
+    },
+    {
+      "name": "tonc_dma_demo",
+      "rom": "tonc/dma_demo.gba",
+      "frames": 60,
+      "hash": "9c4c8f185b506e2f"
+    },
+    {
+      "name": "tonc_first",
+      "rom": "tonc/first.gba",
+      "frames": 60,
+      "hash": "348344528f49392b"
+    },
+    {
+      "name": "tonc_irq_demo",
+      "rom": "tonc/irq_demo.gba",
+      "frames": 60,
+      "hash": "2b7dce9043cb4c63"
+    },
+    {
+      "name": "tonc_m3_demo",
+      "rom": "tonc/m3_demo.gba",
+      "frames": 60,
+      "hash": "2e942c8234ce5f8c"
+    },
+    {
+      "name": "tonc_m7_demo",
+      "rom": "tonc/m7_demo.gba",
+      "frames": 60,
+      "hash": "b91cab92fe7965cf"
+    },
+    {
+      "name": "tonc_mos_demo",
+      "rom": "tonc/mos_demo.gba",
+      "frames": 60,
+      "hash": "62d60e0245b1448d"
+    },
+    {
+      "name": "tonc_oacombo",
+      "rom": "tonc/oacombo.gba",
+      "frames": 60,
+      "hash": "bccb9f39dbec37ad"
+    },
+    {
+      "name": "tonc_obj_aff",
+      "rom": "tonc/obj_aff.gba",
+      "frames": 60,
+      "hash": "affdef941e408537"
+    },
+    {
+      "name": "tonc_obj_demo",
+      "rom": "tonc/obj_demo.gba",
+      "frames": 60,
+      "hash": "f5f7eb2443b88837"
+    },
+    {
+      "name": "tonc_pageflip",
+      "rom": "tonc/pageflip.gba",
+      "frames": 60,
+      "hash": "6ebef7bacd27d385"
+    },
+    {
+      "name": "tonc_sbb_aff",
+      "rom": "tonc/sbb_aff.gba",
+      "frames": 60,
+      "hash": "4a40985cdd97930c"
+    },
+    {
+      "name": "tonc_sbb_reg",
+      "rom": "tonc/sbb_reg.gba",
+      "frames": 60,
+      "hash": "43ecde77f6d10b9a"
+    },
+    {
+      "name": "tonc_snd1_demo",
+      "rom": "tonc/snd1_demo.gba",
+      "frames": 150,
+      "hash": "304f3022df934089",
+      "audio": "42b4378bf3f92a55"
+    },
+    {
+      "name": "tonc_swi_demo",
+      "rom": "tonc/swi_demo.gba",
+      "frames": 60,
+      "hash": "46e947e4ded9ebb6"
+    },
+    {
+      "name": "tonc_tmr_demo",
+      "rom": "tonc/tmr_demo.gba",
+      "frames": 60,
+      "hash": "6dbbc2cecf358dd5"
+    },
+    {
+      "name": "tonc_win_demo",
+      "rom": "tonc/win_demo.gba",
+      "frames": 60,
+      "hash": "646144f68f7bca7e"
+    }
+  ]
+}
