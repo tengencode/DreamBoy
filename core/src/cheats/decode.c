@@ -198,6 +198,7 @@ typedef struct {
     uint32_t list_value; /* GS address list: the value */
     uint32_t patch_addr; /* AR ROM patch: its address */
     size_t block;        /* AR: the open if-block's step (SIZE_MAX: none) */
+    bool block_else;     /* AR: the open block has had its "else" */
     cb_crypt_t cb;
 } decoder_t;
 
@@ -254,7 +255,7 @@ static bool decode_gs(decoder_t *d, uint32_t op1, uint32_t op2) {
 static void ar_end_block(decoder_t *d) {
     cheat_step_t *s = &d->out->steps[d->block];
     uint32_t size = (uint32_t)steps_since(d, d->block);
-    if (s->then_n) s->else_n = size - s->then_n; /* it had an "else" */
+    if (d->block_else) s->else_n = size - s->then_n; /* then_n may be 0: an "else" right after the "if" */
     else s->then_n = size;
     d->block = NONE;
 }
@@ -281,6 +282,7 @@ static bool decode_ar_special(decoder_t *d, uint32_t op2) {
     case 0x60000000u: /* else */
         if (d->block == NONE) return false;
         d->out->steps[d->block].then_n = (uint32_t)steps_since(d, d->block);
+        d->block_else = true;
         return true;
     case 0x80000000u: case 0x82000000u: case 0x84000000u: { /* fill: the value and the counts on the next line */
         unsigned width = 1u << ((op2 >> 25) & 3);
@@ -327,6 +329,7 @@ static bool decode_ar(decoder_t *d, uint32_t op1, uint32_t op2) {
             if (d->block != NONE) ar_end_block(d);
             if (!push(d, s)) return false;
             d->block = d->out->nsteps - 1;
+            d->block_else = false;
             return true;
         }
         return push(d, s);

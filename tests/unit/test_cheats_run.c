@@ -119,6 +119,20 @@ TEST(cheat_ar_if_blocks_with_and_without_else) {
     gba_destroy(g);
 }
 
+/* "if (block), else, code, end if": the code runs only when the condition does not hold. */
+TEST(cheat_ar_else_right_after_its_if) {
+    static const uint32_t c[][2] = {{0x88300000, 0x00000000}, {0x00000000, 0x60000000},  /* if [IW] == 0, else */
+                                    {0x00300002, 0x00000022}, {0x00000000, 0x40000000}}; /* write, end if */
+    gba_t *g = machine();
+    set_ar(g, c, TU_LEN(c));
+    cheats_apply(g); /* [IW] == 0: the "if" holds */
+    CHECK_EQ(peek(g, IW + 2, 1), 0);
+    bus_poke(g, IW, 5, 1);
+    cheats_apply(g);
+    CHECK_EQ(peek(g, IW + 2, 1), 0x22);
+    gba_destroy(g);
+}
+
 TEST(cheat_ar_nested_conditions_inside_if_and_else) {
     static const uint32_t c[][2] = {
         {0x00300003, 0x00000031}, {0x00300004, 0x00000041}, {0x00300005, 0x00000051}, {0x00300006, 0x00000061},
