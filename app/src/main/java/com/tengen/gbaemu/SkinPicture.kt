@@ -31,13 +31,15 @@ object SkinPicture {
         null
     }
 
-    /** As [make]; a PDF's drawing is kept beside it (`cache-<p|l>-<w>x<h>.png`) and read from there next time. */
+    /** As [make]; a PDF's drawing is kept beside it (`cache-<p|l>-<w>x<h>.png`, one per way round) and read from there next time. */
     fun kept(dir: File, image: String, sideways: Boolean, w: Int, h: Int): Bitmap? {
         val file = File(dir, image)
         if (!isPdf(file)) return make(file, w, h) // a PNG decodes faster than a kept copy would be written
-        val copy = File(dir, "cache-${if (sideways) "l" else "p"}-${w}x$h.png")
+        val prefix = "cache-${if (sideways) "l" else "p"}-"
+        val copy = File(dir, "$prefix${w}x$h.png")
         if (copy.isFile) BitmapFactory.decodeFile(copy.path)?.let { return it }
         val bmp = make(file, w, h) ?: return null
+        dir.listFiles { f -> f.name.startsWith(prefix) }?.forEach { it.delete() } // the copy for an older view size
         try {
             copy.outputStream().use { bmp.compress(Bitmap.CompressFormat.PNG, 100, it) }
         } catch (e: IOException) {

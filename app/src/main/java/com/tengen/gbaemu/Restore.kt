@@ -22,7 +22,8 @@ class Restore(private val filesDir: File, private val prefs: Map<String, IntStor
 
     fun source() = Backup.Source(filesDir, Backup.PREFS.associateWith { prefs[it]?.all().orEmpty() }, boxArt.choices())
 
-    /** A backup of the phone's data into [out]; its size in bytes. */
+    /** A backup of the phone's data into [out]; its size in bytes. Never at the same time as a restore or an undo. */
+    @Synchronized
     fun backUp(out: OutputStream, app: String, phone: String, now: Long): Long {
         val counting = Backup.Counting(out)
         Backup.write(source(), counting, app, phone, now)
@@ -43,6 +44,7 @@ class Restore(private val filesDir: File, private val prefs: Map<String, IntStor
     }
 
     /** The checked backup replaces the phone's data, after a safety copy. */
+    @Synchronized
     fun apply(app: String, phone: String, now: Long): Result {
         if (!incoming.isDirectory) return Result(false, false)
         try {
@@ -58,6 +60,7 @@ class Restore(private val filesDir: File, private val prefs: Map<String, IntStor
     }
 
     /** Puts the safety copy back (Undo restore); then it is deleted. */
+    @Synchronized
     fun undo(): Result {
         if (!safety.isFile || safety.inputStream().use { check(it) } == null) return Result(false, false)
         val r = swapOrRollBack()

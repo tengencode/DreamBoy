@@ -137,6 +137,18 @@ Read-only audit of the whole repo at `3cd8aa9`, before the free and open-source 
 
 11 smaller findings were left out: automatic backup racing with a restore, "Export save" leaving an empty file after the app restarts, `backup-state.json` written in place, a rare badge-picture name clash, old skin cache pictures piling up (and going into backups), the game picture redrawn every screen refresh while paused, an unchecked render-thread start, an Action Replay "else" right after its "if" flipping the logic, no direct NEON-vs-C test of the picture mixer, the game-check tool's tests not part of `dev.sh test`, and `dev.sh`'s fixed Android Studio path.
 
+**The 11 smaller findings, after (2026-10-24):**
+- ✅ Automatic backup racing with a restore — `Restore.backUp` / `apply` / `undo` take turns.
+- ✅ "Export save" leaving an empty file after the app restarts — the file is deleted and the user told.
+- ✅ `backup-state.json` written in place — written safely since finding 20 (`File.writeSafely`).
+- ✅ Old skin cache pictures piling up and going into backups — one per way round, left out of backups.
+- ✅ An unchecked render-thread start — `render_create` checks `pthread_create`.
+- ✅ An Action Replay "else" right after its "if" flipping the logic — fixed in `decode.c`.
+- ✅ The game-check tool's tests not part of `dev.sh test` — CTest `game_check_tools`.
+- ✅ `dev.sh`'s fixed Android Studio path — `JBR` and `GBA_AVD` can be set.
+- Open: a rare badge-picture name clash (a game icon and a badge with the same number); the game picture redrawn every screen
+  refresh while paused (battery); no direct NEON-vs-C test of the picture mixer.
+
 **Verdict:** the emulator itself is solid (no memory errors found in graphics, sound or the assembly); fix 1–3 first (crash and save-loss risks), and 4 and 6 before the code goes public.
 
 **Lean:** about −170 lines possible, no dependencies to drop.

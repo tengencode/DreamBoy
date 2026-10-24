@@ -52,6 +52,43 @@ class RestoreTest {
         return to.restore.apply("0.1", "Pixel 9", 2000)
     }
 
+    /** An automatic backup still writing (it waits on [go]) when the user confirms a restore. */
+    private class SlowStream(val started: java.util.concurrent.CountDownLatch, val go: java.util.concurrent.CountDownLatch) :
+        java.io.OutputStream() {
+        val out = ByteArrayOutputStream()
+        override fun write(b: Int) {
+            started.countDown()
+            go.await()
+            out.write(b)
+        }
+    }
+
+    @Test
+    fun aRestoreWaitsForABackupThatIsStillBeingWritten() {
+        val a = Phone("a")
+        full(a)
+        val b = Phone("b")
+        full(b)
+        b.put("saves/$id.sav", "b's own save")
+        assertTrue(b.restore.check(ByteArrayInputStream(a.backup())) != null)
+        val started = java.util.concurrent.CountDownLatch(1)
+        val go = java.util.concurrent.CountDownLatch(1)
+        val slow = SlowStream(started, go)
+        val backup = Thread { b.restore.backUp(slow, "0.1", "Pixel 9", 1500) }.apply { start() }
+        started.await()
+        var restored: Restore.Result? = null
+        val restore = Thread { restored = b.restore.apply("0.1", "Pixel 9", 2000) }.apply { start() }
+        restore.join(300)
+        assertNull("the restore ran while the backup was being written", restored)
+        go.countDown()
+        backup.join()
+        restore.join()
+        assertTrue(restored!!.ok)
+        val zip = java.util.zip.ZipInputStream(ByteArrayInputStream(slow.out.toByteArray()))
+        val save = generateSequence { zip.nextEntry }.first { it.name == "saves/$id.sav" }.let { zip.readBytes().decodeToString() }
+        assertEquals("the backup holds the phone as it was, not half-restored", "b's own save", save)
+    }
+
     @Test
     fun backUpThenRestoreOnAnEmptyPhoneGivesEverythingBack() {
         val a = Phone("a")

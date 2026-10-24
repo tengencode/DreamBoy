@@ -18,7 +18,8 @@ runs well on cheap and old phones; the app around it is Kotlin and Jetpack Compo
 The tools are set up for Windows with Git Bash:
 
 - Android SDK with NDK 27.2.12479018 and CMake 3.31.6 (`ANDROID_HOME`, default `%LOCALAPPDATA%\Android\Sdk`)
-- Android Studio's Java (`JBR` in `tools/dev.sh`), for Gradle
+- Android Studio's Java, for Gradle (set `JBR` if Android Studio isn't in `C:\Program Files\Android\Android Studio`), and a phone
+  emulator for the on-device tests (set `GBA_AVD` to its name)
 - clang from llvm-mingw for the PC builds (`LLVM_MINGW_BIN`)
 - Python 3
 
