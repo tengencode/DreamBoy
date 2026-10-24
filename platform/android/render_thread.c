@@ -179,7 +179,14 @@ render_thread_t *render_create(triple_buffer_t *tb) {
     }
     pthread_mutex_init(&r->lock, NULL);
     pthread_cond_init(&r->done, NULL);
-    pthread_create(&r->thread, NULL, render_main, r);
+    if (pthread_create(&r->thread, NULL, render_main, r) != 0) { /* low on memory: no picture, but no hang */
+        pthread_mutex_destroy(&r->lock);
+        pthread_cond_destroy(&r->done);
+        close(r->pipe_fd[0]);
+        close(r->pipe_fd[1]);
+        free(r);
+        return NULL;
+    }
     return r;
 }
 
