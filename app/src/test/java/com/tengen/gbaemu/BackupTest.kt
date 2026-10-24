@@ -34,6 +34,7 @@ class BackupTest {
         put("layout.json", "{}")
         put("skins/1/info.json", "{}")
         put("skins/1/pictures/a b.png", "picture")
+        put("skins/1/cache-p-1080x2424.png", "a PDF skin's drawing, made again when needed")
         put("skins/.incoming/x", "half")
         put("boxart/cccccccc.jpg", "mine")
         put("boxart/aaaaaaaa.jpg", "downloaded")

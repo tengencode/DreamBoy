@@ -46,6 +46,11 @@ class SkinPictureTest {
         val copy = File(dir, "cache-p-300x150.png")
         assertTrue(copy.isFile)
         assertEquals(Color.RED, BitmapFactory.decodeFile(copy.path).getPixel(60, 75))
+        SkinPicture.kept(dir, "p.pdf", sideways = true, 150, 300) // the other way round: its own copy
+        SkinPicture.kept(dir, "p.pdf", sideways = false, 400, 200) // a new size (split screen, display size)
+        assertFalse("the old copy for this way round is kept", copy.exists())
+        assertTrue(File(dir, "cache-p-400x200.png").isFile)
+        assertTrue(File(dir, "cache-l-150x300.png").isFile)
     }
 
     @Test

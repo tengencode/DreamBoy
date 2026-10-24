@@ -120,7 +120,8 @@ object Backup {
         add("layout.json", File(filesDir, "layout.json"))
         val skins = File(filesDir, "skins")
         skins.listFiles()?.filter { it.isDirectory && it.name.toIntOrNull() != null }?.forEach { d ->
-            d.walkTopDown().filter { it.isFile }.forEach { add("skins/" + it.relativeTo(skins).invariantSeparatorsPath, it) }
+            d.walkTopDown().filter { it.isFile && !it.name.startsWith("cache-") } // a PDF's kept drawing: made again
+                .forEach { add("skins/" + it.relativeTo(skins).invariantSeparatorsPath, it) }
         }
         for ((id, state) in boxChoices) if (state == BoxArt.State.OWN) add("boxart/$id.jpg", File(filesDir, "boxart/$id.jpg"))
         return out
