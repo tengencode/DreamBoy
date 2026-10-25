@@ -1,6 +1,9 @@
 #ifndef GBAEMU_FIT_RECT_H
 #define GBAEMU_FIT_RECT_H
 
+#include <stdbool.h>
+#include <stdint.h>
+
 typedef struct {
     int x, y, w, h;
 } fit_rect_t;
@@ -17,5 +20,16 @@ typedef enum {
 } fit_mode_t;
 
 fit_rect_t fit_rect_mode(int width, int height, fit_mode_t mode);
+
+/* What the drawn picture depends on besides the frame: the surface size and the picture settings. */
+typedef struct {
+    int w, h, mode;
+    bool smooth;
+    uint32_t background;
+} picture_look_t;
+
+/* Whether the picture must be drawn again: a fresh frame, or a look different from *last (then kept in *last).
+ * A zeroed *last means not drawn yet. */
+bool picture_needs_draw(picture_look_t *last, picture_look_t now, bool fresh);
 
 #endif

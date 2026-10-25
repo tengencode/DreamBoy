@@ -89,6 +89,23 @@ TEST(fit_rect_mode_stretch_fills_the_surface) {
     CHECK_EQ(r.w, 0);
 }
 
+TEST(picture_is_drawn_only_when_something_changed) {
+    picture_look_t last = {0};
+    picture_look_t now = {2424, 1080, FIT_ASPECT, false, 0xFF000000u};
+    CHECK(picture_needs_draw(&last, now, false)); /* never drawn on this surface */
+    CHECK(!picture_needs_draw(&last, now, false)); /* paused: nothing new */
+    CHECK(picture_needs_draw(&last, now, true));   /* a new frame */
+    now.w = 1080, now.h = 2424;
+    CHECK(picture_needs_draw(&last, now, false)); /* turned sideways */
+    now.mode = FIT_STRETCH;
+    CHECK(picture_needs_draw(&last, now, false));
+    now.smooth = true;
+    CHECK(picture_needs_draw(&last, now, false));
+    now.background = 0xFF112233u;
+    CHECK(picture_needs_draw(&last, now, false));
+    CHECK(!picture_needs_draw(&last, now, false));
+}
+
 /* ---- frame pacer ---- */
 
 TEST(pacer_first_frame_is_due_one_period_after_now) {
