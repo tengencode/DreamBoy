@@ -18,7 +18,14 @@ class BadgeCacheTest {
         assertArrayEquals(byteArrayOf(1, 2, 3), cache.bytes(url))
         assertArrayEquals(byteArrayOf(1, 2, 3), cache.bytes(url))
         assertEquals(1, fetched)
-        assertArrayEquals(byteArrayOf(1, 2, 3), File(dir, "01001.png").readBytes())
+        assertArrayEquals(byteArrayOf(1, 2, 3), File(dir, "Badge-01001.png").readBytes())
+    }
+
+    @Test
+    fun aGamePictureAndABadgeWithTheSameNumberAreKeptApart() {
+        val cache = BadgeCache(dir) { url -> if ("/Images/" in url) byteArrayOf(1) else byteArrayOf(2) }
+        assertArrayEquals(byteArrayOf(1), cache.bytes("https://media.retroachievements.org/Images/12345.png"))
+        assertArrayEquals(byteArrayOf(2), cache.bytes("https://media.retroachievements.org/Badge/12345.png"))
     }
 
     @Test
