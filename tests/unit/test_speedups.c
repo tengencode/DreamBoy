@@ -215,6 +215,10 @@ TEST(speedup_compose_matches_the_code_before) {
         ppu_compose(g, y, &lb, fast);
         ref_compose(g, y, &lb, ref);
         CHECK(memcmp(fast, ref, sizeof fast) == 0);
+#ifdef GBA_ARM64
+        ppu_compose_generic(g, y, &lb, ref); /* the NEON compositor against today's plain-C twin too */
+        CHECK(memcmp(fast, ref, sizeof fast) == 0);
+#endif
     }
     gba_destroy(g);
 }
