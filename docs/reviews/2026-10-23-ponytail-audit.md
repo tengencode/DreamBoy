@@ -146,8 +146,9 @@ Read-only audit of the whole repo at `3cd8aa9`, before the free and open-source 
 - ✅ An Action Replay "else" right after its "if" flipping the logic — fixed in `decode.c`.
 - ✅ The game-check tool's tests not part of `dev.sh test` — CTest `game_check_tools`.
 - ✅ `dev.sh`'s fixed Android Studio path — `JBR` and `GBA_AVD` can be set.
-- Open: a rare badge-picture name clash (a game icon and a badge with the same number); the game picture redrawn every screen
-  refresh while paused (battery); no direct NEON-vs-C test of the picture mixer.
+- ✅ A rare badge-picture name clash (2026-10-25) — badge files are named by folder and name (`Badge-…`, `Images-…`).
+- ✅ The game picture redrawn every screen refresh while paused (2026-10-25) — drawn only when the frame, size or picture settings change.
+- ✅ No direct NEON-vs-C test of the picture mixer (2026-10-25) — on arm64 the compose test also compares it with `ppu_compose_generic`.
 
 **Verdict:** the emulator itself is solid (no memory errors found in graphics, sound or the assembly); fix 1–3 first (crash and save-loss risks), and 4 and 6 before the code goes public.
 

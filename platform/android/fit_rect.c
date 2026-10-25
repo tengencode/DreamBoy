@@ -24,3 +24,10 @@ fit_rect_t fit_rect_mode(int width, int height, fit_mode_t mode) {
     }
     return fit_rect(width, height);
 }
+
+bool picture_needs_draw(picture_look_t *last, picture_look_t now, bool fresh) {
+    bool same = last->w == now.w && last->h == now.h && last->mode == now.mode && last->smooth == now.smooth &&
+                last->background == now.background;
+    *last = now;
+    return fresh || !same;
+}

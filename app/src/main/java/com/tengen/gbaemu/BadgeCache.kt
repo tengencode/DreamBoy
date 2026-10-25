@@ -4,11 +4,16 @@ import java.io.File
 
 /**
  * RetroAchievements' badge pictures kept on the phone (14) in `files/ra/badges/` (left out of backups: they download
- * again), by the name at the end of their URL (e.g. `01001.png`, `01001_lock.png`). [fetch] downloads one (null: failed).
+ * again), by the last folder and name of their URL (e.g. `Badge-01001.png`, `Badge-01001_lock.png`; a game's picture
+ * `Images-01001.png` can share a badge's number). [fetch] downloads one (null: failed).
  */
 class BadgeCache(private val dir: File, private val fetch: (String) -> ByteArray?) {
-    private fun fileOf(url: String): File? =
-        url.substringAfterLast('/').substringBefore('?').takeIf(NAME::matches)?.let { File(dir, it) }
+    private fun fileOf(url: String): File? {
+        val path = url.substringBefore('?')
+        val name = path.substringAfterLast('/').takeIf(NAME::matches) ?: return null
+        val folder = path.substringBeforeLast('/', "").substringAfterLast('/').takeIf(FOLDER::matches) ?: return null
+        return File(dir, "$folder-$name")
+    }
 
     /** The picture's bytes, from the folder or downloaded and kept; null without one. Slow: not on the UI thread. */
     fun bytes(url: String): ByteArray? {
@@ -34,5 +39,6 @@ class BadgeCache(private val dir: File, private val fetch: (String) -> ByteArray
 
     companion object {
         private val NAME = Regex("[A-Za-z0-9_-]{1,64}\\.png")
+        private val FOLDER = Regex("[A-Za-z0-9_]{1,32}")
     }
 }

@@ -9,6 +9,7 @@
 #include <unistd.h>
 
 #include "egl_ctx.h"
+#include "fit_rect.h"
 #include "video_gl.h"
 
 #define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, "gbaemu", __VA_ARGS__)
@@ -34,6 +35,7 @@ struct render_thread {
     EGLSurface surface;
     ANativeWindow *window;
     video_gl_t gl;
+    picture_look_t drawn; /* zeroed for a new surface: draw it once */
 };
 
 static void post_frame(render_thread_t *r);
@@ -70,6 +72,7 @@ static bool make_surface(render_thread_t *r) {
         LOGE("window surface failed: 0x%x", eglGetError());
         return false;
     }
+    r->drawn = (picture_look_t){0};
     if (!r->gl_ready) {
         r->gl_ready = video_gl_init(&r->gl);
         if (!r->gl_ready) return false;
@@ -100,7 +103,12 @@ static void on_frame(render_thread_t *r) {
     EGLint w = 0, h = 0;
     eglQuerySurface(r->egl.display, r->surface, EGL_WIDTH, &w);
     eglQuerySurface(r->egl.display, r->surface, EGL_HEIGHT, &h);
-    video_gl_draw(&r->gl, w, h, atomic_load(&r->fit_mode), atomic_load(&r->smooth), atomic_load(&r->background));
+    picture_look_t look = {w, h, atomic_load(&r->fit_mode), atomic_load(&r->smooth), atomic_load(&r->background)};
+    if (!picture_needs_draw(&r->drawn, look, fresh)) { /* paused: the screen keeps the last picture */
+        post_frame(r);
+        return;
+    }
+    video_gl_draw(&r->gl, w, h, look.mode, look.smooth, look.background);
     if (!eglSwapBuffers(r->egl.display, r->surface) && eglGetError() == EGL_CONTEXT_LOST) {
         LOGE("EGL context lost: rebuilding");
         drop_context(r);
