@@ -15,9 +15,12 @@ object Licences {
     val SHIPPED = listOf(
         Licence("DreamBoy", "GPL 3.0 or later", "licences/gpl-3.0.txt", emptyList()),
         Licence("rcheevos 12.5.0 (RetroAchievements)", "MIT", "licences/rcheevos-mit.txt", emptyList()),
+        Licence("MD5 code in rcheevos (L. Peter Deutsch, Aladdin Enterprises)", "zlib-style", "licences/md5-zlib.txt", emptyList()),
         Licence("Jetpack Compose, Material 3 and Material icons", "Apache 2.0", "licences/apache-2.0.txt", listOf("androidx.compose.")),
-        Licence("AndroidX core, activity and lifecycle", "Apache 2.0", "licences/apache-2.0.txt", listOf("androidx.")),
-        Licence("Kotlin standard library and kotlinx coroutines", "Apache 2.0", "licences/apache-2.0.txt",
-            listOf("org.jetbrains.kotlin", "org.jetbrains.kotlinx")),
+        Licence("AndroidX libraries (core, activity, lifecycle and others)", "Apache 2.0", "licences/apache-2.0.txt", listOf("androidx.")),
+        Licence("Kotlin standard library, kotlinx coroutines and JetBrains annotations", "Apache 2.0", "licences/apache-2.0.txt",
+            listOf("org.jetbrains")),
+        Licence("Guava ListenableFuture and JSpecify annotations", "Apache 2.0", "licences/apache-2.0.txt",
+            listOf("com.google.guava", "org.jspecify")),
     )
 }

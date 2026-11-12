@@ -34,6 +34,13 @@ class AboutTextTest {
     }
 
     @Test
+    fun webAddressesAreFoundWithoutTheFullStopAfterThem() {
+        assertEquals(listOf("https://github.com/tengencode/DreamBoy/issues"),
+            links("Questions: open an issue at https://github.com/tengencode/DreamBoy/issues."))
+        assertEquals(emptyList<String>(), links("retroachievements.org and thumbnails.libretro.com, no scheme"))
+    }
+
+    @Test
     fun thePrivacyPolicyHasNoMarkupLeftOnceRead() {
         // JVM tests run in app/
         val blocks = docBlocks(File("../PRIVACY.md").readText())

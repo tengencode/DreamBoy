@@ -1,13 +1,17 @@
 package com.tengen.gbaemu
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.PrivacyTip
@@ -15,25 +19,27 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextLinkStyles
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-/** Settings → About DreamBoy (16): the name on a label band, the version, what it is, and its three links. */
+/** Settings → About DreamBoy (16): the version, what it is, and its three links (the header names the app). */
 @Composable
-fun AboutPage(version: String, onGithub: () -> Unit, onPage: (SettingsPage) -> Unit) {
+fun AboutPage(version: String, onGithub: () -> Unit, onPage: (SettingsPage) -> Unit) = Reading {
     Group {
         Column(Modifier.padding(16.dp)) {
-            LabelBand("DreamBoy", big = true)
-            Spacer(Modifier.height(14.dp))
             Text("Version $version", style = MaterialTheme.typography.bodySmall.merge(Tabular),
                 color = MaterialTheme.colorScheme.onSurfaceVariant)
             Spacer(Modifier.height(4.dp))
@@ -45,7 +51,8 @@ fun AboutPage(version: String, onGithub: () -> Unit, onPage: (SettingsPage) -> U
         }
     }
     Group {
-        NavRow(Icons.Filled.Code, "GitHub page", "The code, new versions and bug reports", onClick = onGithub)
+        NavRow(Icons.Filled.Code, "GitHub page", "The code, new versions and bug reports",
+            trailing = Icons.AutoMirrored.Filled.OpenInNew, onClick = onGithub)
         NavRow(Icons.Filled.Description, "Open-source licences", "The parts DreamBoy is built from") { onPage(SettingsPage.LICENCES) }
         NavRow(Icons.Filled.PrivacyTip, "Privacy policy", "What stays on your phone and what doesn't", last = true) {
             onPage(SettingsPage.PRIVACY)
@@ -55,18 +62,18 @@ fun AboutPage(version: String, onGithub: () -> Unit, onPage: (SettingsPage) -> U
 
 /** Settings → About → Open-source licences: every shipped part and its licence; tapping one shows its text. */
 @Composable
-fun LicencesPage(onOpen: (Int) -> Unit) {
+fun LicencesPage(onOpen: (Int) -> Unit) = Reading {
     Group {
         Licences.SHIPPED.forEachIndexed { i, l ->
             NavRow(null, l.part, l.licence, last = i == Licences.SHIPPED.lastIndex) { onOpen(i) }
         }
     }
-    Help("Each part's licence text is in the app.")
+    Help("Tap a part to read its licence.")
 }
 
 /** One licence's full text, as shipped in the app's assets. */
 @Composable
-fun LicenceText(licence: Licence) {
+fun LicenceText(licence: Licence) = Reading {
     val text = reflow(assetText(licence.asset))
     Group {
         Text(text, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(16.dp))
@@ -75,7 +82,7 @@ fun LicenceText(licence: Licence) {
 
 /** The privacy policy (PRIVACY.md, shipped in the assets) as headings, paragraphs and points. */
 @Composable
-fun PrivacyPage() {
+fun PrivacyPage() = Reading {
     val text = assetText(Licences.PRIVACY_ASSET)
     val blocks = remember(text) { docBlocks(text) }
     Group {
@@ -100,15 +107,38 @@ fun PrivacyPage() {
     }
 }
 
+/** A page's column, at most 600 dp wide and centred, so text keeps a readable line length sideways. */
+@Composable
+private fun Reading(content: @Composable ColumnScope.() -> Unit) {
+    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
+        Column(Modifier.widthIn(max = 600.dp), content = content)
+    }
+}
+
 @Composable
 private fun assetText(path: String): String {
     val assets = LocalContext.current.assets
     return remember(path) { try { assets.open(path).bufferedReader().use { it.readText() } } catch (e: Exception) { "" } }
 }
 
-private fun bold(text: String): AnnotatedString = buildAnnotatedString {
-    for ((part, strong) in boldRuns(text)) if (strong) withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append(part) } else append(part)
+/** [text] with its `**` runs bold and its web addresses as links (they open in the browser). */
+@Composable
+private fun bold(text: String): AnnotatedString {
+    val link = TextLinkStyles(SpanStyle(color = MaterialTheme.colorScheme.primary, textDecoration = TextDecoration.Underline))
+    return buildAnnotatedString {
+        for ((part, strong) in boldRuns(text)) {
+            val start = length
+            if (strong) withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append(part) } else append(part)
+            for (url in links(part)) {
+                val at = part.indexOf(url)
+                addLink(LinkAnnotation.Url(url, link), start + at, start + at + url.length)
+            }
+        }
+    }
 }
+
+/** The `https://` addresses in [text], without a full stop or comma after them. */
+fun links(text: String): List<String> = Regex("https://\\S+").findAll(text).map { it.value.trimEnd('.', ',', ';', ')') }.toList()
 
 enum class DocKind { TITLE, NOTE, HEADING, SUBHEADING, TEXT, BULLET }
 

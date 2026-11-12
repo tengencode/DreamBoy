@@ -23,7 +23,7 @@ A Game Boy Advance emulator for Android comparable to Pizza Boy GBA: high compat
 - Players bring their own games folder (Android's folder picker) and, optionally, their own BIOS file.
 
 ## Capabilities and Constraints
-- Screens: first start, game library (Continue card + grid, box art), game sheet, pause menu, save/load state slots, cheats panel and dialogs, Settings (Picture, Sound, Fast-forward and rewind, Keyboard and controller, Touch buttons + skins + layout editor, BIOS, Backup, box-art switch), key table, game settings, restore questions, overlays over the game (speed label, light slider).
+- Screens: first start, game library (Continue card + grid, box art), game sheet, pause menu, save/load state slots, cheats panel and dialogs, Settings (Picture, Sound, Fast-forward and rewind, Keyboard and controller, Touch buttons + skins + layout editor, BIOS, Backup, box-art switch, About DreamBoy with the open-source licences and the privacy policy), key table, game settings, restore questions, overlays over the game (speed label, light slider).
 - Stack: Kotlin + Jetpack Compose (Compose 1.11.4, Material 3 1.4.0, material-icons-extended 1.7.8); Android 8+ (minSdk 26), target 36. Gradle builds offline; any new library or font file needs the user's OK to download.
 - The emulator core (C/asm) is out of scope for UI work and must not change.
 - No ROMs or BIOS ship with the app; never show or bundle copyrighted game art other than the user's own game pictures and libretro box art downloaded on the phone.

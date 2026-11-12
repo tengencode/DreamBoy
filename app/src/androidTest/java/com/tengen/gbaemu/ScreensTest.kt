@@ -99,7 +99,8 @@ class ScreensTest {
     fun licencesListEveryPartAndOpenItsText() {
         settingsAt(SettingsPage.LICENCES)
         compose.onNodeWithText("Jetpack Compose", substring = true).assertExists()
-        compose.onNodeWithText("rcheevos", substring = true).performScrollTo().performClick()
+        compose.onNodeWithText("zlib-style").assertExists() // the MD5 code inside rcheevos
+        compose.onNodeWithText("rcheevos 12.5.0 (RetroAchievements)").performScrollTo().performClick()
         compose.onNodeWithText("MIT License", substring = true).assertExists()
     }
 

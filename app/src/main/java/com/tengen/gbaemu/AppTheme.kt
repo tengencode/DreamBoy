@@ -256,10 +256,12 @@ fun ChoiceRow(label: String, options: List<String>, selected: Int, onPick: (Int)
 
 /**
  * A row that opens a page: an icon, its title, what it is set to now, and a chevron. [enabled] false: greyed out, a
- * tap does nothing. Inside a [Group] the rows are divided by hairlines; [last] leaves the line off.
+ * tap does nothing. Inside a [Group] the rows are divided by hairlines; [last] leaves the line off. [trailing]: the
+ * chevron, or an "opens outside the app" icon.
  */
 @Composable
-fun NavRow(icon: ImageVector?, title: String, summary: String?, enabled: Boolean = true, last: Boolean = false, onClick: () -> Unit) {
+fun NavRow(icon: ImageVector?, title: String, summary: String?, enabled: Boolean = true, last: Boolean = false,
+           trailing: ImageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight, onClick: () -> Unit) {
     // Off: the icon, title and chevron fade; the summary (often the reason it's off) stays readable.
     val fade = Modifier.alpha(if (enabled) 1f else 0.38f)
     Row(Modifier.fillMaxWidth().clickable(enabled = enabled, onClick = onClick)
@@ -275,8 +277,7 @@ fun NavRow(icon: ImageVector?, title: String, summary: String?, enabled: Boolean
                 Text(summary, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
-        Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null, tint = MaterialTheme.colorScheme.outline,
-            modifier = fade)
+        Icon(trailing, contentDescription = null, tint = MaterialTheme.colorScheme.outline, modifier = fade)
     }
     if (!last) HorizontalDivider(Modifier.padding(start = if (icon != null) 56.dp else 16.dp),
         color = MaterialTheme.colorScheme.outlineVariant)

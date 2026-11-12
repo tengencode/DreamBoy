@@ -15,7 +15,7 @@ Constraints: Material 3 components and system Back; phone's own fonts (Roboto, R
 
 Memorable moment: the seated cartridge in the slot, and the insert when you press Continue.
 
-Unresolved: the public app name.
+The public app name: DreamBoy (decided 2026-11-12, milestone 16). Settings gained About DreamBoy with the licences and the privacy policy (see DESIGN.md, About and Document Pages).
 
 ## Direction contract
 
