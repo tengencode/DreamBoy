@@ -45,15 +45,15 @@
 **Interfaces:**
 - Produces: `RaNet.userAgent(version: String, androidRelease: String, rcheevosClause: String): String`; `Net.userAgent: String` (a `@Volatile var`, default `"DreamBoy (Android)"`, set once at app start to `"DreamBoy/$version (Android)"`; replaces the `USER_AGENT` const); `BackupSchedule.fileName(now)` → `DreamBoy backup yyyy-MM-dd HH-mm.zip`.
 
-- [ ] **Step 1: Branch.** `git checkout -b milestone-16` (from `main`).
-- [ ] **Step 2: Write the failing tests.**
+- [x] **Step 1: Branch.** `git checkout -b milestone-16` (from `main`).
+- [x] **Step 2: Write the failing tests.**
   - `RaNetTest`: `assertEquals("DreamBoy/1.0.0 (Android 16) rcheevos/12.5", RaNet.userAgent("1.0.0", "16", "rcheevos/12.5"))`; `NetTest`'s User-Agent check expects that string too.
   - `BackupScheduleTest`: rename every expected name to `DreamBoy backup …`; new `oldAppBackupsAreNeverCleanedUp`: `toDelete` on 7 `DreamBoy backup 2026-11-0N 10-00.zip` plus 3 `GBA Emulator backup 2026-10-0N 10-00.zip` returns only the 2 oldest DreamBoy ones.
-- [ ] **Step 3: Run** `bash tools/dev.sh jvmtest` — expected: those tests fail (wrong User-Agent, wrong names).
-- [ ] **Step 4: Implement.** `applicationId = "com.tengen.dreamboy"`, `versionCode = 1`, `versionName = "1.0.0"`; `buildTypes { debug { applicationIdSuffix = ".debug"; manifestPlaceholders["appLabel"] = "DreamBoy debug" }; release { manifestPlaceholders["appLabel"] = "DreamBoy"; … } }`; `BackupSchedule.OURS` matches only `DreamBoy backup …`; `MainActivity` passes `appVersion()` to `RaNet.userAgent` and sets `Net.userAgent` before any download.
-- [ ] **Step 5: Run** `bash tools/dev.sh jvmtest` — all pass; `bash tools/dev.sh apk` — no warnings; `aapt2 dump badging app/build/outputs/apk/debug/app-debug.apk` shows `package: name='com.tengen.dreamboy.debug' versionCode='1' versionName='1.0.0'` and `application-label:'DreamBoy debug'`.
+- [x] **Step 3: Run** `bash tools/dev.sh jvmtest` — expected: those tests fail (wrong User-Agent, wrong names).
+- [x] **Step 4: Implement.** `applicationId = "com.tengen.dreamboy"`, `versionCode = 1`, `versionName = "1.0.0"`; `buildTypes { debug { applicationIdSuffix = ".debug"; manifestPlaceholders["appLabel"] = "DreamBoy debug" }; release { manifestPlaceholders["appLabel"] = "DreamBoy"; … } }`; `BackupSchedule.OURS` matches only `DreamBoy backup …`; `MainActivity` passes `appVersion()` to `RaNet.userAgent` and sets `Net.userAgent` before any download.
+- [x] **Step 5: Run** `bash tools/dev.sh jvmtest` — all pass; `bash tools/dev.sh apk` — no warnings; `aapt2 dump badging app/build/outputs/apk/debug/app-debug.apk` shows `package: name='com.tengen.dreamboy.debug' versionCode='1' versionName='1.0.0'` and `application-label:'DreamBoy debug'`.
 - [ ] **Step 6: On-device tests** — `bash tools/dev.sh androidtest` (asks the user first if the emulator isn't running — CLAUDE.md memory rule); expected 90/90 under the new debug id (this also runs the 2026-10-25 redraw change on a device for the first time). The old `com.tengen.gbaemu` app on the emulator is left installed.
-- [ ] **Step 7: Commit** — `feat: the app is DreamBoy (com.tengen.dreamboy, 1.0.0)`.
+- [x] **Step 7: Commit** — `feat: the app is DreamBoy (com.tengen.dreamboy, 1.0.0)`.
 
 ### Task 2: Unlocks made offline are kept and sent later
 
@@ -68,18 +68,18 @@
 
 **How it works (decided here):** rcheevos builds the requests (`third_party/rcheevos/src/rapi/rc_api_runtime.c:640-672`, `:748-775`): POST `r=awardachievement&u=…&t=…&a=ID&h=0|1[&m=HASH][&o=SECONDS]&v=MD5` and `r=submitlbentry&u=…&t=…&i=ID&s=SCORE[&m=HASH][&o=SECONDS]&v=MD5`. `v` = md5 of `"$id$user$h"` + (if o > 0) `"$id$o"` for an unlock, md5 of `"$board$user$score"` + (if o > 0) `"$o"` for a score. When the worker gets `NO_REPLY` for one of these, the outbox stores `url`, `post`, `contentType` and the time it was first stored, keyed by `a`+`h` (unlocks) or `i`+`s` (scores); any other status for the same key removes it. `resend` rebuilds each post with `o = old o + (now − stored)/1000` and a fresh `v`, sends it, and removes it unless the answer is `NO_REPLY` (a refusal or "already unlocked" also removes it). Resend runs once at app start (after the worker starts) and after any RetroAchievements answer that isn't `NO_REPLY`, on the worker's pool, never on the UI thread.
 
-- [ ] **Step 1: The C cross-check (proves the rule above is rcheevos').** In `test_ra.c`, `TEST(ra_award_and_score_signatures_for_the_outbox)`: `rc_api_init_award_achievement_request` with `{username "Tester", api_token "TOKEN", achievement_id 1001, hardcore 0, seconds_since_unlock 90}` → its `post_data` contains `v=e47388663084231e1df43ac2611c6687`; with `seconds_since_unlock 0` → `v=ba409acb0b83555ccca0863531b10f6d`; `rc_api_init_submit_lboard_entry_request` with `{"Tester", "TOKEN", leaderboard_id 2001, score 1234, seconds_since_completion 60}` → `v=725eb09a0efa54931ee41fa8fa759c5e`. Run `bash tools/dev.sh unit ra_award` — expected PASS straight away (it pins rcheevos' behaviour; it isn't new code).
-- [ ] **Step 2: Write the failing Kotlin tests** in `RaOutboxTest` (a temp folder, a fake clock, `send` lambdas):
+- [x] **Step 1: The C cross-check (proves the rule above is rcheevos').** In `test_ra.c`, `TEST(ra_award_and_score_signatures_for_the_outbox)`: `rc_api_init_award_achievement_request` with `{username "Tester", api_token "TOKEN", achievement_id 1001, hardcore 0, seconds_since_unlock 90}` → its `post_data` contains `v=e47388663084231e1df43ac2611c6687`; with `seconds_since_unlock 0` → `v=ba409acb0b83555ccca0863531b10f6d`; `rc_api_init_submit_lboard_entry_request` with `{"Tester", "TOKEN", leaderboard_id 2001, score 1234, seconds_since_completion 60}` → `v=725eb09a0efa54931ee41fa8fa759c5e`. Run `bash tools/dev.sh unit ra_award` — expected PASS straight away (it pins rcheevos' behaviour; it isn't new code).
+- [x] **Step 2: Write the failing Kotlin tests** in `RaOutboxTest` (a temp folder, a fake clock, `send` lambdas):
   - `signaturesMatchRcheevos`: `awardSignature(1001, "Tester", 0, 90) == "e47388663084231e1df43ac2611c6687"`, `awardSignature(1001, "Tester", 0, 0) == "ba409acb0b83555ccca0863531b10f6d"`, `scoreSignature(2001, "Tester", 1234, 60) == "725eb09a0efa54931ee41fa8fa759c5e"`.
   - `anUnlockThatCantBeSentIsKeptAcrossARestart`: `sent(award 1001, NO_REPLY)` → a **new** `RaOutbox` on the same file has `size == 1`; after 120 s on the clock, `resend` sends one POST with `o=120` and `v=awardSignature(1001,"Tester",0,120)`; answered 200 → returns 1, `size == 0`.
   - `anAnswerRemovesIt`: `sent(award, NO_REPLY)` then `sent(same award, 200)` → `size == 0`; a 400 refusal also removes it.
   - `stillOfflineKeepsIt`: `resend` answered `NO_REPLY` → returns 0, `size == 1`, and the stored time is unchanged (the next `o` still counts from the first failure).
   - `repeatedFailuresAreKeptOnce`, `twoScoresOnOneBoardAreBothKept` (scores 1234 and 1300 on board 2001 → `size == 2`), `aUserNameIsSignedDecoded` (`u=Bob%20Smith` → signed with `"Bob Smith"`), `aDamagedFileIsEmptyNotACrash` (file holds `{"broken` → `size == 0`, `sent` still works), `otherRequestsAreIgnored` (`login2`, `lbinfo` with `NO_REPLY` → `size == 0`), `clearForgetsEverything`.
   - `FakeRaServerTest.offlineAnswersNoReply`: with `offlineFlag` pointing at an existing file, `reply(award)` → status `NO_REPLY`; file deleted → 200.
-- [ ] **Step 3: Run** `bash tools/dev.sh jvmtest` — expected: compile errors (`RaOutbox` unresolved), then failures.
-- [ ] **Step 4: Implement** `RaOutbox` (JSON through the existing `Json.kt`, written with `File.writeSafely`, `@Synchronized` methods, MD5 via `java.security.MessageDigest`, parameters decoded with `java.net.URLDecoder` and re-encoded with `URLEncoder` for `o` / `v` only); the `RaWorker` hook; `FakeRaServer.offlineFlag`; in `MainActivity`: `RaOutbox(File(filesDir, "ra-outbox.json"))` given to `RaService.worker`, `offlineFlag = File(filesDir, "ra-fake-offline")` when the pretend server is on, a resend after the worker starts, `outbox.clear()` in `onRaSignOut`.
-- [ ] **Step 5: Run** `bash tools/dev.sh jvmtest` and `bash tools/dev.sh unit ra_` — all pass. `bash tools/dev.sh apk` — no warnings.
-- [ ] **Step 6: Commit** — `feat: RetroAchievements unlocks made offline are kept and sent later`.
+- [x] **Step 3: Run** `bash tools/dev.sh jvmtest` — expected: compile errors (`RaOutbox` unresolved), then failures.
+- [x] **Step 4: Implement** `RaOutbox` (JSON through the existing `Json.kt`, written with `File.writeSafely`, `@Synchronized` methods, MD5 via `java.security.MessageDigest`, parameters decoded with `java.net.URLDecoder` and re-encoded with `URLEncoder` for `o` / `v` only); the `RaWorker` hook; `FakeRaServer.offlineFlag`; in `MainActivity`: `RaOutbox(File(filesDir, "ra-outbox.json"))` given to `RaService.worker`, `offlineFlag = File(filesDir, "ra-fake-offline")` when the pretend server is on, a resend after the worker starts, `outbox.clear()` in `onRaSignOut`.
+- [x] **Step 5: Run** `bash tools/dev.sh jvmtest` and `bash tools/dev.sh unit ra_` — all pass. `bash tools/dev.sh apk` — no warnings.
+- [x] **Step 6: Commit** — `feat: RetroAchievements unlocks made offline are kept and sent later`.
 
 ### Task 3: Licences and the privacy policy in the app
 
@@ -90,15 +90,15 @@
 **Interfaces:**
 - Produces: `data class Licence(val part: String, val licence: String, val asset: String, val groups: List<String>)` (`groups`: the Maven group prefixes it covers, e.g. `listOf("androidx.")`; empty for DreamBoy and rcheevos); `object Licences { val SHIPPED: List<Licence> }` — DreamBoy itself (GPL-3.0-or-later, `licences/gpl-3.0.txt`), rcheevos 12.5.0 (MIT, `licences/rcheevos-mit.txt`), Kotlin standard library and kotlinx coroutines (Apache-2.0), AndroidX core / activity / lifecycle and Jetpack Compose UI / foundation / Material 3 / Material icons (Apache-2.0, `licences/apache-2.0.txt`). `const val PRIVACY_ASSET = "privacy.md"`.
 
-- [ ] **Step 1: Write the failing tests** in `LicencesTest`:
+- [x] **Step 1: Write the failing tests** in `LicencesTest`:
   - `everyShippedLibraryIsListed`: every `implementation("group:…")` line in `../app/build.gradle.kts` (the JVM tests run in `app/`) has its group covered by a `Licences.SHIPPED` entry (a list of group prefixes on each `Licence`, e.g. `androidx.`, `org.jetbrains.kotlin`), so a new dependency without a listed licence fails the build.
   - `everyLicenceTextIsInTheApp`: each `asset` exists under `src/main/assets/` or is one the copy task makes (`gpl-3.0.txt`, `rcheevos-mit.txt`).
   - `thePrivacyPolicyHasNoPlaceholders`: `../PRIVACY.md` contains none of `TODO`, `TBD`, `[`, `example.com`, and names `retroachievements.org`, `thumbnails.libretro.com`, `raw.githubusercontent.com`, `api.github.com` and `https://github.com/tengencode/DreamBoy/issues`.
-- [ ] **Step 2: Run** `bash tools/dev.sh jvmtest` — expected: compile errors, then failures.
-- [ ] **Step 3: Write `PRIVACY.md`** with exactly the content the spec lists in §3.5 (no analytics/ads/tracking/server of our own; RetroAchievements only when signed in — what is sent, token kept on the phone, never the password, not in backups; box art and cheat lists from the three hosts, which see the IP address; how long data is kept; where the servers are — only what each service states, "not known" otherwise; the user's rights; contact = the repo's issues page). Plain words, dated, no placeholders.
-- [ ] **Step 4: Add the Apache-2.0 text** — the standard text taken from the Android SDK's `build-tools/36.0.0/NOTICE.txt` (from "Apache License" / "Version 2.0, January 2004" to "END OF TERMS AND CONDITIONS"); no download. Then `Licences.kt` and the copy task.
-- [ ] **Step 5: Run** `bash tools/dev.sh jvmtest` — passes; `bash tools/dev.sh apk` and `unzip -l app/build/outputs/apk/debug/app-debug.apk | grep -E "assets/(licences|privacy)"` lists all four files.
-- [ ] **Step 6: Commit** — `feat: licences and the privacy policy travel with the app`.
+- [x] **Step 2: Run** `bash tools/dev.sh jvmtest` — expected: compile errors, then failures.
+- [x] **Step 3: Write `PRIVACY.md`** with exactly the content the spec lists in §3.5 (no analytics/ads/tracking/server of our own; RetroAchievements only when signed in — what is sent, token kept on the phone, never the password, not in backups; box art and cheat lists from the three hosts, which see the IP address; how long data is kept; where the servers are — only what each service states, "not known" otherwise; the user's rights; contact = the repo's issues page). Plain words, dated, no placeholders.
+- [x] **Step 4: Add the Apache-2.0 text** — the standard text taken from the Android SDK's `build-tools/36.0.0/NOTICE.txt` (from "Apache License" / "Version 2.0, January 2004" to "END OF TERMS AND CONDITIONS"); no download. Then `Licences.kt` and the copy task.
+- [x] **Step 5: Run** `bash tools/dev.sh jvmtest` — passes; `bash tools/dev.sh apk` and `unzip -l app/build/outputs/apk/debug/app-debug.apk | grep -E "assets/(licences|privacy)"` lists all four files.
+- [x] **Step 6: Commit** — `feat: licences and the privacy policy travel with the app`.
 
 ### Task 4: The About page (impeccable)
 
@@ -126,11 +126,11 @@
 **Interfaces:**
 - Produces: `python tools/public_scan.py [--history]` — exit 0 and "clean" when no banned word is found in `git ls-files` contents (and, with `--history`, in `git log -p --all` and commit messages); exit 1 with `file:line: word` lines otherwise. Banned words: each game's name and file name from `tests/games/games.local.txt` and `tests/bench/scenes.local.txt` (the user's games), any `C:\Users\<name>` / `/c/Users/<name>` path, and each line of the gitignored `tests/public_scan.local.txt` (extra words: the user adds anything personal). Case-insensitive; `third_party/` skipped (CLAUDE.md).
 
-- [ ] **Step 1: Write the failing tests** (`unittest`, a temp git repo): `test_finds_a_local_game_name_in_a_tracked_file`, `test_finds_a_users_folder_path`, `test_skips_third_party`, `test_history_finds_a_word_in_an_old_commit`, `test_clean_repo_says_clean`.
-- [ ] **Step 2: Run** `python tools/test_public_scan.py` — expected: fails (no module).
-- [ ] **Step 3: Implement** `tools/public_scan.py` (standard library only) and the CTest entry.
-- [ ] **Step 4: Run** `python tools/test_public_scan.py` — passes; `bash tools/dev.sh test` — CTest 123/123; `python tools/public_scan.py --history` on this repo — "clean" (fix anything it finds first).
-- [ ] **Step 5: Commit** — `test: a scanner keeps the public repo free of personal details`.
+- [x] **Step 1: Write the failing tests** (`unittest`, a temp git repo): `test_finds_a_local_game_name_in_a_tracked_file`, `test_finds_a_users_folder_path`, `test_skips_third_party`, `test_history_finds_a_word_in_an_old_commit`, `test_clean_repo_says_clean`.
+- [x] **Step 2: Run** `python tools/test_public_scan.py` — expected: fails (no module).
+- [x] **Step 3: Implement** `tools/public_scan.py` (standard library only) and the CTest entry.
+- [x] **Step 4: Run** `python tools/test_public_scan.py` — passes; `bash tools/dev.sh test` — CTest 123/123; `python tools/public_scan.py --history` on this repo — "clean" (fix anything it finds first).
+- [x] **Step 5: Commit** — `test: a scanner keeps the public repo free of personal details`.
 
 ### Task 6: The GitHub page: README, screenshots, social preview
 
@@ -149,9 +149,9 @@
 **Files:**
 - Create: `docs/RELEASE.md`
 
-- [ ] **Step 1: Write `docs/RELEASE.md`:** (1) the user's one-time signing key (`keytool -genkeypair -v -keystore dreamboy-release.jks -keyalg RSA -keysize 4096 -validity 10000 -alias dreamboy`, then `keystore.properties`; keep both safe); (2) moving their data from the old app (backup → restore → sign in again); (3) each release: raise `versionCode`/`versionName`, `bash tools/dev.sh apk-release`, check with `aapt2 dump badging` (no `application-debuggable`, `package: name='com.tengen.dreamboy'`), rename to `DreamBoy-<version>.apk`, tag `v<version>`, `gh release create v<version> DreamBoy-<version>.apk --title "DreamBoy <version>" --notes-file …`; (4) the repo's description and topics with the exact `gh repo edit tengencode/DreamBoy --description "…" --add-topic …` commands and uploading `docs/images/social-preview.png` in Settings → Social preview; (5) drafts for r/EmulationOnAndroid, a "Show HN", the Emulation General wiki entry and an awesome-list pull request — each says it's GBA-only for now and built with Claude's help; (6) later: Google developer verification before the 2027 rollout, RetroAchievements approval after 6 months public (then `Settings.hardcore = true` + `SettingsTest`).
-- [ ] **Step 2: Check** — `python tools/public_scan.py` clean; the commands match `tools/dev.sh` and the Global Constraints.
-- [ ] **Step 3: Commit** — `docs: the launch checklist and post drafts`.
+- [x] **Step 1: Write `docs/RELEASE.md`:** (1) the user's one-time signing key (`keytool -genkeypair -v -keystore dreamboy-release.jks -keyalg RSA -keysize 4096 -validity 10000 -alias dreamboy`, then `keystore.properties`; keep both safe); (2) moving their data from the old app (backup → restore → sign in again); (3) each release: raise `versionCode`/`versionName`, `bash tools/dev.sh apk-release`, check with `aapt2 dump badging` (no `application-debuggable`, `package: name='com.tengen.dreamboy'`), rename to `DreamBoy-<version>.apk`, tag `v<version>`, `gh release create v<version> DreamBoy-<version>.apk --title "DreamBoy <version>" --notes-file …`; (4) the repo's description and topics with the exact `gh repo edit tengencode/DreamBoy --description "…" --add-topic …` commands and uploading `docs/images/social-preview.png` in Settings → Social preview; (5) drafts for r/EmulationOnAndroid, a "Show HN", the Emulation General wiki entry and an awesome-list pull request — each says it's GBA-only for now and built with Claude's help; (6) later: Google developer verification before the 2027 rollout, RetroAchievements approval after 6 months public (then `Settings.hardcore = true` + `SettingsTest`).
+- [x] **Step 2: Check** — `python tools/public_scan.py` clean; the commands match `tools/dev.sh` and the Global Constraints.
+- [x] **Step 3: Commit** — `docs: the launch checklist and post drafts`.
 
 ### Task 8: Claude's emulator check and the finish review
 
