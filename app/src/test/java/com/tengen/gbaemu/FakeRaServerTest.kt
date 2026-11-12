@@ -9,6 +9,19 @@ class FakeRaServerTest {
     private fun text(r: Net.Reply) = String(r.body!!)
 
     @Test
+    fun offlineAnswersNoReply() {
+        val flag = java.io.File.createTempFile("ra-fake-offline", "")
+        try {
+            FakeRaServer.offlineFlag = flag
+            assertEquals(Net.NO_REPLY, ask("r=awardachievement&u=Tester&t=TOKEN&a=1&h=0").status)
+            flag.delete()
+            assertEquals(200, ask("r=awardachievement&u=Tester&t=TOKEN&a=1&h=0").status)
+        } finally {
+            FakeRaServer.offlineFlag = null
+        }
+    }
+
+    @Test
     fun itKnowsTesterAndAnExpiredToken() {
         val ok = ask("r=login2&u=Tester&p=secret")
         assertEquals(200, ok.status)

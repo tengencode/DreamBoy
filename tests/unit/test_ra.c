@@ -4,6 +4,7 @@
 
 #include "ra.h"
 #include "ra_fake.h"
+#include "rc_api_runtime.h"
 #include "rc_error.h"
 #include "test.h"
 
@@ -25,6 +26,32 @@ TEST(ra_md5_is_rcheevos_gba_hash) {
     CHECK(strcmp(hex, "d41d8cd98f00b204e9800998ecf8427e") == 0);
     ra_md5_hex((const uint8_t *)"abc", 3, hex);
     CHECK(strcmp(hex, "900150983cd24fb0d6963f7d28e17f72") == 0);
+}
+
+/* The app's outbox (RaOutbox.kt) re-signs unlocks and scores sent late; these are rcheevos' own signatures it must match. */
+TEST(ra_award_and_score_signatures_for_the_outbox) {
+    rc_api_request_t req;
+    rc_api_award_achievement_request_t award = {0};
+    award.username = "Tester";
+    award.api_token = "TOKEN";
+    award.achievement_id = 1001;
+    award.seconds_since_unlock = 90;
+    CHECK_EQ(rc_api_init_award_achievement_request(&req, &award), RC_OK);
+    CHECK(strstr(req.post_data, "v=e47388663084231e1df43ac2611c6687") != NULL);
+    rc_api_destroy_request(&req);
+    award.seconds_since_unlock = 0;
+    CHECK_EQ(rc_api_init_award_achievement_request(&req, &award), RC_OK);
+    CHECK(strstr(req.post_data, "v=ba409acb0b83555ccca0863531b10f6d") != NULL);
+    rc_api_destroy_request(&req);
+    rc_api_submit_lboard_entry_request_t entry = {0};
+    entry.username = "Tester";
+    entry.api_token = "TOKEN";
+    entry.leaderboard_id = 2001;
+    entry.score = 1234;
+    entry.seconds_since_completion = 60;
+    CHECK_EQ(rc_api_init_submit_lboard_entry_request(&req, &entry), RC_OK);
+    CHECK(strstr(req.post_data, "v=725eb09a0efa54931ee41fa8fa759c5e") != NULL);
+    rc_api_destroy_request(&req);
 }
 
 TEST(ra_requests_wait_in_order_until_answered) {

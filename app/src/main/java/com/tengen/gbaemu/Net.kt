@@ -12,11 +12,12 @@ object Net {
     data object Missing : Result
     data object Failed : Result
 
-    const val USER_AGENT = "GBAEmulator/1.0 (Android)"
+    /** Set once at app start to `DreamBoy/<version> (Android)`. */
+    @Volatile var userAgent = "DreamBoy (Android)"
     private const val TIMEOUT = 15_000
 
     /** GET [url] (15 s to connect and to read, redirects followed); more than [max] bytes is a failure. */
-    fun get(url: String, max: Int): Result = send(url, null, null, USER_AGENT, max).let {
+    fun get(url: String, max: Int): Result = send(url, null, null, userAgent, max).let {
         when (it.status) {
             200 -> Got(it.body!!)
             404 -> Missing

@@ -52,18 +52,27 @@ class BackupScheduleTest {
     fun theNamesAreOursAndOnlyOurOldestBeyondFiveAreDeleted() {
         val name = BackupSchedule.fileName(1_759_600_000_000L)
         assertTrue(name, BackupSchedule.OURS.matches(name))
-        assertTrue(name.startsWith("GBA Emulator backup 20") && name.endsWith(".zip"))
-        val ours = (1..7).map { "GBA Emulator backup 2026-10-0$it 10-00.zip" }
-        val names = ours + listOf("GBA Emulator backup 2026-10-01 10-00 (1).zip", "holiday.jpg", "GBA Emulator backup notes.zip")
-        assertEquals(listOf("GBA Emulator backup 2026-10-02 10-00.zip", "GBA Emulator backup 2026-10-01 10-00.zip",
-            "GBA Emulator backup 2026-10-01 10-00 (1).zip").sorted(), BackupSchedule.toDelete(names.shuffled()).sorted())
+        assertTrue(name.startsWith("DreamBoy backup 20") && name.endsWith(".zip"))
+        val ours = (1..7).map { "DreamBoy backup 2026-10-0$it 10-00.zip" }
+        val names = ours + listOf("DreamBoy backup 2026-10-01 10-00 (1).zip", "holiday.jpg", "DreamBoy backup notes.zip")
+        assertEquals(listOf("DreamBoy backup 2026-10-02 10-00.zip", "DreamBoy backup 2026-10-01 10-00.zip",
+            "DreamBoy backup 2026-10-01 10-00 (1).zip").sorted(), BackupSchedule.toDelete(names.shuffled()).sorted())
     }
     @Test
     fun ofBackupsMadeInTheSameMinuteTheLaterNumbersAreTheNewer() {
         // Android names a second file of the same name "… (1).zip", then "(2)", … (found in Claude's check: a text sort
         // put "(1)" before the plain name, so the newer one was deleted)
-        val minute = "GBA Emulator backup 2026-10-04 20-44"
+        val minute = "DreamBoy backup 2026-10-04 20-44"
         val names = listOf("$minute.zip") + (1..10).map { "$minute ($it).zip" }
         assertEquals(listOf("$minute.zip") + (1..5).map { "$minute ($it).zip" }, BackupSchedule.toDelete(names.shuffled()).sortedBy { names.indexOf(it) })
+    }
+
+    @Test
+    fun oldAppBackupsAreNeverCleanedUp() {
+        // Backups made before the app was named DreamBoy may share the automatic-backup folder; they're the user's own.
+        val ours = (1..7).map { "DreamBoy backup 2026-11-0$it 10-00.zip" }
+        val old = (1..3).map { "GBA Emulator backup 2026-10-0$it 10-00.zip" }
+        assertEquals(listOf("DreamBoy backup 2026-11-01 10-00.zip", "DreamBoy backup 2026-11-02 10-00.zip"),
+            BackupSchedule.toDelete((ours + old).shuffled()).sorted())
     }
 }

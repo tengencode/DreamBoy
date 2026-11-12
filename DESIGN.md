@@ -1,5 +1,5 @@
 ---
-name: GBA Emulator
+name: DreamBoy
 description: A Game Boy Advance emulator for Android whose screens are moulded cartridge plastic and whose games are a Game Pak collection.
 colors:
   accent-indigo: "#4B3FB8"
@@ -257,7 +257,7 @@ components:
     height: "6px"
 ---
 
-# Design System: GBA Emulator
+# Design System: DreamBoy
 
 ## Overview
 
@@ -324,11 +324,12 @@ A committed plastic palette: neutral greys own every surface, black label bands 
 - **Title small** (900 italic, 15sp): names on grid carts' bands (two lines); achievement and leaderboard names on the pop-up cart and in the Achievements and Leaderboards lists; ranks in a score table (tabular); Continue uses it at 17sp.
 - **Body** (Roboto 400, 16sp; 500 for row titles and menu rows): settings rows, menu rows, explanations, names and scores in a score table (the user's name bold).
 - **Body small** (Roboto 400, 12sp): summaries, help notes under a setting, times on carts and stickers, the line under a board's name on its pop-up card (tabular).
+- **Document heading** (Roboto 700, upright; 18sp for a section, 16sp for a part of one): headings inside a document shown in the app, such as the privacy policy; more space above than below.
 - **Label** (Roboto 700, 14sp): Material button labels.
 - **Tag** (Roboto Condensed 700, 13sp, 0.2sp): short tags in sentence case: "Empty" on a save slot, the label above a choice row in the pause menu, key-table column heads, the speed pill, the achievement progress count and the leaderboard counters over the game, the "pts" under points and the "rank" under a rank stamp, an achievement's progress in the list, the gap in a score table ("Ranks 11 to 14").
 
 ### Named Rules
-**The Label Lettering Rule.** Roboto Black Italic is for names and numbers that would be printed on a cartridge: screen titles, game names on bands, slot numbers, achievement and leaderboard names, points and ranks, the Continue and Resume labels. Running text, settings and messages (a server problem, a score that couldn't be sent, a note) stay in upright Roboto; so do players' names and scores in a score table.
+**The Label Lettering Rule.** Roboto Black Italic is for names and numbers that would be printed on a cartridge: screen titles, game names on bands, slot numbers, achievement and leaderboard names, points and ranks, the Continue and Resume labels. Running text, settings and messages (a server problem, a score that couldn't be sent, a note) stay in upright Roboto; so do players' names and scores in a score table, and a document's headings (the privacy policy's).
 
 **The Tabular Times Rule.** Times, dates, counts, scores, ranks and slot numbers use tabular figures (tnum) so they line up and a running counter doesn't jitter; times on carts and scores in a table sit right-aligned or in the grip strip.
 
@@ -409,6 +410,9 @@ A page of the pause panel like Achievements: the header "Leaderboards" with the 
 
 ### Hardcore Restart Dialog
 Switching Hardcore on during a game with achievements asks "Restart the game?" in a standard dialog on the cart colour, explaining that hardcore starts from the title screen and unsaved progress is lost. Restart is a label-red text button; Cancel is a text button in the accent (it can be pressed).
+
+### About and Document Pages
+Settings → About DreamBoy (its own group at the end of Settings, info icon, "Version 1.0.0" as the summary): a settings group with the version in tabular body small soft ink, what the app is in body, and the licence line in body small soft ink — no label band (the header names the app); then a group of nav rows: GitHub page (the code icon; its trailing icon is open-in-new, not the chevron, because it leaves the app), Open-source licences, Privacy policy. Licences is a group of text-only nav rows (part, licence as the summary); a licence's page has the header "Licence" with the part as its subtitle and the text, paragraphs reflowed, in a group. The privacy policy is a document page: document headings, body paragraphs, soft-ink bullets with bold runs, the dated note in body small soft ink, web addresses as underlined accent links that open the browser. These reading pages are centred and at most 600dp wide, so lines stay readable sideways.
 
 ### Save Sticker
 A filled slot is printed label stock with the picture, the date and time, and the slot number in 84sp label lettering in day ink. An empty slot is bare cart-high plastic with "Empty" as a tag and the number in the theme's ink. The quick slot shows "Q".

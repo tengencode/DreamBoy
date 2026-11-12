@@ -39,12 +39,12 @@ class BackupSchedule(private val file: File) {
         const val DAY = 24L * 60 * 60 * 1000
         const val KEEP = 5
 
-        /** The name of a backup made at [now]: `GBA Emulator backup 2026-10-04 14-02.zip`. */
+        /** The name of a backup made at [now]: `DreamBoy backup 2026-10-04 14-02.zip`. */
         fun fileName(now: Long): String =
-            "GBA Emulator backup " + SimpleDateFormat("yyyy-MM-dd HH-mm", Locale.US).format(Date(now)) + ".zip"
+            "DreamBoy backup " + SimpleDateFormat("yyyy-MM-dd HH-mm", Locale.US).format(Date(now)) + ".zip"
 
         /** The app's own backup names (Android adds " (1)", " (2)", … when a name of that minute is taken). */
-        val OURS = Regex("GBA Emulator backup (\\d{4}-\\d{2}-\\d{2} \\d{2}-\\d{2})( \\((\\d+)\\))?\\.zip")
+        val OURS = Regex("DreamBoy backup (\\d{4}-\\d{2}-\\d{2} \\d{2}-\\d{2})( \\((\\d+)\\))?\\.zip")
 
         /**
          * Of a folder's file names, the app's own beyond the newest [KEEP] (to delete); other files never. Newest = the

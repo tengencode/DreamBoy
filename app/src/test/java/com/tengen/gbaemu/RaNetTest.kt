@@ -23,7 +23,7 @@ class RaNetTest {
 
     @Test
     fun theUserAgentNamesTheAppAndrcheevos() {
-        assertEquals("GBAEmulator/1.0 (Android 16) rcheevos/12.5", RaNet.userAgent("16", "rcheevos/12.5"))
+        assertEquals("DreamBoy/1.0.0 (Android 16) rcheevos/12.5", RaNet.userAgent("1.0.0", "16", "rcheevos/12.5"))
     }
 
     @Test

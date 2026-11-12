@@ -132,15 +132,12 @@ fun FirstStartScreen(folderLost: Boolean, message: String?, onChooseFolder: () -
                      onSettings: () -> Unit) {
     Surface(modifier = Modifier.fillMaxSize()) { /* the theme's background and text colours */
         Box(Modifier.fillMaxSize().systemBarsPadding()) {
-            IconButton(onClick = onSettings, modifier = Modifier.align(Alignment.TopEnd).padding(4.dp)) {
-                Icon(Icons.Filled.Settings, contentDescription = "Settings")
-            }
             Column(
                 modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(24.dp),
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                Text("GBA Emulator", style = MaterialTheme.typography.headlineMedium)
+                Text("DreamBoy", style = MaterialTheme.typography.headlineMedium)
                 Spacer(Modifier.height(20.dp))
                 SlotBay(Modifier.widthIn(max = 420.dp)) {
                     EmptyCartOutline(if (folderLost) "Folder not found" else "No cartridge",
@@ -170,6 +167,10 @@ fun FirstStartScreen(folderLost: Boolean, message: String?, onChooseFolder: () -
                     Spacer(Modifier.height(16.dp))
                     Text(message, color = MaterialTheme.colorScheme.error, textAlign = TextAlign.Center)
                 }
+            }
+            // After the full-screen column, so it is drawn on top and gets the tap.
+            IconButton(onClick = onSettings, modifier = Modifier.align(Alignment.TopEnd).padding(4.dp)) {
+                Icon(Icons.Filled.Settings, contentDescription = "Settings")
             }
         }
     }

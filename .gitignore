@@ -41,3 +41,6 @@ gbaview-*.png
 
 # brainstorming mockups (visual companion)
 .superpowers/
+
+# Extra words the public-safe scanner looks for (tools/public_scan.py; personal, never committed)
+tests/public_scan.local.txt

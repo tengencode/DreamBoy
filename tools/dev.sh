@@ -84,7 +84,7 @@ join_scenes() { mkdir -p "$ROOT/build" && cat "$ROOT/tests/bench/scenes.txt" $( 
 # ---- Android ----
 JBR="${JBR:-/c/Program Files/Android/Android Studio/jbr}" # Android Studio's own Java, which runs Gradle (JBR=… to change)
 AVD="${GBA_AVD:-Pixel_9_API_36_1}" # the phone emulator (GBA_AVD=… to use another)
-APP_ID="com.tengen.gbaemu"
+APP_ID="com.tengen.dreamboy.debug"
 # MSYS_NO_PATHCONV: stop Git Bash rewriting phone paths such as /sdcard/... into Windows paths.
 adb() { MSYS_NO_PATHCONV=1 "$SDK/platform-tools/adb" "$@"; }
 gradle_run() {
@@ -188,7 +188,7 @@ case "$cmd" in
     jvmtest) gradle_run :app:testDebugUnitTest ;;
     emu) emu_up ;;
     install) emu_up && gradle_run :app:installDebug ;;
-    launch) emu_up && adb shell am start -a android.intent.action.MAIN -c android.intent.category.LAUNCHER -n "$APP_ID/.MainActivity" ;; # as the app icon does
+    launch) emu_up && adb shell am start -a android.intent.action.MAIN -c android.intent.category.LAUNCHER -n "$APP_ID/com.tengen.gbaemu.MainActivity" ;; # as the app icon does (the class keeps its old package)
     androidtest) emu_up && gradle_run :app:connectedDebugAndroidTest ;;
     push) emu_up && adb push "$(cygpath -w "$1")" /sdcard/Download/ ;; # adb is a Windows program: give it a Windows path
     phone-install)

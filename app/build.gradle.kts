@@ -18,11 +18,11 @@ android {
     ndkVersion = "27.2.12479018"
 
     defaultConfig {
-        applicationId = "com.tengen.gbaemu"
+        applicationId = "com.tengen.dreamboy"
         minSdk = 26
         targetSdk = 36
         versionCode = 1
-        versionName = "0.1"
+        versionName = "1.0.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         ndk { abiFilters += listOf("x86_64", "arm64-v8a") }
         // -PgbaForceGeneric=ON: the arm64 core with only the plain-C twins of its fast paths (tools/dev.sh GENERIC=1)
@@ -44,7 +44,17 @@ android {
             keyPassword = releaseKey.getProperty("keyPassword")
         }
     }
-    buildTypes { getByName("release") { signingConfig = signingConfigs.findByName("release") } }
+    buildTypes {
+        // Its own id, so a debug install never clashes with the release (signed with another key) on the same phone.
+        getByName("debug") {
+            applicationIdSuffix = ".debug"
+            manifestPlaceholders["appLabel"] = "DreamBoy debug"
+        }
+        getByName("release") {
+            manifestPlaceholders["appLabel"] = "DreamBoy"
+            signingConfig = signingConfigs.findByName("release")
+        }
+    }
 
     buildFeatures { compose = true }
 
@@ -56,7 +66,18 @@ android {
     // On-device tests read the local test ROMs + approved fingerprints from the test APK's assets
     // (copied from the gitignored tests/ folders at build time; never in the app APK or in git).
     sourceSets.getByName("androidTest").assets.srcDir(layout.buildDirectory.dir("generated/testRoms").get().asFile)
+    // The licence texts and the privacy policy kept at the repo root, copied into the app (16).
+    sourceSets.getByName("main").assets.srcDir(layout.buildDirectory.dir("generated/aboutAssets").get().asFile)
 }
+
+val copyAboutAssets by tasks.registering(Copy::class) {
+    from(rootProject.file("LICENSE")) { rename { "licences/gpl-3.0.txt" } }
+    from(rootProject.file("third_party/rcheevos/LICENSE")) { rename { "licences/rcheevos-mit.txt" } }
+    from(rootProject.file("PRIVACY.md")) { rename { "privacy.md" } }
+    into(layout.buildDirectory.dir("generated/aboutAssets"))
+}
+// Before everything in every build (also release lint, which reads the assets folders).
+tasks.named("preBuild") { dependsOn(copyAboutAssets) }
 
 kotlin {
     compilerOptions { jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17) }

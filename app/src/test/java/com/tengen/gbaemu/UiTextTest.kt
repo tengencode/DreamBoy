@@ -42,7 +42,8 @@ class UiTextTest {
         val FORBIDDEN = listOf("…", "...", "&", "▶", "⋮", "☀", "⏩", "⟲")
 
         /** The touch buttons draw these on themselves (their look is milestone 8b's). */
-        val ALLOWED = setOf("TouchLayout.kt" to "⏩", "TouchLayout.kt" to "⟲", "TouchControlsView.kt" to "⏩", "TouchControlsView.kt" to "⟲")
+        val ALLOWED = setOf("TouchLayout.kt" to "⏩", "TouchLayout.kt" to "⟲", "TouchControlsView.kt" to "⏩", "TouchControlsView.kt" to "⟲",
+            "RaOutbox.kt" to "&") // a web form's separator, never on screen
 
         // Written as codes: the reader is about these very characters.
         val NL = 10.toChar()

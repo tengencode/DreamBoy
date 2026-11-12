@@ -180,9 +180,13 @@ class MainActivity : ComponentActivity() {
         // RetroAchievements (14): the internet (or, in a debug build with files/ra-fake, the pretend server) and the saved sign-in.
         val debuggable = applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE != 0
         val fake = debuggable && File(filesDir, "ra-fake").exists()
-        val userAgent = RaNet.userAgent(android.os.Build.VERSION.RELEASE, NativeBridge.raUserAgentClause())
+        Net.userAgent = "DreamBoy/${appVersion()} (Android)"
+        val userAgent = RaNet.userAgent(appVersion(), android.os.Build.VERSION.RELEASE, NativeBridge.raUserAgentClause())
+        if (fake) FakeRaServer.offlineFlag = File(filesDir, "ra-fake-offline")
         RaService.worker.send = if (fake) FakeRaServer::reply else { r -> RaNet.send(r, userAgent) }
+        val outbox = RaService.worker.outbox ?: RaOutbox(File(filesDir, "ra-outbox.json")).also { RaService.worker.outbox = it }
         RaService.worker.start()
+        if (outbox.size > 0) thread(isDaemon = true, name = "ra-outbox") { outbox.resend(RaService.worker.send) } // from an earlier run
         badges = BadgeCache(File(filesDir, "ra/badges"),
             if (fake) FakeBadges::png else { url -> (Net.get(url, 512 * 1024) as? Net.Got)?.bytes })
         ra = Achievements(NativeRa, RaAccount(File(filesDir, "ra.json")))
@@ -394,7 +398,8 @@ class MainActivity : ComponentActivity() {
                         onAutoBackup = { on -> if (on) pickBackupFolder.launch(null) else stopAutoBackup() },
                         onChangeFolder = { pickBackupFolder.launch(null) },
                         ra = raUi, onRaSignIn = { u, p -> ra.signIn(u, p); watchSignIn() },
-                        onRaSignOut = { ra.signOut(); refreshRaUi(); hardcoreOn = false; raSet = false; raBoards = emptyList(); openBoard = null })
+                        onRaSignOut = { ra.signOut(); RaService.worker.outbox?.clear(); refreshRaUi(); hardcoreOn = false; raSet = false; raBoards = emptyList(); openBoard = null },
+                        version = appVersion(), onOpenGithub = ::openGithub)
                 }
                 editLayout?.let { side ->
                     LayoutEditor(side, layouts.of(side), editPicture, settings.touchLook,
@@ -1081,6 +1086,15 @@ class MainActivity : ComponentActivity() {
     /** The phone's name as the user set it, written into backups. */
     private fun phoneName(): String =
         android.provider.Settings.Global.getString(contentResolver, android.provider.Settings.Global.DEVICE_NAME) ?: android.os.Build.MODEL
+
+    /** Settings → About → GitHub page: the browser (16); nothing is fetched by the app. */
+    private fun openGithub() {
+        try {
+            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(GITHUB_URL)))
+        } catch (e: android.content.ActivityNotFoundException) {
+            toast("No browser to open $GITHUB_URL")
+        }
+    }
 
     private fun appVersion(): String = try {
         packageManager.getPackageInfo(packageName, 0).versionName ?: ""
