@@ -165,7 +165,7 @@
 
 - [x] **Step 1: Ask the user** to make the signing key and `keystore.properties` (`docs/RELEASE.md` §1), and to add any personal words to `tests/public_scan.local.txt`. Wait.
 - [x] **Step 2: Build and check** — `python tools/public_scan.py --history` clean; `bash tools/dev.sh apk-release`; `aapt2 dump badging` shows `com.tengen.dreamboy`, `1.0.0`, label DreamBoy, not debuggable; `apksigner verify --print-certs` shows the user's key; copy to `DreamBoy-1.0.0.apk` at the repo root (gitignored by `*.apk`; never committed).
-- [ ] **Step 3: The user's check** — they install `DreamBoy-1.0.0.apk` on their real phone the way users will (copy it over, open it from the files app), play a game, open About and the privacy policy, and, if they want, restore their own backup and sign in to RetroAchievements. Wait for their word; fix what they find (test-first), rebuild, repeat.
+- [x] **Step 3: The user's check** — they install `DreamBoy-1.0.0.apk` on their real phone the way users will (copy it over, open it from the files app), play a game, open About and the privacy policy, and, if they want, restore their own backup and sign in to RetroAchievements. Wait for their word; fix what they find (test-first), rebuild, repeat.
 
 ### Task 10: Publish and finish the milestone (STOP: each outward step on the user's OK)
 
