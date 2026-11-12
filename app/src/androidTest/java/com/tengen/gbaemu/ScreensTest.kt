@@ -11,6 +11,7 @@ import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.onAllNodesWithContentDescription
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -68,6 +69,46 @@ class ScreensTest {
         assertEquals(true, changed.smooth)
         compose.onNodeWithText("Whole steps").performClick()
         assertEquals(Settings.SIZE_NAMES.indexOf("Whole-number steps"), changed.size)
+    }
+
+    /** Settings at [start], following onPage like the app does; [opened] counts GitHub-page taps. */
+    private fun settingsAt(start: SettingsPage, onGithub: () -> Unit = {}) {
+        val page = mutableStateOf(start)
+        compose.setContent {
+            AppTheme {
+                SettingsScreen(page.value, Settings(), KeyBindings(MemoryStore()), 0, "Built-in",
+                    onPage = { page.value = it }, onBack = { page.value = page.value.up ?: SettingsPage.MAIN }, onChange = {},
+                    onPickKey = { _, _ -> }, onResetKeys = {}, onChooseBios = {}, onBuiltInBios = {},
+                    version = "1.0.0", onOpenGithub = onGithub)
+            }
+        }
+    }
+
+    @Test
+    fun aboutShowsTheNameVersionAndLinks() {
+        var github = 0
+        settingsAt(SettingsPage.MAIN) { github++ }
+        compose.onNodeWithText("About DreamBoy").performScrollTo().performClick()
+        compose.onNodeWithText("Version 1.0.0").assertIsDisplayed()
+        for (row in listOf("GitHub page", "Open-source licences", "Privacy policy")) compose.onNodeWithText(row).assertIsDisplayed()
+        compose.onNodeWithText("GitHub page").performClick()
+        assertEquals(1, github)
+    }
+
+    @Test
+    fun licencesListEveryPartAndOpenItsText() {
+        settingsAt(SettingsPage.LICENCES)
+        compose.onNodeWithText("Jetpack Compose", substring = true).assertExists()
+        compose.onNodeWithText("rcheevos", substring = true).performScrollTo().performClick()
+        compose.onNodeWithText("MIT License", substring = true).assertExists()
+    }
+
+    @Test
+    fun privacyPolicyIsShown() {
+        settingsAt(SettingsPage.PRIVACY)
+        compose.onAllNodesWithText("RetroAchievements", substring = true).fetchSemanticsNodes().let { assertEquals(true, it.isNotEmpty()) }
+        compose.onAllNodesWithText("## ", substring = true).assertCountEquals(0) // headings shown as headings, not markdown
+        compose.onAllNodesWithText("**", substring = true).assertCountEquals(0)
     }
 
     @Test
@@ -351,9 +392,13 @@ class ScreensTest {
     fun theFirstStartShowsAnEmptySlotAndItsButtons() {
         var chose = 0
         var opened = 0
+        var settings = 0
         compose.setContent {
-            AppTheme { FirstStartScreen(false, null, onChooseFolder = { chose++ }, onOpenGame = { opened++ }, onSettings = {}) }
+            AppTheme { FirstStartScreen(false, null, onChooseFolder = { chose++ }, onOpenGame = { opened++ }, onSettings = { settings++ }) }
         }
+        // The gear must be reachable before a folder is chosen (16: a new DreamBoy restores a backup from Settings).
+        compose.onNodeWithContentDescription("Settings").performClick()
+        assertEquals(1, settings)
         compose.onNodeWithText("No cartridge").assertIsDisplayed()
         compose.onNodeWithText("Choose games folder").performClick()
         compose.onNodeWithText("Open one game").performClick()

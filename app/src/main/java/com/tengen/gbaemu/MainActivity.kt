@@ -398,7 +398,8 @@ class MainActivity : ComponentActivity() {
                         onAutoBackup = { on -> if (on) pickBackupFolder.launch(null) else stopAutoBackup() },
                         onChangeFolder = { pickBackupFolder.launch(null) },
                         ra = raUi, onRaSignIn = { u, p -> ra.signIn(u, p); watchSignIn() },
-                        onRaSignOut = { ra.signOut(); RaService.worker.outbox?.clear(); refreshRaUi(); hardcoreOn = false; raSet = false; raBoards = emptyList(); openBoard = null })
+                        onRaSignOut = { ra.signOut(); RaService.worker.outbox?.clear(); refreshRaUi(); hardcoreOn = false; raSet = false; raBoards = emptyList(); openBoard = null },
+                        version = appVersion(), onOpenGithub = ::openGithub)
                 }
                 editLayout?.let { side ->
                     LayoutEditor(side, layouts.of(side), editPicture, settings.touchLook,
@@ -1085,6 +1086,15 @@ class MainActivity : ComponentActivity() {
     /** The phone's name as the user set it, written into backups. */
     private fun phoneName(): String =
         android.provider.Settings.Global.getString(contentResolver, android.provider.Settings.Global.DEVICE_NAME) ?: android.os.Build.MODEL
+
+    /** Settings → About → GitHub page: the browser (16); nothing is fetched by the app. */
+    private fun openGithub() {
+        try {
+            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(GITHUB_URL)))
+        } catch (e: android.content.ActivityNotFoundException) {
+            toast("No browser to open $GITHUB_URL")
+        }
+    }
 
     private fun appVersion(): String = try {
         packageManager.getPackageInfo(packageName, 0).versionName ?: ""

@@ -40,6 +40,7 @@ import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.FastForward
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.Image
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Memory
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.SportsEsports
@@ -64,8 +65,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -94,12 +97,15 @@ import androidx.compose.ui.unit.dp
 /** The Settings screen's pages: the sections, then one page each; the Skin page (8b) inside Touch buttons. */
 enum class SettingsPage(val title: String) {
     MAIN("Settings"), PICTURE("Picture"), SOUND("Sound"), SPEED("Fast-forward and rewind"), KEYS("Keyboard and controller"),
-    TOUCH("Touch buttons"), BIOS("BIOS"), SKIN("Skin"), BACKUP("Backup"), ACHIEVEMENTS("RetroAchievements");
+    TOUCH("Touch buttons"), BIOS("BIOS"), SKIN("Skin"), BACKUP("Backup"), ACHIEVEMENTS("RetroAchievements"),
+    ABOUT("About DreamBoy"), LICENCES("Open-source licences"), LICENCE("Licence"), PRIVACY("Privacy policy");
 
     /** Where Back goes: the section a page is in; from the main page out of Settings (null). */
     val up: SettingsPage? get() = when (this) {
         MAIN -> null
         SKIN -> TOUCH
+        LICENCES, PRIVACY -> ABOUT
+        LICENCE -> LICENCES
         else -> MAIN
     }
 }
@@ -149,13 +155,14 @@ fun SettingsScreen(page: SettingsPage, settings: Settings, keys: KeyBindings, ke
                    onRemoveSkin: (Int) -> Unit = {}, backup: BackupStatus = BackupStatus(), onBackUp: () -> Unit = {},
                    onRestore: () -> Unit = {}, onUndoRestore: () -> Unit = {}, onAutoBackup: (Boolean) -> Unit = {},
                    onChangeFolder: () -> Unit = {}, ra: RaUi = RaUi(), onRaSignIn: (String, String) -> Unit = { _, _ -> },
-                   onRaSignOut: () -> Unit = {}) {
+                   onRaSignOut: () -> Unit = {}, version: String = "", onOpenGithub: () -> Unit = {}) {
     val s = settings
+    var licence by rememberSaveable { mutableIntStateOf(0) } // the one Settings → About → licences shows
     val chosen = importedSkins.firstOrNull { it.number == s.skinImport } // an imported skin in use, or null
     val skinName = chosen?.name ?: Skins.at(s.skin).name
     Surface(Modifier.fillMaxSize()) {
         Column(Modifier.fillMaxSize().systemBarsPadding().imePadding()) { // the sign-in fields stay above the keyboard
-            ScreenHeader(page.title, onBack = onBack)
+            ScreenHeader(page.title, onBack = onBack, subtitle = if (page == SettingsPage.LICENCE) Licences.SHIPPED[licence].part else null)
             Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp)
                 .padding(bottom = 24.dp).widthIn(max = 640.dp)) {
                 when (page) {
@@ -178,6 +185,9 @@ fun SettingsScreen(page: SettingsPage, settings: Settings, keys: KeyBindings, ke
                         Group {
                             SwitchRow("Download box art", s.boxArt, { onChange(s.copy(boxArt = it)) },
                                 help = "Pictures of game boxes from libretro, for the game list. Uses the internet.")
+                        }
+                        Group {
+                            NavRow(Icons.Filled.Info, "About DreamBoy", "Version $version", last = true) { onPage(SettingsPage.ABOUT) }
                         }
                     }
                     SettingsPage.PICTURE -> Group {
@@ -269,6 +279,10 @@ fun SettingsScreen(page: SettingsPage, settings: Settings, keys: KeyBindings, ke
                         Help("A dump of your own GBA's BIOS (16 KB). Games then start with the Nintendo logo. Used the next time a game opens; save states made with the other BIOS can't be loaded.")
                     }
                     SettingsPage.ACHIEVEMENTS -> RaPage(ra, s, onChange, onRaSignIn, onRaSignOut)
+                    SettingsPage.ABOUT -> AboutPage(version, onOpenGithub, onPage)
+                    SettingsPage.LICENCES -> LicencesPage { licence = it; onPage(SettingsPage.LICENCE) }
+                    SettingsPage.LICENCE -> LicenceText(Licences.SHIPPED[licence])
+                    SettingsPage.PRIVACY -> PrivacyPage()
                 }
             }
         }

@@ -132,9 +132,6 @@ fun FirstStartScreen(folderLost: Boolean, message: String?, onChooseFolder: () -
                      onSettings: () -> Unit) {
     Surface(modifier = Modifier.fillMaxSize()) { /* the theme's background and text colours */
         Box(Modifier.fillMaxSize().systemBarsPadding()) {
-            IconButton(onClick = onSettings, modifier = Modifier.align(Alignment.TopEnd).padding(4.dp)) {
-                Icon(Icons.Filled.Settings, contentDescription = "Settings")
-            }
             Column(
                 modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(24.dp),
                 verticalArrangement = Arrangement.Center,
@@ -170,6 +167,10 @@ fun FirstStartScreen(folderLost: Boolean, message: String?, onChooseFolder: () -
                     Spacer(Modifier.height(16.dp))
                     Text(message, color = MaterialTheme.colorScheme.error, textAlign = TextAlign.Center)
                 }
+            }
+            // After the full-screen column, so it is drawn on top and gets the tap.
+            IconButton(onClick = onSettings, modifier = Modifier.align(Alignment.TopEnd).padding(4.dp)) {
+                Icon(Icons.Filled.Settings, contentDescription = "Settings")
             }
         }
     }
