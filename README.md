@@ -1,4 +1,4 @@
-# GBA Emulator for Android
+# DreamBoy
 
 A Game Boy Advance emulator for Android phones. The emulator core is C with hand-written ARM64 assembly and NEON, so it
 runs well on cheap and old phones; the app around it is Kotlin and Jetpack Compose.

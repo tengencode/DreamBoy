@@ -180,7 +180,8 @@ class MainActivity : ComponentActivity() {
         // RetroAchievements (14): the internet (or, in a debug build with files/ra-fake, the pretend server) and the saved sign-in.
         val debuggable = applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE != 0
         val fake = debuggable && File(filesDir, "ra-fake").exists()
-        val userAgent = RaNet.userAgent(android.os.Build.VERSION.RELEASE, NativeBridge.raUserAgentClause())
+        Net.userAgent = "DreamBoy/${appVersion()} (Android)"
+        val userAgent = RaNet.userAgent(appVersion(), android.os.Build.VERSION.RELEASE, NativeBridge.raUserAgentClause())
         RaService.worker.send = if (fake) FakeRaServer::reply else { r -> RaNet.send(r, userAgent) }
         RaService.worker.start()
         badges = BadgeCache(File(filesDir, "ra/badges"),

@@ -21,7 +21,8 @@ object RaNet {
     const val MAX_REPLY = 4 shl 20
 
     /** The app as RetroAchievements sees it: it recognises approved emulators by this name and version. */
-    fun userAgent(androidRelease: String, rcheevosClause: String) = "GBAEmulator/1.0 (Android $androidRelease) $rcheevosClause"
+    fun userAgent(version: String, androidRelease: String, rcheevosClause: String) =
+        "DreamBoy/$version (Android $androidRelease) $rcheevosClause"
 
     fun send(r: RaRequest, userAgent: String): Net.Reply =
         Net.send(r.url, r.post?.toByteArray(Charsets.UTF_8), r.contentType, userAgent, MAX_REPLY)

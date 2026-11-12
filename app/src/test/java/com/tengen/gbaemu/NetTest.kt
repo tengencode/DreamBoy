@@ -58,7 +58,7 @@ class NetTest {
             val got = Net.get("${s.url}/ok", 100)
             assertTrue(got is Net.Got)
             assertEquals("hello", String((got as Net.Got).bytes))
-            assertTrue(s.lastRequest, "User-Agent: ${Net.USER_AGENT}" in s.lastRequest)
+            assertTrue(s.lastRequest, "User-Agent: ${Net.userAgent}" in s.lastRequest)
             assertEquals(Net.Missing, Net.get("${s.url}/gone", 100))
         }
     }
@@ -83,12 +83,12 @@ class NetTest {
     fun sendPostsTheFormAndGivesStatusAndBody() {
         Server(mapOf("/dorequest.php" to (401 to "{\"Success\":false}".toByteArray()))).use { s ->
             val r = Net.send("${s.url}/dorequest.php", "r=login2&u=Tester".toByteArray(), "application/x-www-form-urlencoded",
-                "GBAEmulator/1.0 (Android 16) rcheevos/12.5", 1000)
+                "DreamBoy/1.0.0 (Android 16) rcheevos/12.5", 1000)
             assertEquals(401, r.status)
             assertEquals("{\"Success\":false}", String(r.body!!))
             assertEquals("r=login2&u=Tester", s.lastBody)
             assertTrue(s.lastRequest, "POST /dorequest.php" in s.lastRequest)
-            assertTrue(s.lastRequest, "User-Agent: GBAEmulator/1.0 (Android 16) rcheevos/12.5" in s.lastRequest)
+            assertTrue(s.lastRequest, "User-Agent: DreamBoy/1.0.0 (Android 16) rcheevos/12.5" in s.lastRequest)
             assertTrue(s.lastRequest, "Content-Type: application/x-www-form-urlencoded" in s.lastRequest)
         }
     }

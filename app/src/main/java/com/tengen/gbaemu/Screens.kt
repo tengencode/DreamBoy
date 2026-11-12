@@ -140,7 +140,7 @@ fun FirstStartScreen(folderLost: Boolean, message: String?, onChooseFolder: () -
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                Text("GBA Emulator", style = MaterialTheme.typography.headlineMedium)
+                Text("DreamBoy", style = MaterialTheme.typography.headlineMedium)
                 Spacer(Modifier.height(20.dp))
                 SlotBay(Modifier.widthIn(max = 420.dp)) {
                     EmptyCartOutline(if (folderLost) "Folder not found" else "No cartridge",

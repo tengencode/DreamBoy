@@ -8,7 +8,7 @@
 
     <!-- Android's own backup off (11): the app's data leaves the phone only in the user's own backups. -->
     <application
-        android:label="GBA Emulator"
+        android:label="${appLabel}"
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:allowBackup="false"

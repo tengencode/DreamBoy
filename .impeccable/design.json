@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "generatedAt": "2026-10-06T12:00:00Z",
-  "title": "Design System: GBA Emulator",
+  "title": "Design System: DreamBoy",
   "extensions": {
     "colorMeta": {
       "accent-indigo": { "role": "primary", "displayName": "See-through Indigo", "canonical": "#4B3FB8", "tonalRamp": ["#120F2E", "#221C57", "#332A80", "#4B3FB8", "#6C62CB", "#928BD7", "#B9B4E6", "#E0DEF5"] },

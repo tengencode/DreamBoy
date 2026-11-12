@@ -1,4 +1,4 @@
-# GBA Emulator for Android — Working Rules
+# DreamBoy (GBA emulator for Android) — Working Rules
 
 ## Always
 - **Use layman mode** (`/layman`) for every reply: plain words, short answers. Code, commands and exact values stay exact.

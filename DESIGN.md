@@ -1,5 +1,5 @@
 ---
-name: GBA Emulator
+name: DreamBoy
 description: A Game Boy Advance emulator for Android whose screens are moulded cartridge plastic and whose games are a Game Pak collection.
 colors:
   accent-indigo: "#4B3FB8"
@@ -257,7 +257,7 @@ components:
     height: "6px"
 ---
 
-# Design System: GBA Emulator
+# Design System: DreamBoy
 
 ## Overview
 
