@@ -1,7 +1,7 @@
 # Milestone 16 — Release prep: DreamBoy 1.0 on GitHub — Design
 
 **Date:** 2026-11-12
-**Status:** Draft — brainstormed with the user 2026-10-26 to 2026-11-12, checked by a fresh reviewer (builder check) and the user's answers added 2026-11-12; waiting for the user's approval of this document.
+**Status:** Approved by the user 2026-11-12 ("Approve, write plan") — brainstormed 2026-10-26 to 2026-11-12, checked by a fresh reviewer (builder check), the user's answers added. Plan: `docs/superpowers/plans/2026-11-12-milestone-16-release-prep.md`.
 **Parent spec:** `docs/superpowers/specs/2026-09-24-gba-emulator-design.md` (§10 milestones)
 **Previous work:** milestone 15 (tag `milestone-15`, private archive); the whole-repo audit and its fixes (`docs/reviews/2026-10-23-ponytail-audit.md`, all done 2026-10-25).
 
