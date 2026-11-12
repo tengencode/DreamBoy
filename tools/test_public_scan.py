@@ -59,6 +59,13 @@ class Scan(unittest.TestCase):
         self.commit("third_party/lib/x.c", "/* Secret Quest support */\n")
         self.assertEqual(ps.scan(self.root), [])
 
+    def test_history_reads_every_commit_message_after_a_third_party_diff(self):
+        (self.root / "b.txt").write_text("b\n")
+        self.git("add", "b.txt")
+        self.git("commit", "-q", "-m", "about Secret Quest")  # only the message holds the word
+        self.commit("third_party/x.c", "x\n")  # newer, so git log prints its third_party diff just before that message
+        self.assertTrue(ps.scan(self.root, history=True))
+
     def test_history_finds_a_word_in_an_old_commit(self):
         self.commit("old.md", "secret quest\n")
         self.git("rm", "-q", "old.md")

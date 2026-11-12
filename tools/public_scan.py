@@ -70,6 +70,7 @@ def scan(root, history=False):
         for line in log.splitlines():
             if line.startswith("commit "):
                 commit = line[7:15]
+                current = ""  # a new commit's message belongs to no file
             if line.startswith("diff --git "):
                 current = line.split(" b/", 1)[-1]
             if current.startswith("third_party/") and not line.startswith("commit "):

@@ -188,7 +188,7 @@ case "$cmd" in
     jvmtest) gradle_run :app:testDebugUnitTest ;;
     emu) emu_up ;;
     install) emu_up && gradle_run :app:installDebug ;;
-    launch) emu_up && adb shell am start -a android.intent.action.MAIN -c android.intent.category.LAUNCHER -n "$APP_ID/.MainActivity" ;; # as the app icon does
+    launch) emu_up && adb shell am start -a android.intent.action.MAIN -c android.intent.category.LAUNCHER -n "$APP_ID/com.tengen.gbaemu.MainActivity" ;; # as the app icon does (the class keeps its old package)
     androidtest) emu_up && gradle_run :app:connectedDebugAndroidTest ;;
     push) emu_up && adb push "$(cygpath -w "$1")" /sdcard/Download/ ;; # adb is a Windows program: give it a Windows path
     phone-install)

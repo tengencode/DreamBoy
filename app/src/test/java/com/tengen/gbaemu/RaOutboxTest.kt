@@ -86,6 +86,36 @@ class RaOutboxTest {
     }
 
     @Test
+    fun aBusyOrDownServerKeepsIt() {
+        // rcheevos retries these too (rc_client_should_retry): maintenance, a full pool, Cloudflare, too many at once.
+        for (status in listOf(429, 502, 503, 504, 521, 522, 523, 524, 525)) {
+            val one = RaOutbox(File(file.parentFile, "busy-$status.json")) { clock }
+            one.sent(award(), status) // rcheevos retries it, but only while the app runs
+            assertEquals("kept after $status", 1, one.size)
+        }
+        val b = box()
+        b.sent(award(), Net.NO_REPLY)
+        b.sent(award(o = 2), 503) // rcheevos' own retry hit maintenance
+        assertEquals(1, b.size)
+        assertEquals(0, b.resend(Sender(503)::send))
+        assertEquals(1, b.size)
+        assertEquals(1, b.resend(Sender(200)::send))
+        assertEquals(0, b.size)
+    }
+
+    @Test
+    fun aResendStopsAtTheFirstUnansweredOne() {
+        val b = box()
+        b.sent(award(1), Net.NO_REPLY)
+        b.sent(award(2), Net.NO_REPLY)
+        b.sent(award(3), Net.NO_REPLY)
+        val s = Sender(Net.NO_REPLY)
+        b.resend(s::send)
+        assertEquals(1, s.sent.size) // the connection is gone: don't wait out a timeout for each
+        assertEquals(3, b.size)
+    }
+
+    @Test
     fun repeatedFailuresAreKeptOnce() {
         val b = box()
         b.sent(award(), Net.NO_REPLY)

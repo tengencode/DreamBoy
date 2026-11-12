@@ -18,12 +18,12 @@ class RaOutbox(private val file: File, private val now: () -> Long = System::cur
 
     val size: Int @Synchronized get() = entries.size
 
-    /** After each of rcheevos' requests: an unlock or a score with no answer is kept; any answer forgets it. */
+    /** After each of rcheevos' requests: an unlock or a score not taken yet ([retryable]) is kept; any other answer forgets it. */
     @Synchronized
     fun sent(r: RaRequest, status: Int) {
         val post = r.post ?: return
         val k = key(post) ?: return
-        if (status == Net.NO_REPLY) {
+        if (retryable(status)) {
             if (entries.any { key(it.post) == k }) return
             val offset = RaNet.params(post)["o"]?.toLongOrNull() ?: 0
             entries += Entry(r.url, post, r.contentType, now() - offset * 1000)
@@ -34,8 +34,9 @@ class RaOutbox(private val file: File, private val now: () -> Long = System::cur
     }
 
     /**
-     * Sends what is kept, each with its time since the unlock brought up to date; any answer (also a refusal) forgets
-     * one. Slow: not on the UI thread. How many the server took.
+     * Sends what is kept, each with its time since the unlock brought up to date; an answer (also a refusal) forgets
+     * one. Stops at the first one not taken ([retryable]): the connection or the server is down, so the rest would only
+     * wait out their timeouts. Slow: not on the UI thread. How many the server took.
      */
     fun resend(send: (RaRequest) -> Net.Reply): Int {
         if (!resending.compareAndSet(false, true)) return 0
@@ -43,7 +44,7 @@ class RaOutbox(private val file: File, private val now: () -> Long = System::cur
             var took = 0
             for (e in synchronized(this) { entries.toList() }) {
                 val status = try { send(RaRequest(0, e.url, resigned(e), e.contentType)).status } catch (x: Exception) { Net.NO_REPLY }
-                if (status == Net.NO_REPLY) continue
+                if (retryable(status)) break
                 if (status in 200..299) took++
                 synchronized(this) { if (entries.remove(e)) save() }
             }
@@ -109,6 +110,9 @@ class RaOutbox(private val file: File, private val now: () -> Long = System::cur
     companion object {
         private const val AWARD = "awardachievement"
         private const val SCORE = "submitlbentry"
+
+        /** No answer, or one rcheevos retries too (rc_client_should_retry): too many at once, maintenance, Cloudflare. */
+        fun retryable(status: Int) = status == Net.NO_REPLY || status == 429 || status in 502..504 || status in 521..525
 
         /** Which unlock or score a form is (null: neither): the same unlock retried is one; two scores are two. */
         private fun key(post: String): String? {

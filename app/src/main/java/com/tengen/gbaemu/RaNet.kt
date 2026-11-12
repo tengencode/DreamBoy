@@ -60,7 +60,7 @@ class RaWorker(private val take: (Int) -> RaRequest?, private val reply: (Int, I
                     reply(r.id, answer.status, answer.body)
                     outbox?.let { box ->
                         box.sent(r, answer.status)
-                        if (answer.status != Net.NO_REPLY && box.size > 0) box.resend(send) // connected again
+                        if (!RaOutbox.retryable(answer.status) && box.size > 0) box.resend(send) // answering again
                     }
                 }
             }

@@ -76,8 +76,8 @@ val copyAboutAssets by tasks.registering(Copy::class) {
     from(rootProject.file("PRIVACY.md")) { rename { "privacy.md" } }
     into(layout.buildDirectory.dir("generated/aboutAssets"))
 }
-tasks.matching { it.name.startsWith("merge") && it.name.endsWith("Assets") && "AndroidTest" !in it.name }
-    .configureEach { dependsOn(copyAboutAssets) }
+// Before everything in every build (also release lint, which reads the assets folders).
+tasks.named("preBuild") { dependsOn(copyAboutAssets) }
 
 kotlin {
     compilerOptions { jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17) }
