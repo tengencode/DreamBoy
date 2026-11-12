@@ -169,8 +169,8 @@
 
 ### Task 10: Publish and finish the milestone (STOP: each outward step on the user's OK)
 
-- [ ] **Step 1: The user creates** the public repo `tengencode/DreamBoy` (empty, no README or licence added by GitHub).
-- [ ] **Step 2: On their OK:** merge `milestone-16` into `main` (`git merge --no-ff refs/heads/milestone-16`), add the remote, push `main`, tag `v1.0.0` and push the tag, `gh release create v1.0.0 DreamBoy-1.0.0.apk …`, `gh repo edit` description and topics (`docs/RELEASE.md` §3–4). The user uploads the social preview.
-- [ ] **Step 3: Check the live page** — the README renders, the badge opens the release, the APK downloads and its SHA-256 matches the local file.
+- [x] **Step 1: The user creates** (done by Claude with `gh`, the user asked for it **private first**, 2026-11-12) the public repo `tengencode/DreamBoy` (empty, no README or licence added by GitHub).
+- [x] **Step 2: On their OK:** merge `milestone-16` into `main` (`git merge --no-ff refs/heads/milestone-16`), add the remote, push `main`, tag `v1.0.0` and push the tag, `gh release create v1.0.0 DreamBoy-1.0.0.apk …`, `gh repo edit` description and topics (`docs/RELEASE.md` §3–4). The user uploads the social preview.
+- [x] **Step 3: Check the live page** — the README renders, the badge opens the release, the APK downloads and its SHA-256 matches the local file.
 - [ ] **Step 4: The posts** — the user sends them (drafts in `docs/RELEASE.md`); Claude sends nothing.
 - [ ] **Step 5: Milestone exit** — docs marked done (the spec's status, the parent spec's status and §10 row 16, `CLAUDE.md` key files: no current milestone, last finished 16, the release line; `docs/PROGRESS.md`), checked for staleness; commit and push on the user's OK; branch `milestone-16` deleted.
