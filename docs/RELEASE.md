@@ -25,6 +25,8 @@ keyAlias=dreamboy
 keyPassword=<the key password you chose>
 ```
 
+The key can also live outside the repo folder (safer: it can never be committed); then `storeFile` points at it, e.g. `storeFile=../dreamboy-release.jks` for the folder above. Notepad may save the file as `keystore.properties.txt` — the name must be exactly `keystore.properties`.
+
 Keep a copy of both files and the passwords somewhere safe outside this PC (a password manager, an offline drive).
 
 ## 2. Moving your own data across (you, once)
