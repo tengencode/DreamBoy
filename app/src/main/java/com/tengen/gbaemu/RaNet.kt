@@ -1,5 +1,6 @@
 package com.tengen.gbaemu
 
+import java.net.URLDecoder
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import kotlin.concurrent.thread
@@ -24,6 +25,12 @@ object RaNet {
     fun userAgent(version: String, androidRelease: String, rcheevosClause: String) =
         "DreamBoy/$version (Android $androidRelease) $rcheevosClause"
 
+    /** A request's form (`a=1&b=x%20y`) as decoded values. */
+    fun params(form: String): Map<String, String> = form.split('&').mapNotNull { pair ->
+        val kv = pair.split('=', limit = 2)
+        if (kv.size == 2) kv[0] to URLDecoder.decode(kv[1], "UTF-8") else null
+    }.toMap()
+
     fun send(r: RaRequest, userAgent: String): Net.Reply =
         Net.send(r.url, r.post?.toByteArray(Charsets.UTF_8), r.contentType, userAgent, MAX_REPLY)
 }
@@ -34,6 +41,8 @@ object RaNet {
  */
 class RaWorker(private val take: (Int) -> RaRequest?, private val reply: (Int, Int, ByteArray?) -> Unit) {
     @Volatile var send: (RaRequest) -> Net.Reply = { Net.Reply(Net.NO_REPLY, null) }
+    /** Keeps unlocks and scores that got no answer, and sends them once answers come again (16). */
+    @Volatile var outbox: RaOutbox? = null
     @Volatile private var running = false
     private var pool: ExecutorService? = null
 
@@ -49,6 +58,10 @@ class RaWorker(private val take: (Int) -> RaRequest?, private val reply: (Int, I
                 p.execute {
                     val answer = try { send(r) } catch (e: Exception) { Net.Reply(Net.NO_REPLY, null) }
                     reply(r.id, answer.status, answer.body)
+                    outbox?.let { box ->
+                        box.sent(r, answer.status)
+                        if (answer.status != Net.NO_REPLY && box.size > 0) box.resend(send) // connected again
+                    }
                 }
             }
         }

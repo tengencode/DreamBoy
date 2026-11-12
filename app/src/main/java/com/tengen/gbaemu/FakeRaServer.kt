@@ -1,6 +1,6 @@
 package com.tengen.gbaemu
 
-import java.net.URLDecoder
+import java.io.File
 
 /**
  * A pretend RetroAchievements server inside the app (14), answering like the real one (and like platform/ra/ra_fake.c):
@@ -52,12 +52,13 @@ object FakeRaServer {
         "\"Status\":401,\"Code\":\"expired_token\"}"
     private const val NOT_FOUND = "{\"Success\":false,\"Error\":\"Unknown game\",\"Code\":\"not_found\",\"Status\":404}"
 
-    fun params(form: String): Map<String, String> = form.split('&').mapNotNull { pair ->
-        val kv = pair.split('=', limit = 2)
-        if (kv.size == 2) kv[0] to URLDecoder.decode(kv[1], "UTF-8") else null
-    }.toMap()
+    fun params(form: String): Map<String, String> = RaNet.params(form)
+
+    /** While this file exists every request goes unanswered, as with no connection (16: the outbox check). */
+    @Volatile var offlineFlag: File? = null
 
     fun reply(r: RaRequest): Net.Reply {
+        if (offlineFlag?.exists() == true) return Net.Reply(Net.NO_REPLY, null)
         val p = params(r.post ?: r.url.substringAfter('?', ""))
         fun say(status: Int, body: String) = Net.Reply(status, body.toByteArray())
         return when (p["r"]) {

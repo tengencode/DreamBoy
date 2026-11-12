@@ -182,8 +182,11 @@ class MainActivity : ComponentActivity() {
         val fake = debuggable && File(filesDir, "ra-fake").exists()
         Net.userAgent = "DreamBoy/${appVersion()} (Android)"
         val userAgent = RaNet.userAgent(appVersion(), android.os.Build.VERSION.RELEASE, NativeBridge.raUserAgentClause())
+        if (fake) FakeRaServer.offlineFlag = File(filesDir, "ra-fake-offline")
         RaService.worker.send = if (fake) FakeRaServer::reply else { r -> RaNet.send(r, userAgent) }
+        val outbox = RaService.worker.outbox ?: RaOutbox(File(filesDir, "ra-outbox.json")).also { RaService.worker.outbox = it }
         RaService.worker.start()
+        if (outbox.size > 0) thread(isDaemon = true, name = "ra-outbox") { outbox.resend(RaService.worker.send) } // from an earlier run
         badges = BadgeCache(File(filesDir, "ra/badges"),
             if (fake) FakeBadges::png else { url -> (Net.get(url, 512 * 1024) as? Net.Got)?.bytes })
         ra = Achievements(NativeRa, RaAccount(File(filesDir, "ra.json")))
@@ -395,7 +398,7 @@ class MainActivity : ComponentActivity() {
                         onAutoBackup = { on -> if (on) pickBackupFolder.launch(null) else stopAutoBackup() },
                         onChangeFolder = { pickBackupFolder.launch(null) },
                         ra = raUi, onRaSignIn = { u, p -> ra.signIn(u, p); watchSignIn() },
-                        onRaSignOut = { ra.signOut(); refreshRaUi(); hardcoreOn = false; raSet = false; raBoards = emptyList(); openBoard = null })
+                        onRaSignOut = { ra.signOut(); RaService.worker.outbox?.clear(); refreshRaUi(); hardcoreOn = false; raSet = false; raBoards = emptyList(); openBoard = null })
                 }
                 editLayout?.let { side ->
                     LayoutEditor(side, layouts.of(side), editPicture, settings.touchLook,
