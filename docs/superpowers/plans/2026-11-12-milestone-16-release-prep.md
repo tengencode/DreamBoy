@@ -138,11 +138,11 @@
 - Modify: `README.md` (rewritten), Create: `docs/BUILDING.md` (today's build section moves here), `docs/images/screenshot-*.png` (3–4), `docs/images/social-preview.png` (1280 × 640), `docs/images/get-it-on-github.png` (the badge, committed so the README loads no third-party image)
 
 - [x] **Step 1: Check the homebrew licences** — for each homebrew game in `tests/games/games.txt`: `gh api repos/<owner>/<repo> --jq .license.spdx_id`; keep only games whose licence allows sharing pictures (an open licence, or CC); note each chosen game, its licence and author in the README's picture credits.
-- [ ] **Step 2: Take the screenshots** on the phone emulator with the debug app (homebrew pushed with `bash tools/dev.sh push <file>`): the game list with cartridges, a game playing with touch controls, the pause menu or achievements, a console skin — light and dark mix, upright. No commercial games, no user files, no account names visible (sign in to the pretend server if a RetroAchievements screen is shown).
-- [ ] **Step 3: Make the social preview** (1280 × 640: the cartridge icon, "DreamBoy", "GBA emulator for Android", one screenshot) and the badge, with whatever is on the machine (Python + Pillow if installed; otherwise an HTML page shown in the browser pane and captured). Installing anything → ask the user first.
+- [x] **Step 2: Take the screenshots** on the phone emulator with the debug app (homebrew pushed with `bash tools/dev.sh push <file>`): the game list with cartridges, a game playing with touch controls, the pause menu or achievements, a console skin — light and dark mix, upright. No commercial games, no user files, no account names visible (sign in to the pretend server if a RetroAchievements screen is shown).
+- [x] **Step 3: Make the social preview** (1280 × 640: the cartridge icon, "DreamBoy", "GBA emulator for Android", one screenshot) and the badge, with whatever is on the machine (Python + Pillow if installed; otherwise an HTML page shown in the browser pane and captured). Installing anything → ask the user first.
 - [x] **Step 4: Rewrite `README.md`** in this order: `# DreamBoy`; "A fast, free Game Boy Advance emulator for Android. Game Boy and Game Boy Color support is planned."; the badge → `https://github.com/tengencode/DreamBoy/releases/latest`; the screenshot row; features (from today's README); "Install" (download `DreamBoy-<version>.apk` from Releases, allow installs from the browser or files app, Obtainium for updates); "No games or BIOS come with the app. Use games you own."; RetroAchievements (sign in with your own account; Hardcore off until RetroAchievements approves the app); "Building" → `docs/BUILDING.md`; "How it was made" — built with help from an AI assistant (Claude), with the tests that check it (CTest, on-device tests, the game check); licence; privacy → `PRIVACY.md`; picture credits; the Nintendo disclaimer.
-- [ ] **Step 5: Check** — `python tools/public_scan.py` clean; every README link resolves to a file in the repo or the GitHub URLs above; images under 1 MB each.
-- [ ] **Step 6: Commit** — `docs: a README for players, screenshots and the social preview`.
+- [x] **Step 5: Check** — `python tools/public_scan.py` clean; every README link resolves to a file in the repo or the GitHub URLs above; images under 1 MB each.
+- [x] **Step 6: Commit** — `docs: a README for players, screenshots and the social preview`.
 
 ### Task 7: The launch checklist and post drafts
 
@@ -155,11 +155,11 @@
 
 ### Task 8: Claude's emulator check and the finish review
 
-- [ ] **Step 1: The whole suite** — `bash tools/dev.sh unit`, `bash tools/dev.sh test`, `bash tools/dev.sh jvmtest`, `bash tools/dev.sh androidtest`, `bash tools/dev.sh games --check` — all pass (unit 485, CTest 123, `games --check` 31/31; Kotlin and on-device counts recorded).
-- [ ] **Step 2: On the emulator (debug app):** the launcher and game list say DreamBoy; About, Licences and Privacy read right; **an old-app backup restores** (make a backup in the old `com.tengen.gbaemu` app on the emulator, restore it in DreamBoy debug — saves and settings appear); **offline unlock across a restart** with the pretend server (`files/ra-fake` + `files/ra-fake-offline`; play until an unlock; force-stop; remove `ra-fake-offline`; start → the outbox sends it — seen in `logcat` and by `files/ra-outbox.json` being gone).
-- [ ] **Step 3: Reviews** — `ponytail-review` of the branch (`git diff main...milestone-16`); the impeccable finish review of the About pages (fix until `ship`); fix what they find, test-first where there is logic.
-- [ ] **Step 4: Clean the emulator** — remove the pretend-server files from the debug app; font, rotation and light mode back to normal.
-- [ ] **Step 5: Docs** — `docs/PROGRESS.md` (Completed, status, Next = Task 9), the plan's boxes, the spec's status; check nothing is stale. Commit — `docs: milestone 16 — Claude's check`.
+- [x] **Step 1: The whole suite** — `bash tools/dev.sh unit`, `bash tools/dev.sh test`, `bash tools/dev.sh jvmtest`, `bash tools/dev.sh androidtest`, `bash tools/dev.sh games --check` — all pass (unit 485, CTest 123, `games --check` 31/31; Kotlin and on-device counts recorded).
+- [x] **Step 2: On the emulator (debug app):** the launcher and game list say DreamBoy; About, Licences and Privacy read right; **an old-app backup restores** (make a backup in the old `com.tengen.gbaemu` app on the emulator, restore it in DreamBoy debug — saves and settings appear); **offline unlock across a restart** with the pretend server (`files/ra-fake` + `files/ra-fake-offline`; play until an unlock; force-stop; remove `ra-fake-offline`; start → the outbox sends it — seen in `logcat` and by `files/ra-outbox.json` being gone).
+- [x] **Step 3: Reviews** — `ponytail-review` of the branch (`git diff main...milestone-16`); the impeccable finish review of the About pages (fix until `ship`); fix what they find, test-first where there is logic.
+- [x] **Step 4: Clean the emulator** — remove the pretend-server files from the debug app; font, rotation and light mode back to normal.
+- [x] **Step 5: Docs** — `docs/PROGRESS.md` (Completed, status, Next = Task 9), the plan's boxes, the spec's status; check nothing is stale. Commit — `docs: milestone 16 — Claude's check`.
 
 ### Task 9: The user's steps — the key, the release APK, their phone (STOP: needs the user)
 
