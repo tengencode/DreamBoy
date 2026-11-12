@@ -66,7 +66,18 @@ android {
     // On-device tests read the local test ROMs + approved fingerprints from the test APK's assets
     // (copied from the gitignored tests/ folders at build time; never in the app APK or in git).
     sourceSets.getByName("androidTest").assets.srcDir(layout.buildDirectory.dir("generated/testRoms").get().asFile)
+    // The licence texts and the privacy policy kept at the repo root, copied into the app (16).
+    sourceSets.getByName("main").assets.srcDir(layout.buildDirectory.dir("generated/aboutAssets").get().asFile)
 }
+
+val copyAboutAssets by tasks.registering(Copy::class) {
+    from(rootProject.file("LICENSE")) { rename { "licences/gpl-3.0.txt" } }
+    from(rootProject.file("third_party/rcheevos/LICENSE")) { rename { "licences/rcheevos-mit.txt" } }
+    from(rootProject.file("PRIVACY.md")) { rename { "privacy.md" } }
+    into(layout.buildDirectory.dir("generated/aboutAssets"))
+}
+tasks.matching { it.name.startsWith("merge") && it.name.endsWith("Assets") && "AndroidTest" !in it.name }
+    .configureEach { dependsOn(copyAboutAssets) }
 
 kotlin {
     compilerOptions { jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17) }
