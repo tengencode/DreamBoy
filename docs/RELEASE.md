@@ -81,7 +81,7 @@ better than being found out.
 > - Save states, rewind, fast-forward, cheats (Action Replay, GameShark, CodeBreaker, libretro .cht files)
 > - Touch layout editor, console skins, Delta skins, controllers and keyboards
 > - Tilt, gyro, solar sensor and rumble cartridges, real-time clock
-> - RetroAchievements with leaderboards (sign in with your own account)
+> - RetroAchievements (sign in with your own account); leaderboard scores and Hardcore once RetroAchievements approves the app
 > - Box art, backup and restore of everything as one zip
 >
 > GBA only for now; Game Boy and Game Boy Color are planned. No games or BIOS included.
