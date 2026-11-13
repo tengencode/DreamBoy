@@ -17,6 +17,7 @@ typedef enum {
     GB_ERR_UNSUPPORTED_CART, /* a cartridge chip this core does not have */
     GB_ERR_NOMEM,
     GB_ERR_STATE,            /* a save state of another game, another format or version, or damaged */
+    GB_ERR_CHEAT,            /* a cheat text that does not read, or too many codes */
 } gb_err_t;
 
 enum { /* the same bits as GBA_KEY_* */
@@ -67,6 +68,18 @@ void gb_look_colours(int look, uint16_t out[12]);
  * console's combinations; good for gb_look_colours and gb_set_look). */
 int gb_look_auto(const uint8_t *rom, size_t size);
 void gb_set_look(gb_t *g, int look); /* kept across gb_reset and gb_load_rom */
+
+/* Cheats: Game Genie (ABC-DEF or ABC-DEF-GHI, dashes optional: a ROM byte reads as another) and GameShark
+ * (TTVVLLHH: a RAM byte is written every frame). A cheat is its codes as text, one per line or joined by '+'
+ * (spaces and blank lines allowed); Auto reads each code as what it is. */
+typedef enum { GB_CHEAT_AUTO, GB_CHEAT_GAME_GENIE, GB_CHEAT_GAMESHARK } gb_cheat_type_t;
+/* Reads a cheat without a machine: the type it is read as with *bad_line = 0, or *bad_line = the first line that
+ * is not a code of that type (1-based, blank lines counted; 1 for a text without any code). */
+gb_cheat_type_t gb_cheat_check(const char *text, gb_cheat_type_t type, int *bad_line);
+/* The switched-on cheats, replacing the previous ones (whose ROM patches are undone first). Call between frames.
+ * GameShark codes run at the end of every gb_run_frame; save states and rewind never contain cheats, and loading
+ * another ROM drops them. GB_ERR_CHEAT (a text that does not read, more than 256 codes) leaves none on. */
+gb_err_t gb_cheats_set(gb_t *g, const char *const *texts, const gb_cheat_type_t *types, size_t count);
 
 /* Rumble cartridges (MBC5 with a motor). */
 int gb_has_rumble(const gb_t *g);    /* 1: the loaded cartridge has a motor */

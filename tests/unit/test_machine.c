@@ -168,3 +168,27 @@ TEST(machine_passes_a_game_boy_rumble_cartridge_on) { /* 17c */
     CHECK_EQ(machine_has_rumble(m), 0);
     machine_destroy(m);
 }
+
+TEST(machine_cheats_go_to_the_right_core) { /* 17c */
+    int bad = -1;
+    CHECK_EQ(machine_cheat_check(MACHINE_GB, "01AA23C1", 0, &bad), (int)GB_CHEAT_GAMESHARK);
+    CHECK_EQ(bad, 0);
+    CHECK_EQ(machine_cheat_check(MACHINE_GBC, "00A-17B-C49", 0, &bad), (int)GB_CHEAT_GAME_GENIE);
+    CHECK_EQ(bad, 0);
+    machine_cheat_check(MACHINE_GBA, "00A-17B-C49", 0, &bad); /* no Game Boy Advance code */
+    CHECK_EQ(bad, 1);
+    CHECK_EQ(machine_cheat_check(MACHINE_GBA, "02000000:12", 0, &bad), (int)GBA_CHEAT_RAW);
+    CHECK_EQ(bad, 0);
+    uint8_t *rom = gbtu_rom(0x8000, 0, 0, 0);
+    machine_t *m = machine_create(MACHINE_GB);
+    CHECK_EQ(machine_load_rom(m, rom, 0x8000), MACHINE_OK);
+    free(rom);
+    const char *good = "01AA23C1", *bad_text = "02000000:12";
+    int type = 0;
+    CHECK_EQ(machine_cheats_set(m, &good, &type, 1), MACHINE_OK);
+    machine_run_frame(m);
+    CHECK_EQ(gb_wram(machine_gb(m))[0x123], 0xAA);
+    CHECK_EQ(machine_cheats_set(m, &bad_text, &type, 1), MACHINE_ERR_CHEAT);
+    CHECK_EQ(machine_cheats_set(m, NULL, NULL, 0), MACHINE_OK);
+    machine_destroy(m);
+}

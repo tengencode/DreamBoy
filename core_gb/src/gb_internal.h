@@ -156,6 +156,14 @@ typedef struct {
     gb_rtc_t rtc;
 } gb_cart_t;
 
+/* One cheat code (cheats.c). */
+typedef struct {
+    uint8_t genie;       /* 1: a ROM patch; 0: a GameShark write */
+    uint8_t value, compare, has_compare;
+    uint8_t bank; /* GameShark: the code's first byte */
+    uint16_t addr;
+} gb_code_t;
+
 struct gb {
     cart_info_t info;
     uint8_t *cart_ram; /* info.ram_size bytes */
@@ -171,6 +179,15 @@ struct gb {
     gb_audio_t audio;
     uint16_t frame[GB_WIDTH * GB_HEIGHT]; /* the picture, BGR555 (frame and back: one save-state chunk) */
     uint16_t back[GB_WIDTH * GB_HEIGHT]; /* the picture being drawn; shown (copied to frame) when VBlank starts */
+    struct { /* the switched-on cheats; in no state chunk */
+        gb_code_t *codes;
+        size_t ncodes;
+        struct {
+            uint32_t at;
+            uint8_t old;
+        } *patches; /* the ROM bytes Game Genie codes replaced, in the order they were */
+        size_t npatches;
+    } cheats;
     uint16_t look[3][4]; /* a grey game's colours: the background's, sprites 0's, sprites 1's (17c); in no state chunk */
     int look_asked;      /* as last set: GB_LOOK_AUTO is worked out again for each loaded game */
     struct rewind_ring *rewind; /* rewind history (core_common), NULL while off; in no state chunk */
@@ -229,6 +246,11 @@ uint8_t gb_rtc_read(const gb_t *g, uint8_t reg); /* reg 0x08-0x0C */
 void gb_rtc_write(gb_t *g, uint8_t reg, uint8_t value);
 void gb_rtc_latch(gb_t *g, uint8_t value);
 gb_err_t gb_cart_load(gb_t *g, const uint8_t *rom, size_t size);
+void gb_cheats_clear(gb_t *g); /* none on, the ROM as it was loaded */
+void gb_cheats_run(gb_t *g);   /* the end of a frame: the GameShark writes */
+/* A cheat's write into the cartridge RAM at addr (0xA000-0xBFFF): bank -1 = the one mapped now; nothing if the
+ * cartridge has no such byte. Marks the save dirty. */
+void gb_cart_poke(gb_t *g, int bank, uint16_t addr, uint8_t value);
 void gb_look_refresh(gb_t *g); /* after a game is loaded: the automatic look is this game's */
 void gb_cart_free(gb_t *g);
 

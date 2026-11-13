@@ -18,7 +18,7 @@ struct gba;
 struct gb;
 
 enum { MACHINE_OK = 0, MACHINE_ERR_ROM, MACHINE_ERR_UNSUPPORTED, MACHINE_ERR_NOMEM, MACHINE_ERR_STATE,
-       MACHINE_ERR_SAVE };
+       MACHINE_ERR_SAVE, MACHINE_ERR_CHEAT };
 
 /* Which console a ROM file is for. By content first: a Game Boy Advance header (its fixed byte and checksum), else
  * a Game Boy header (its checksum, and a size byte that fits the file; bit 7 of byte 0x143 = Game Boy Color).
@@ -50,6 +50,12 @@ size_t machine_save_write(const machine_t *m, uint8_t *buf, size_t cap); /* byte
 int machine_save_read(machine_t *m, const uint8_t *data, size_t size);
 int machine_save_dirty(machine_t *m);
 void machine_set_rtc(machine_t *m, int64_t unix_seconds, int32_t utc_offset_s);
+
+/* Cheats. The type numbers are each console's own (gba_cheat_type_t, gb_cheat_type_t; 0 = auto in both).
+ * machine_cheat_check reads a cheat without a machine: the type it is read as, *bad_line = 0 or the first bad line.
+ * machine_cheats_set: the switched-on cheats, replacing the previous ones; MACHINE_OK or MACHINE_ERR_CHEAT (none on). */
+int machine_cheat_check(machine_kind_t kind, const char *text, int type, int *bad_line);
+int machine_cheats_set(machine_t *m, const char *const *texts, const int *types, size_t count);
 
 /* A rumble cartridge: whether the loaded game has a motor, and whether it is running now. */
 int machine_has_rumble(const machine_t *m);

@@ -188,3 +188,17 @@ int gb_has_rumble(const gb_t *g) {
 int gb_rumble_active(const gb_t *g) { /* the motor is bit 3 of what the game last wrote as its RAM bank */
     return g->info.rumble && (g->cart.ram_bank & 0x08) != 0;
 }
+
+void gb_cart_poke(gb_t *g, int bank, uint16_t addr, uint8_t value) {
+    if (!g->info.ram_size) return;
+    uint32_t at;
+    if (bank < 0) {
+        if (g->info.mbc == MBC3 && g->cart.ram_bank >= 8) return; /* a clock register is mapped there now */
+        at = ram_index(g, addr);
+    } else {
+        at = (uint32_t)bank * 0x2000 + (addr & 0x1FFF);
+        if (at >= g->info.ram_size) return;
+    }
+    g->cart_ram[at] = value;
+    g->cart.dirty = 1;
+}

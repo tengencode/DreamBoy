@@ -126,13 +126,13 @@ machine_rumble_active(const machine_t *)`; `emu_cart_hardware` reports `GBA_HW_R
   a new `MACHINE_ERR_CHEAT`).
 - Limits: 256 codes in all (more: `GB_ERR_CHEAT`); lines split on newline and `+`.
 
-- [ ] **Step 1:** Failing tests: decoding (`genie_nine_digits`, `genie_six_digits`, `genie_without_dashes`,
+- [x] **Step 1:** Failing tests: decoding (`genie_nine_digits`, `genie_six_digits`, `genie_without_dashes`,
   `gameshark_plain`, `auto_detects`, `bad_line_is_reported`, `plus_joins_codes`); application
   (`genie_patches_only_matching_banks`, `genie_bank0_needs_its_compare`, `genie_is_undone_on_clear_and_on_reset_of_the_list`,
   `gameshark_holds_a_byte_against_the_game`, `gameshark_bank_digit_picks_work_ram_bank_on_color`,
   `gameshark_bank_digit_picks_cart_ram_bank`, `gameshark_missing_bank_is_skipped`, `gameshark_other_address_is_not_a_code`,
   `gameshark_cart_ram_write_marks_the_save_dirty`); `cheats_are_not_in_states` and `cheats_survive_state_load_and_rewind`.
-- [ ] **Step 2:** Implement. `unit`, `test`. Commit `gb core: Game Genie and GameShark cheats`.
+- [x] **Step 2:** Implement. `unit`, `test`. Commit `gb core: Game Genie and GameShark cheats`.
 
 ### Task 5: Cheats — the app and cheat files
 
