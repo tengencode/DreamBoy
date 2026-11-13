@@ -39,6 +39,13 @@ class TouchLayoutTest {
     private val sideways = TouchLayout(2400f, 1080f, density, sideways = true)
     private val delta = 0.01f
 
+    @Test
+    fun sidewaysAGameBoyGameHasNoButtonOverTheGame() { // its picture is narrow: Select and Start go to the side bars
+        val gb = TouchLayout(2400f, 1080f, 3f, sideways = true, console = Console.GB)
+        assertTrue(gb.buttons.none { gb.overGame(it) })
+        assertTrue(gb.box(LayoutItem.SELECT).right < gb.game.left && gb.box(LayoutItem.START).left > gb.game.right)
+    }
+
     private fun TouchLayout.button(bit: Int) = buttons.first { it.bit == bit }
 
     @Test

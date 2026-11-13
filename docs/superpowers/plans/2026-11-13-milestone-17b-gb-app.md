@@ -188,14 +188,14 @@ defaults without L and R, the picture 10:9.
 
 ### Task 9: Claude's check on the phone emulator; the finish review
 
-- [ ] **Step 1:** `dev.sh install`; push the two demo ROMs, two homebrew games (`tests/roms/homebrew/`) and a GBA
+- [x] **Step 1:** `dev.sh install`; push the two demo ROMs, two homebrew games (`tests/roms/homebrew/`) and a GBA
   demo into the emulator's games folder. By element text: all three kinds in one list with their marks; each opened,
   played with the touch buttons, saved, a state saved and loaded, rewound, fast-forwarded; upright and sideways,
   light and dark, font 1.3×; the layout editor for both families; box art; a backup made and restored; a zipped
   game; the unsupported-cartridge message; the not-yet rows. Screenshots into `.impeccable/review/`.
-- [ ] **Step 2:** impeccable finish review of the changed screens → `ship`; fix what it finds; update `DESIGN.md`
+- [x] **Step 2:** impeccable finish review of the changed screens → `ship`; fix what it finds; update `DESIGN.md`
   through the documenter if the design system gained the console mark.
-- [ ] **Step 3:** All tests: `unit`, `test`, `jvmtest`, `androidtest`, `games --check`, `bench --check`;
+- [x] **Step 3:** All tests: `unit`, `test`, `jvmtest`, `androidtest`, `games --check`, `bench --check`;
   `ponytail-review` of the 17b diff. Commit `17b: Claude's check and the finish review`.
 
 ### Task 10: The user's check and the release

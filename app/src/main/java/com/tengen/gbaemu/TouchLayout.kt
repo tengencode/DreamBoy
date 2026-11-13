@@ -129,8 +129,13 @@ class TouchLayout(val width: Float, val height: Float, private val density: Floa
             boxes[LayoutItem.FAST] = Box(width - 80 * dp, extraTop, width - 16 * dp, extraBottom)
             boxes[LayoutItem.A] = Box(ax - ar, ay - ar, ax + ar, ay + ar)
             boxes[LayoutItem.B] = Box(bx - ar, by - ar, bx + ar, by + ar)
-            boxes[LayoutItem.SELECT] = Box(width / 2 - 8 * dp - smallW, smallTop, width / 2 - 8 * dp, smallTop + smallH)
-            boxes[LayoutItem.START] = Box(width / 2 + 8 * dp, smallTop, width / 2 + 8 * dp + smallW, smallTop + smallH)
+            if (console.hasShoulders) {
+                boxes[LayoutItem.SELECT] = Box(width / 2 - 8 * dp - smallW, smallTop, width / 2 - 8 * dp, smallTop + smallH)
+                boxes[LayoutItem.START] = Box(width / 2 + 8 * dp, smallTop, width / 2 + 8 * dp + smallW, smallTop + smallH)
+            } else { // a Game Boy picture is narrow: the side bars have room, so nothing covers the game
+                boxes[LayoutItem.SELECT] = Box(16 * dp, smallTop, 16 * dp + smallW, smallTop + smallH)
+                boxes[LayoutItem.START] = Box(width - 16 * dp - smallW, smallTop, width - 16 * dp, smallTop + smallH)
+            }
         }
         return boxes
     }
