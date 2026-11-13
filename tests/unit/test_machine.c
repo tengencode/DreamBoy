@@ -150,3 +150,21 @@ TEST(machine_look_reaches_a_game_boy_and_nothing_else) {
     machine_set_look(m, 1); /* nothing to do, nothing breaks */
     machine_destroy(m);
 }
+
+TEST(machine_passes_a_game_boy_rumble_cartridge_on) { /* 17c */
+    uint8_t *rom = gbtu_rom(0x10000, 0x1C, 0, 0);
+    machine_t *m = machine_create(MACHINE_GB);
+    CHECK_EQ(machine_load_rom(m, rom, 0x10000), MACHINE_OK);
+    free(rom);
+    CHECK_EQ(machine_has_rumble(m), 1);
+    CHECK_EQ(machine_rumble_active(m), 0);
+    gb_bus_write(machine_gb(m), 0x4000, 0x08);
+    CHECK_EQ(machine_rumble_active(m), 1);
+    machine_destroy(m);
+    rom = gbtu_rom(0x8000, 0, 0, 0);
+    m = machine_create(MACHINE_GB);
+    CHECK_EQ(machine_load_rom(m, rom, 0x8000), MACHINE_OK);
+    free(rom);
+    CHECK_EQ(machine_has_rumble(m), 0);
+    machine_destroy(m);
+}

@@ -270,7 +270,7 @@ static void play_frame(emu_t *e, int speed) {
     }
     machine_run_frame(e->m);
     check_achievements(e);
-    atomic_store(&e->rumble, e->g && gba_rumble_active(e->g) != 0);
+    atomic_store(&e->rumble, machine_rumble_active(e->m) != 0);
     memcpy(tb_back(&e->tb), machine_framebuffer(e->m), sizeof(uint16_t) * e->pixels);
     tb_publish(&e->tb);
     feed_sound(e, speed);
@@ -577,7 +577,7 @@ void emu_set_look(emu_t *e, int look) {
 }
 
 uint32_t emu_cart_hardware(const emu_t *e) {
-    return e->g ? gba_cart_hardware(e->g) : 0;
+    return e->g ? gba_cart_hardware(e->g) : machine_has_rumble(e->m) ? GBA_HW_RUMBLE : 0; /* (a Game Boy rumble cartridge, 17c) */
 }
 
 gba_save_type_t emu_save_type(const emu_t *e) {

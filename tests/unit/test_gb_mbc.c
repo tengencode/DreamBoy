@@ -212,3 +212,27 @@ TEST(gb_cart_lying_header_safe) {
         }
     }
 }
+
+TEST(gb_mbc5_rumble_follows_the_motor_bit) { /* 17c */
+    gb_t *g = cart(0x10000, 0x1C, 0); /* MBC5 + rumble */
+    CHECK_EQ(gb_has_rumble(g), 1);
+    CHECK_EQ(gb_rumble_active(g), 0);
+    gb_bus_write(g, 0x4000, 0x08);
+    CHECK_EQ(gb_rumble_active(g), 1);
+    size_t n = gb_state_size(g);
+    void *state = malloc(n);
+    CHECK_EQ(gb_state_save(g, state, n), n);
+    gb_bus_write(g, 0x4000, 0x00);
+    CHECK_EQ(gb_rumble_active(g), 0);
+    CHECK_EQ(gb_state_load(g, state, n), GB_OK); /* the motor is as the state left it */
+    CHECK_EQ(gb_rumble_active(g), 1);
+    gb_reset(g);
+    CHECK_EQ(gb_rumble_active(g), 0);
+    free(state);
+    gb_destroy(g);
+    g = cart(0x10000, 0x1B, 2); /* a plain MBC5: bit 3 is part of the RAM bank, no motor */
+    CHECK_EQ(gb_has_rumble(g), 0);
+    gb_bus_write(g, 0x4000, 0x08);
+    CHECK_EQ(gb_rumble_active(g), 0);
+    gb_destroy(g);
+}

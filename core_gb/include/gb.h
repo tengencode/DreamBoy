@@ -68,6 +68,10 @@ void gb_look_colours(int look, uint16_t out[12]);
 int gb_look_auto(const uint8_t *rom, size_t size);
 void gb_set_look(gb_t *g, int look); /* kept across gb_reset and gb_load_rom */
 
+/* Rumble cartridges (MBC5 with a motor). */
+int gb_has_rumble(const gb_t *g);    /* 1: the loaded cartridge has a motor */
+int gb_rumble_active(const gb_t *g); /* 1 while the game holds the motor on */
+
 /* The save file: the cartridge RAM, then for a clock cartridge 48 bytes (the clock registers and a Unix time),
  * the format other emulators use. */
 size_t gb_save_size(const gb_t *g); /* 0: this cartridge keeps no save */

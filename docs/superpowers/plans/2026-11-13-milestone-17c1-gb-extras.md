@@ -108,9 +108,9 @@ register is set on a rumble cartridge); `int machine_has_rumble(const machine_t 
 machine_rumble_active(const machine_t *)`; `emu_cart_hardware` reports `GBA_HW_RUMBLE` for such a game so the app's
 `Rumble` starts as for GBA.
 
-- [ ] **Step 1:** Failing tests: `mbc5_rumble_follows_the_motor_bit` (type 0x1C: write 0x08 to 0x4000 → active; 0x00 →
+- [x] **Step 1:** Failing tests: `mbc5_rumble_follows_the_motor_bit` (type 0x1C: write 0x08 to 0x4000 → active; 0x00 →
   not; a non-rumble MBC5 never); the machine passes it on; a state load keeps the bit.
-- [ ] **Step 2:** Implement. `unit`. Commit `gb core + app: rumble cartridges shake the phone`.
+- [x] **Step 2:** Implement. `unit`. Commit `gb core + app: rumble cartridges shake the phone`.
 
 ### Task 4: Cheats — the core
 

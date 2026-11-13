@@ -149,6 +149,14 @@ void machine_set_rtc(machine_t *m, int64_t unix_seconds, int32_t utc_offset_s) {
     else gb_set_rtc(m->gb, unix_seconds);
 }
 
+int machine_has_rumble(const machine_t *m) {
+    return m->gba ? (gba_cart_hardware(m->gba) & GBA_HW_RUMBLE) != 0 : gb_has_rumble(m->gb);
+}
+
+int machine_rumble_active(const machine_t *m) {
+    return m->gba ? gba_rumble_active(m->gba) : gb_rumble_active(m->gb);
+}
+
 void machine_set_look(machine_t *m, int look) {
     if (m->gb) gb_set_look(m->gb, look);
 }

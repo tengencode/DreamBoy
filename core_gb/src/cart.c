@@ -180,3 +180,11 @@ void gb_cart_write(gb_t *g, uint16_t addr, uint8_t value) {
     }
     map(g);
 }
+
+int gb_has_rumble(const gb_t *g) {
+    return g->info.rumble != 0;
+}
+
+int gb_rumble_active(const gb_t *g) { /* the motor is bit 3 of what the game last wrote as its RAM bank */
+    return g->info.rumble && (g->cart.ram_bank & 0x08) != 0;
+}
