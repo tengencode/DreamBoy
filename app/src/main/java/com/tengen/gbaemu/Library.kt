@@ -86,7 +86,7 @@ class Library(filesDir: File) {
             games.filter { it.lastPlayed <= 0 }.sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.name })
 
     companion object {
-        private val EXTENSIONS = listOf(".gba", ".zip")
+        private val EXTENSIONS = RomFile.GAME_ENDINGS + ".zip"
 
         /** The game list's Continue card (the most recently played game, or none) and the rest, in [rows]' order. */
         fun continueAndRest(rows: List<GameEntry>): Pair<GameEntry?, List<GameEntry>> {
@@ -96,7 +96,7 @@ class Library(filesDir: File) {
 
         fun isGameFile(fileName: String): Boolean = EXTENSIONS.any { fileName.endsWith(it, ignoreCase = true) && fileName.length > it.length }
 
-        /** The name shown: the file name without `.gba` / `.zip`. */
+        /** The name shown: the file name without its `.gba` / `.gb` / `.gbc` / `.zip`. */
         fun nameOf(fileName: String): String =
             EXTENSIONS.firstOrNull { fileName.endsWith(it, ignoreCase = true) }?.let { fileName.dropLast(it.length) } ?: fileName
 

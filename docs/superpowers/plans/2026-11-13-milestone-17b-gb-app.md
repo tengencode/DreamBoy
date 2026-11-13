@@ -106,12 +106,12 @@ shorts; `ERR_UNSUPPORTED = 100`.
 and checksum; else a Game Boy header checksum with a size byte that fits; else the name's ending; else null) and
 `val hasShoulders: Boolean`, `val frameWidth / frameHeight`; `RomFile.GAME_ENDINGS = listOf(".gba", ".gb", ".gbc")`.
 
-- [ ] **Step 1: Failing Kotlin tests:** `ConsoleTest` (content beats name; name fallback; null for neither; the same
+- [x] **Step 1: Failing Kotlin tests:** `ConsoleTest` (content beats name; name fallback; null for neither; the same
   byte cases as `tests/unit/test_machine.c`), `RomFileTest` additions (a zip holding a `.gb`; a zip holding a `.gbc`;
   the first game of any kind wins; "no game inside this zip"), `LibraryTest` additions (`isGameFile` and `nameOf` for
   the new endings; `x.gb` shorter names).
-- [ ] **Step 2:** Implement; `FolderScan` lists the new endings and zips holding them. `jvmtest` passes.
-- [ ] **Step 3:** Commit `app: .gb and .gbc game files`.
+- [x] **Step 2:** Implement; `FolderScan` lists the new endings and zips holding them. `jvmtest` passes.
+- [x] **Step 3:** Commit `app: .gb and .gbc game files`.
 
 ### Task 3: The game list knows each game's console; opening and its errors
 

@@ -47,6 +47,19 @@ class RomFileTest {
     }
 
     @Test
+    fun gameBoyFilesInAZipCountToo() {
+        val gb = zip("readme.txt" to other, "Shock (World).GB" to game)
+        assertArrayEquals(game, read(gb))
+        assertEquals("Shock (World).GB", RomFile.readNamed(ByteArrayInputStream(gb)).zipName)
+        assertEquals("Shock (World).GB", RomFile.zipGameName(ByteArrayInputStream(gb)))
+        val gbc = zip("a/city.gbc" to game, "later.gba" to other) // the first game of any kind wins
+        assertArrayEquals(game, read(gbc))
+        assertEquals("a/city.gbc", RomFile.zipGameName(ByteArrayInputStream(gbc)))
+        assertEquals(null, RomFile.readNamed(ByteArrayInputStream(game)).zipName) // a plain file has no inner name
+        assertEquals(null, RomFile.zipGameName(ByteArrayInputStream(zip("notes.gbx" to other))))
+    }
+
+    @Test
     fun aZipWithoutAGameIsRefused() {
         val z = zip("readme.txt" to other, "game.sav" to other)
         assertNotAGame(z, "a zip without a .gba")

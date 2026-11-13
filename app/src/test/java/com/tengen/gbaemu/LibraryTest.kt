@@ -19,6 +19,10 @@ class LibraryTest {
         assertEquals("notes.txt", Library.nameOf("notes.txt"))
         assertTrue(Library.isGameFile("a.GBA") && Library.isGameFile("b.zip"))
         assertFalse(Library.isGameFile("c.sav") || Library.isGameFile("gba"))
+        assertTrue(Library.isGameFile("a.gb") && Library.isGameFile("b.GBC"))
+        assertFalse(Library.isGameFile(".gb") || Library.isGameFile("x.gbx"))
+        assertEquals("Shock", Library.nameOf("Shock.gb"))
+        assertEquals("City v1.3", Library.nameOf("City v1.3.GBC"))
     }
 
     @Test

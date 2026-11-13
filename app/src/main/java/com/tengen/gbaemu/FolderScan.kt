@@ -29,7 +29,7 @@ object FolderScan {
         null
     }
 
-    /** The `.gba` files and the `.zip` files holding one; null if the folder can't be opened (gone, no permission). */
+    /** The game files (`.gba`, `.gb`, `.gbc`) and the `.zip` files holding one; null if the folder can't be opened (gone, no permission). */
     fun scan(resolver: ContentResolver, tree: Uri): List<FoundGame>? = try {
         val out = mutableListOf<FoundGame>()
         walk(resolver, tree, DocumentsContract.getTreeDocumentId(tree), 0, out, top = true)
