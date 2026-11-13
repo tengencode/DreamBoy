@@ -1,4 +1,5 @@
 /* Game Boy save states and rewind. */
+#include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -149,6 +150,29 @@ TEST(gb_state_bad_values_safe) {
     CHECK_EQ(at, size);
     CHECK(chunks >= 10);
     CHECK(loaded > 0);
+    /* The sound channels' timers and the mixer's sums are signed numbers that are added to: the extremes of an
+     * int32 must be refused (they would overflow, or keep a catch-up loop busy for seconds). */
+    size_t apu_at = 16;
+    for (;;) {
+        uint32_t len;
+        memcpy(&len, state + apu_at + 8, 4);
+        if (!memcmp(state + apu_at, "APU ", 4)) break;
+        apu_at += 12 + len;
+    }
+    static const size_t fields[] = {offsetof(gb_apu_t, ch[0].timer), offsetof(gb_apu_t, ch[2].timer),
+                                    offsetof(gb_apu_t, ch[3].timer), offsetof(gb_apu_t, sum_left),
+                                    offsetof(gb_apu_t, sum_right), offsetof(gb_apu_t, cap_left),
+                                    offsetof(gb_apu_t, cap_right)};
+    static const int32_t extremes[] = {INT32_MIN, INT32_MAX, -(1 << 30), 1 << 30};
+    for (size_t f = 0; f < sizeof fields / sizeof fields[0]; f++) {
+        for (size_t e = 0; e < 4; e++) {
+            memcpy(bad, state, size);
+            memcpy(bad + apu_at + 12 + fields[f], &extremes[e], 4);
+            CHECK_EQ(gb_state_load(g, bad, size), GB_ERR_STATE);
+        }
+    }
+    CHECK_EQ(gb_state_load(g, state, size), GB_OK);
+    run(g, 2);
     free(state);
     free(bad);
     gb_destroy(g);

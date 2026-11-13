@@ -20,6 +20,8 @@
 #define STATE_FORMAT 1u
 #define HEADER_SIZE 16u
 #define CHUNK_HEAD 12u
+#define MAX_PERIOD ((112 << 15) + 8)  /* the longest channel period (noise), in ticks */
+#define MAX_SUM (15 * 4 * 8 * 128)   /* 4 channels at full level and volume over one 128-tick sample */
 
 /* The machine's own fields, in a fixed layout without padding. */
 typedef struct {
@@ -86,12 +88,22 @@ static bool values_ok(const uint8_t *const data[]) {
     }
     for (size_t n = 0; n < 4; n++) { /* a duty step 0-7 or a wave position 0-31; an 11-bit frequency */
         size_t at = offsetof(gb_apu_t, ch) + n * sizeof(gb_chan_t);
+        int32_t timer;
+        memcpy(&timer, apu + at + offsetof(gb_chan_t, timer), sizeof timer);
         if (field_at(apu, at + offsetof(gb_chan_t, pos), 1) > (n == 2 ? 31u : 7u) ||
-            field_at(apu, at + offsetof(gb_chan_t, freq), 2) > 2047) {
-            return false;
+            field_at(apu, at + offsetof(gb_chan_t, freq), 2) > 2047 || timer < -8 || timer > MAX_PERIOD) {
+            return false; /* (a timer far below 0 would take for ever to catch up; far above, overflow) */
         }
     }
     if (FIELD(apu, gb_apu_t, sum_dots) >= 128) return false;
+    static const size_t sums[] = {offsetof(gb_apu_t, sum_left), offsetof(gb_apu_t, sum_right),
+                                  offsetof(gb_apu_t, cap_left), offsetof(gb_apu_t, cap_right)};
+    for (size_t i = 0; i < 4; i++) { /* the mixer's sums and filter: within what real sound can make them */
+        int32_t v;
+        memcpy(&v, apu + sums[i], sizeof v);
+        int32_t limit = i < 2 ? MAX_SUM : MAX_SUM * 256;
+        if (v < -limit || v > limit) return false;
+    }
     misc_t misc;
     memcpy(&misc, data[C_MISC], sizeof misc);
     return misc.frame_left <= 0 && misc.frame_left > -4096; /* between two frames */
