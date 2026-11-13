@@ -82,11 +82,11 @@ better than being found out.
 > - Its own emulator cores in C (the GBA one with hand-written ARM64 assembly), so it runs well on cheap and older phones
 > - Save states, rewind, fast-forward, cheats (Game Genie, GameShark, Action Replay, CodeBreaker, libretro .cht files)
 > - Touch layout editor, console skins, controllers and keyboards; grey Game Boy games in colour
-> - Rumble cartridges and the real-time clock; for GBA games also tilt, gyro and solar sensors and Delta skins
+> - Imported Delta skins, rumble and tilt cartridges and the real-time clock; for GBA games also the gyro and solar sensors
 > - RetroAchievements (sign in with your own account); leaderboard scores and Hardcore once RetroAchievements approves the app
 > - Box art, backup and restore of everything as one zip
 >
-> Still missing for Game Boy and Game Boy Color games: Delta skins, tilt cartridges, link cable. No games or BIOS included.
+> Not there: link cable, and a few rare Game Boy cartridge types. No games or BIOS included.
 >
 > Full disclosure: I built it with a lot of help from an AI assistant (Claude). It's checked by nearly a thousand
 > automated tests, test ROMs and a 30-game check, but I'd love bug reports.
@@ -130,6 +130,23 @@ A pull request to a list that has an Android-emulator or GBA-emulator section, o
 >
 > Nothing changes for your GBA games, saves and states. Update by installing the new APK over the old one (or let
 > Obtainium do it): https://github.com/tengencode/DreamBoy/releases/latest
+
+### Release notes and a short post for 1.3.0 (Delta skins and tilt cartridges for Game Boy games)
+
+> **DreamBoy 1.3.0: Delta skins and tilt cartridges for Game Boy games**
+>
+> The last two things Game Boy and Game Boy Color games were missing:
+>
+> - **Delta skins:** import a `.deltaskin` made for the Game Boy Color (Delta uses one kind for both Game Boy
+>   consoles) under Settings → Touch buttons → Skin. Each imported skin shows whether it is for GBA or Game Boy
+>   games, and each console keeps its own: pick one for your GBA games and another for your Game Boy games.
+>   Tapping a built-in colour skin goes back to the built-in buttons for all of them.
+> - **Tilt cartridges** now open and save: tilt the phone to steer (or use the I / J / K / L keys on a keyboard).
+>   This is new and has only been tried with a test program, not with a real tilt game — if it steers the wrong
+>   way or does not work for you, please open an issue.
+>
+> Nothing changes for your GBA skin, your saves or your states. Update by installing the new APK over the old one
+> (or let Obtainium do it): https://github.com/tengencode/DreamBoy/releases/latest
 
 ### Release notes and a short post for 1.2.0 (the Game Boy extras)
 

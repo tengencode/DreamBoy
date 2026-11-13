@@ -260,13 +260,13 @@ Kotlin change: `MotionInput` starts the accelerometer on the bit.
 `docs/RELEASE.md` (§5: release notes for 1.3.0, the post drafts), `Screens.kt` / `Console.kt` if a message still
 says tilt or skins are GBA only, `PRIVACY.md` only if its date line is tied to the version.
 
-- [ ] **Step 1:** `grep -rn "GBA today\|GBA only\|Only GBA\|not for Game Boy\|isn't supported yet"` over the app,
+- [x] **Step 1:** `grep -rn "GBA today\|GBA only\|Only GBA\|not for Game Boy\|isn't supported yet"` over the app,
   README, `PRODUCT.md`, `DESIGN.md`, `docs/RELEASE.md`, `docs/BUILDING.md`; fix each line that is no longer true.
   The unsupported-cartridge message stays (other chips are still refused).
-- [ ] **Step 2:** Release notes for 1.3.0: Delta skins for Game Boy and Game Boy Color games (each console family
+- [x] **Step 2:** Release notes for 1.3.0: Delta skins for Game Boy and Game Boy Color games (each console family
   keeps its own); tilt cartridges. If the user owns no tilt game: one line that tilt cartridges are new and
   untried with a real game, with a request for reports.
-- [ ] **Step 3:** `bash tools/dev.sh jvmtest` (`UiTextTest`, any version test). Commit
+- [x] **Step 3:** `bash tools/dev.sh jvmtest` (`UiTextTest`, any version test). Commit
   `1.3.0: the words and the version`.
 
 ### Task 8: Claude's check, all tests, the reviews

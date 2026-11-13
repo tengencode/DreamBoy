@@ -15,7 +15,7 @@ A Game Boy, Game Boy Color and Game Boy Advance emulator for Android (the last c
 ## Positioning
 - The core is written in C with hand-written ARM64 assembly and NEON; it runs games at 3.4–6.4× real speed on a 2018 phone's small core (phone B, measured in milestone 7b), so it suits cheap and old phones.
 - Nothing leaves the phone except box-art downloads and, for players who sign in, RetroAchievements: no cloud, no app keys (user decision 2026-10-04). The one sign-in is the player's own retroachievements.org account (user decision 2026-10-05, milestone 14): the login token is kept, never the password. Users keep their saves with the built-in backup `.zip`.
-- Imports Delta emulator skins (`.deltaskin`) and libretro `.cht` cheat files; 13 built-in console skins in the colours of special-edition handhelds.
+- Imports Delta emulator skins (`.deltaskin`, for all three consoles) and libretro `.cht` cheat files; 13 built-in console skins in the colours of special-edition handhelds.
 
 ## Operating Context
 - Used on a phone held upright (game picture above, touch buttons below) or sideways (picture in the middle, buttons over it); in-game menus sit over a paused game.
@@ -27,7 +27,7 @@ A Game Boy, Game Boy Color and Game Boy Advance emulator for Android (the last c
 - Stack: Kotlin + Jetpack Compose (Compose 1.11.4, Material 3 1.4.0, material-icons-extended 1.7.8); Android 8+ (minSdk 26), target 36. Gradle builds offline; any new library or font file needs the user's OK to download.
 - The emulator core (C/asm) is out of scope for UI work and must not change.
 - No ROMs or BIOS ship with the app; never show or bundle copyrighted game art other than the user's own game pictures and libretro box art downloaded on the phone.
-- Free and open source (user decision 2026-10-23) under GPL-3.0-or-later (2026-10-24, `LICENSE`). Released as **DreamBoy** on GitHub only (`https://github.com/tengencode/DreamBoy`, sideloaded; no Play Store) — decided 2026-11-12 (milestone 16). One app for Game Boy, Game Boy Color and GBA: 1.0.0 played GBA only; 1.1.0 (milestone 17b) adds the other two; 1.2.0 (17c part 1) gives them cheats, RetroAchievements, colours for grey games and rumble; Delta skins and tilt cartridges for them wait for 1.3.0 (17c part 2).
+- Free and open source (user decision 2026-10-23) under GPL-3.0-or-later (2026-10-24, `LICENSE`). Released as **DreamBoy** on GitHub only (`https://github.com/tengencode/DreamBoy`, sideloaded; no Play Store) — decided 2026-11-12 (milestone 16). One app for Game Boy, Game Boy Color and GBA: 1.0.0 played GBA only; 1.1.0 (milestone 17b) adds the other two; 1.2.0 (17c part 1) gives them cheats, RetroAchievements, colours for grey games and rumble; 1.3.0 (17c part 2) gives them imported Delta skins (each console family keeps its own chosen skin) and tilt cartridges, so no feature is GBA-only for want of work any more.
 
 ## Brand Commitments
 - Plain, short wording: sentence case, buttons start with a verb, no "…", no "&", no "please", no "!" (enforced by `UiTextTest`).
