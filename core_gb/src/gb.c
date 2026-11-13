@@ -30,6 +30,7 @@ void gb_reset(gb_t *g) {
     g->mem.iflag = 0x01;   /* the boot ROM leaves a VBlank request behind */
     g->timer.div = 0xABC8;   /* where the boot ROM leaves the divider */
     g->serial_len = 0;
+    gb_cgb_reset(g);
     gb_cart_reset(g);
     gb_ppu_reset(g);
     gb_apu_reset(g);

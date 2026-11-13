@@ -111,6 +111,21 @@ typedef struct {
     int32_t cap_left, cap_right; /* the output filter */
 } gb_apu_t;
 
+/* Game Boy Color only. */
+typedef struct {
+    uint8_t double_speed, speed_armed;
+    uint8_t vbk;          /* the video RAM bank, 0-1 */
+    uint8_t svbk;         /* the work RAM bank register as written (mem.wram_bank is what it selects) */
+    uint8_t bcps, ocps;   /* palette indexes (bit 7: move on after each write) */
+    uint8_t opri;         /* 1: sprites overlap by the plain Game Boy's rule */
+    uint8_t rp, ff72, ff73, ff74, ff75;
+    uint8_t hdma_active;  /* a per-line copy is running */
+    uint8_t hdma_left;    /* its blocks still to go, less 1 */
+    uint16_t hdma_src, hdma_dst;
+    uint16_t stall;       /* machine cycles the CPU still stands still for a copy */
+    uint8_t bg_palette[64], obj_palette[64];
+} gb_cgb_t;
+
 /* The banking chip's registers. */
 typedef struct {
     uint8_t ram_on;
@@ -134,6 +149,7 @@ struct gb {
     gb_cart_t cart;
     gb_ppu_t ppu;
     gb_apu_t apu;
+    gb_cgb_t cgb;
     int16_t audio[GB_AUDIO_FRAMES * 2]; /* samples not yet read: a ring */
     uint32_t audio_read, audio_count;
     uint16_t back[GB_WIDTH * GB_HEIGHT]; /* the picture being drawn; shown (copied to frame) when VBlank starts */
@@ -176,6 +192,11 @@ void gb_apu_tick(gb_t *g, int dots);
 void gb_apu_sequencer(gb_t *g); /* a 512 Hz step: the divider's bit 12 fell */
 uint8_t gb_apu_read(const gb_t *g, uint16_t addr); /* 0xFF10-0xFF3F */
 void gb_apu_write(gb_t *g, uint16_t addr, uint8_t value);
+void gb_cgb_reset(gb_t *g);
+uint8_t gb_cgb_read(const gb_t *g, uint16_t addr); /* 0xFF4D-0xFF75, the Game Boy Color's own registers */
+void gb_cgb_write(gb_t *g, uint16_t addr, uint8_t value);
+void gb_cgb_hblank(gb_t *g);
+bool gb_cgb_speed_switch(gb_t *g); /* STOP: true when it switched the speed */
 void gb_cart_reset(gb_t *g);
 uint8_t gb_cart_read(const gb_t *g, uint16_t addr); /* 0x0000-0x7FFF and 0xA000-0xBFFF */
 void gb_cart_write(gb_t *g, uint16_t addr, uint8_t value);

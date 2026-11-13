@@ -14,8 +14,10 @@ static void count(gb_timer_t *t) {
 /* The divider goes from `old` to its new value: the timer and the serial clock watch its bits fall. */
 static void divider_changed(gb_t *g, uint16_t old, bool timer_was_high) {
     if (timer_was_high && !timer_bit(&g->timer)) count(&g->timer);
-    if (old & ~g->timer.div & 0x100) gb_serial_clock(g);
-    if (old & ~g->timer.div & 0x1000) gb_apu_sequencer(g);
+    /* The serial clock (8192 Hz) is one cycle ahead of the divider's bit 8 falling, as seen from the CPU (the
+     * mooneye suite's boot_sclk_align test). */
+    if ((uint16_t)(old + 4) & ~(uint16_t)(g->timer.div + 4) & 0x100) gb_serial_clock(g);
+    if (old & ~g->timer.div & (g->cgb.double_speed ? 0x2000 : 0x1000)) gb_apu_sequencer(g);
 }
 
 void gb_timer_tick(gb_t *g) {

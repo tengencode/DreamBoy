@@ -1,5 +1,7 @@
 {"tests": [
+  {"name": "blargg_cpu_instrs_cpu_instrs", "rom": "blargg/cpu_instrs/cpu_instrs.gb", "mode": "serial", "frames": 4000},
   {"name": "blargg_instr_timing_instr_timing", "rom": "blargg/instr_timing/instr_timing.gb", "mode": "serial"},
+  {"name": "blargg_mem_timing_mem_timing", "rom": "blargg/mem_timing/mem_timing.gb", "mode": "serial"},
   {"name": "blargg_cpu_instrs_individual_01_special", "rom": "blargg/cpu_instrs/individual/01-special.gb", "mode": "serial"},
   {"name": "blargg_cpu_instrs_individual_02_interrupts", "rom": "blargg/cpu_instrs/individual/02-interrupts.gb", "mode": "serial"},
   {"name": "blargg_cpu_instrs_individual_03_op_sp_hl", "rom": "blargg/cpu_instrs/individual/03-op sp,hl.gb", "mode": "serial"},
@@ -14,6 +16,7 @@
   {"name": "blargg_mem_timing_individual_01_read_timing", "rom": "blargg/mem_timing/individual/01-read_timing.gb", "mode": "serial"},
   {"name": "blargg_mem_timing_individual_02_write_timing", "rom": "blargg/mem_timing/individual/02-write_timing.gb", "mode": "serial"},
   {"name": "blargg_mem_timing_individual_03_modify_timing", "rom": "blargg/mem_timing/individual/03-modify_timing.gb", "mode": "serial"},
+  {"name": "blargg_mem_timing_2_mem_timing", "rom": "blargg/mem_timing-2/mem_timing.gb", "mode": "memtext"},
   {"name": "blargg_dmg_sound_rom_singles_01_registers", "rom": "blargg/dmg_sound/rom_singles/01-registers.gb", "mode": "memtext"},
   {"name": "blargg_dmg_sound_rom_singles_02_len_ctr", "rom": "blargg/dmg_sound/rom_singles/02-len ctr.gb", "mode": "memtext"},
   {"name": "blargg_dmg_sound_rom_singles_03_trigger", "rom": "blargg/dmg_sound/rom_singles/03-trigger.gb", "mode": "memtext"},
@@ -90,6 +93,7 @@
   {"name": "mooneye_acceptance_reti_intr_timing", "rom": "mooneye/acceptance/reti_intr_timing.gb", "mode": "mooneye"},
   {"name": "mooneye_acceptance_reti_timing", "rom": "mooneye/acceptance/reti_timing.gb", "mode": "mooneye"},
   {"name": "mooneye_acceptance_rst_timing", "rom": "mooneye/acceptance/rst_timing.gb", "mode": "mooneye"},
+  {"name": "mooneye_acceptance_serial_boot_sclk_align_dmgabcmgb", "rom": "mooneye/acceptance/serial/boot_sclk_align-dmgABCmgb.gb", "mode": "mooneye"},
   {"name": "mooneye_acceptance_timer_div_write", "rom": "mooneye/acceptance/timer/div_write.gb", "mode": "mooneye"},
   {"name": "mooneye_acceptance_timer_rapid_toggle", "rom": "mooneye/acceptance/timer/rapid_toggle.gb", "mode": "mooneye"},
   {"name": "mooneye_acceptance_timer_tim00", "rom": "mooneye/acceptance/timer/tim00.gb", "mode": "mooneye"},

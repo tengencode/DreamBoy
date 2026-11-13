@@ -98,6 +98,7 @@ static void event(gb_t *g) {
     case PH_SHOW_0:
         p->mode = 0;
         p->oam_busy = p->vram_busy = 0;
+        gb_cgb_hblank(g);
         p->phase = PH_LINE_END;
         p->next = LINE_DOTS;
         break;

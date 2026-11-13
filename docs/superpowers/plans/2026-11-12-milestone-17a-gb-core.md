@@ -387,19 +387,19 @@ Greys (BGR555): shade 0 `0x7FFF`, 1 `0x56B5`, 2 `0x294A`, 3 `0x0000`.
 68/69, OCPS/OCPD 6A/6B, OPRI 6C, SVBK 70, the undocumented 72–75; all of them read 0xFF and ignore writes when the
 game runs as a plain Game Boy.
 
-- [ ] **Step 1: Failing tests:** speed switch (KEY1 bit 0 then STOP → bit 7 set, CPU cycles take 2 ticks of screen
+- [x] **Step 1: Failing tests:** speed switch (KEY1 bit 0 then STOP → bit 7 set, CPU cycles take 2 ticks of screen
   and sound time, the divider and timer run with the CPU; a frame is still 70,224 ticks); WRAM banks 1–7 (0 → 1) at
   0xD000 and in `gb_wram`; VRAM bank; palette RAM with auto-increment, locked in mode 3; general HDMA (the CPU stalls
   for the copy) and per-line HDMA (16 bytes each HBlank of lines 0–143, HDMA5 read-back, cancel by writing bit 7 = 0);
   drawing: tile attributes (palette, bank, X/Y flip, priority), sprites by OAM order (not X), LCDC bit 0 as "master
   priority", 8 BG + 8 OBJ palettes straight to BGR555; a plain Game Boy game still draws in the four greys;
   CGB wave-RAM rules.
-- [ ] **Step 2–4:** fail; implement; pass.
-- [ ] **Step 5: ROM tests.** cgb-acid2 against its reference picture, exact (CGB 5-bit colour → the reference's
+- [x] **Step 2–4:** fail; implement; pass.
+- [x] **Step 5: ROM tests.** cgb-acid2 against its reference picture, exact (CGB 5-bit colour → the reference's
   8-bit as `(c << 3) | (c >> 2)`); lock its hash. mooneye CGB boot tests the suite has (`misc/boot_regs-cgb`,
   `boot_div-cgbABCDE`, `boot_hwio-C` — those that fit a late Game Boy Color; record any that cannot). blargg
   `cgb_sound` 01–12 time-boxed as Task 7 (aim ≥ 8). `interrupt_time` (blargg, CGB) if it is in the package.
-- [ ] **Step 6:** Commit `gb: Game Boy Color`.
+- [x] **Step 6:** Commit `gb: Game Boy Color`.
 
 ### Task 9: The clock and the save file
 

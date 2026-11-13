@@ -1,6 +1,24 @@
 {
   "frames": [
     {
+      "name": "gb_cgb_acid2",
+      "rom": "gb/acid/cgb-acid2.gbc",
+      "frames": 60,
+      "hash": "78ce869d9b004a6f"
+    },
+    {
+      "name": "gb_blargg_halt_bug",
+      "rom": "gb/blargg/halt_bug.gb",
+      "frames": 400,
+      "hash": "655c3ae9d19ac067"
+    },
+    {
+      "name": "gb_blargg_interrupt_time",
+      "rom": "gb/blargg/interrupt_time/interrupt_time.gb",
+      "frames": 400,
+      "hash": "fedf697ad03e5839"
+    },
+    {
       "name": "gb_dmg_acid2",
       "rom": "gb/acid/dmg-acid2.gb",
       "frames": 60,

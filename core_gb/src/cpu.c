@@ -203,9 +203,11 @@ static void execute(gb_t *g, uint8_t op) {
                 addr = fetch16(g);
                 gb_bus_write(g, addr, (uint8_t)c->sp);
                 gb_bus_write(g, (uint16_t)(addr + 1), (uint8_t)(c->sp >> 8));
-            } else if (y == 2) { /* STOP: skips a byte and idles like HALT */
+            } else if (y == 2) { /* STOP: skips a byte; switches a Game Boy Color's speed when that is armed (the
+                                    divider starts again), else idles like HALT */
                 c->pc++;
-                c->halted = 1;
+                if (gb_cgb_speed_switch(g)) gb_timer_write(g, 0xFF04, 0);
+                else c->halted = 1;
             } else { /* JR e / JR cc,e */
                 v = fetch(g);
                 if (y == 3 || cond(c, y - 4)) {
@@ -392,6 +394,7 @@ void gb_cpu_step(gb_t *g) {
         gb_tick(g);
         return;
     }
+    for (; g->cgb.stall; g->cgb.stall--) gb_tick(g); /* a copy into video RAM holds the CPU */
     if (c->ei_delay && --c->ei_delay == 0) c->ime = 1;
     if (c->ime && (g->mem.ie & g->mem.iflag & 0x1F)) {
         interrupt(g);

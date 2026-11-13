@@ -17,12 +17,12 @@ static gb_t *machine(void) {
 
 TEST(gb_serial_no_cable) {
     gb_t *g = machine();
-    g->timer.div = 0xFFFC; /* the write's own cycle brings the divider to 0 */
     gb_bus_write(g, SB, 'H');
-    g->timer.div = 0xFFFC;
+    g->timer.div = 0xFFFC; /* the write's own cycle brings the divider to 0; a bit moves every 512 ticks, the
+                              first 508 ticks from here (the serial clock is one cycle ahead of divider bit 8) */
     gb_bus_write(g, SC, 0x81);
     CHECK_EQ(gb_bus_peek(g, SC), 0xFF);
-    for (int i = 0; i < 8 * 512 / 4 - 1; i++) gb_tick(g);
+    for (int i = 0; i < 8 * 512 / 4 - 2; i++) gb_tick(g);
     CHECK_EQ(g->mem.iflag & 8, 0);
     CHECK_EQ(gb_bus_peek(g, SC) & 0x80, 0x80);
     gb_tick(g);
