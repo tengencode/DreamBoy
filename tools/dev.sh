@@ -5,7 +5,7 @@
 #   tools/dev.sh unit [filter]    build, then run unit tests whose name contains filter
 #   tools/dev.sh test             build, then run every CTest test
 #   tools/dev.sh run <args>       build, then run tools/testrunner with args
-#   tools/dev.sh view <args>      build the optimised build/release, then run its gbaview (Windows)
+#   tools/dev.sh view <args>      build the optimised build/release, then run its gbaview (Windows): a .gba, .gb or .gbc game
 #   tools/dev.sh release          configure (if needed) and build build/release (Release, no sanitizers)
 #   tools/dev.sh bench <args>     build/release, then gbabench (speed scenes, tests/bench/scenes.txt + scenes.local.txt) with the
 #                                 games from $GBA_GAMES (default ~/Downloads); e.g. bench --check, bench --only m7_demo
@@ -148,7 +148,7 @@ phone_copy() {
 # Everything gbabench needs on the phone: itself (always), the scene list, and every game a scene names.
 phone_bench_push() {
     phone_bench_build || return 1 # a failed build must not run the old program
-    adb -s "$PHONE" shell mkdir -p "$PHONE_DIR/roms/tonc"
+    adb -s "$PHONE" shell mkdir -p "$PHONE_DIR/roms/tonc" "$PHONE_DIR/roms/homebrew"
     adb -s "$PHONE" push "$(cygpath -w "$PHONE_BUILD/tools/bench/gbabench")" "$PHONE_DIR/gbabench" >/dev/null 2>&1
     adb -s "$PHONE" shell chmod 755 "$PHONE_DIR/gbabench"
     join_scenes
@@ -158,7 +158,7 @@ phone_bench_push() {
         rom=$(echo "$rom" | xargs); save=$(echo "$save" | xargs)
         for f in "$rom" "$save"; do
             [ -z "$f" ] || [ "$f" = "-" ] && continue
-            case "$f" in tonc/*) phone_copy "$ROOT/tests/roms/$f" "$PHONE_DIR/roms/$f" ;;
+            case "$f" in tonc/*|homebrew/*) phone_copy "$ROOT/tests/roms/$f" "$PHONE_DIR/roms/$f" ;;
                 *) phone_copy "$GAMES/$f" "$PHONE_DIR/roms/$f" ;; esac
         done
     done < <(grep -v '^#' "$SCENES" | grep '|')

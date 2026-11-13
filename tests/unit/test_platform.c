@@ -10,7 +10,7 @@
 /* ---- fit_rect ---- */
 
 TEST(fit_rect_exact_3_to_2_fills_the_surface) {
-    fit_rect_t r = fit_rect(480, 320);
+    fit_rect_t r = fit_rect(480, 320, 240, 160);
     CHECK_EQ(r.x, 0);
     CHECK_EQ(r.y, 0);
     CHECK_EQ(r.w, 480);
@@ -18,7 +18,7 @@ TEST(fit_rect_exact_3_to_2_fills_the_surface) {
 }
 
 TEST(fit_rect_wide_surface_gets_bars_left_and_right) {
-    fit_rect_t r = fit_rect(720, 320);
+    fit_rect_t r = fit_rect(720, 320, 240, 160);
     CHECK_EQ(r.x, 120);
     CHECK_EQ(r.y, 0);
     CHECK_EQ(r.w, 480);
@@ -26,7 +26,7 @@ TEST(fit_rect_wide_surface_gets_bars_left_and_right) {
 }
 
 TEST(fit_rect_tall_surface_gets_bars_above_and_below) {
-    fit_rect_t r = fit_rect(1080, 2424); /* Pixel 9 portrait */
+    fit_rect_t r = fit_rect(1080, 2424, 240, 160); /* Pixel 9 portrait */
     CHECK_EQ(r.x, 0);
     CHECK_EQ(r.y, 852);
     CHECK_EQ(r.w, 1080);
@@ -34,18 +34,18 @@ TEST(fit_rect_tall_surface_gets_bars_above_and_below) {
 }
 
 TEST(fit_rect_odd_sizes_round_down_and_centre) {
-    fit_rect_t r = fit_rect(301, 200);
+    fit_rect_t r = fit_rect(301, 200, 240, 160);
     CHECK_EQ(r.w, 300);
     CHECK_EQ(r.h, 200);
     CHECK_EQ(r.x, 0);
     CHECK_EQ(r.y, 0);
-    r = fit_rect(0, 100);
+    r = fit_rect(0, 100, 240, 160);
     CHECK_EQ(r.w, 0);
     CHECK_EQ(r.h, 0);
 }
 
 TEST(fit_rect_mode_fit_is_fit_rect) {
-    fit_rect_t a = fit_rect(1080, 2424), b = fit_rect_mode(1080, 2424, FIT_ASPECT);
+    fit_rect_t a = fit_rect(1080, 2424, 240, 160), b = fit_rect_mode(1080, 2424, 240, 160, FIT_ASPECT);
     CHECK_EQ(b.x, a.x);
     CHECK_EQ(b.y, a.y);
     CHECK_EQ(b.w, a.w);
@@ -53,17 +53,17 @@ TEST(fit_rect_mode_fit_is_fit_rect) {
 }
 
 TEST(fit_rect_mode_integer_takes_the_largest_whole_multiple_centred) {
-    fit_rect_t r = fit_rect_mode(1080, 720, FIT_INTEGER); /* Pixel 9 upright: 4.5x → 4x */
+    fit_rect_t r = fit_rect_mode(1080, 720, 240, 160, FIT_INTEGER); /* Pixel 9 upright: 4.5x → 4x */
     CHECK_EQ(r.w, 960);
     CHECK_EQ(r.h, 640);
     CHECK_EQ(r.x, 60);
     CHECK_EQ(r.y, 40);
-    r = fit_rect_mode(2424, 1080, FIT_INTEGER); /* sideways: 6x by height */
+    r = fit_rect_mode(2424, 1080, 240, 160, FIT_INTEGER); /* sideways: 6x by height */
     CHECK_EQ(r.w, 1440);
     CHECK_EQ(r.h, 960);
     CHECK_EQ(r.x, 492);
     CHECK_EQ(r.y, 60);
-    r = fit_rect_mode(480, 320, FIT_INTEGER); /* exactly 2x */
+    r = fit_rect_mode(480, 320, 240, 160, FIT_INTEGER); /* exactly 2x */
     CHECK_EQ(r.w, 480);
     CHECK_EQ(r.h, 320);
     CHECK_EQ(r.x, 0);
@@ -71,27 +71,53 @@ TEST(fit_rect_mode_integer_takes_the_largest_whole_multiple_centred) {
 }
 
 TEST(fit_rect_mode_integer_smaller_than_1x_falls_back_to_fit) {
-    fit_rect_t r = fit_rect_mode(200, 100, FIT_INTEGER);
-    fit_rect_t f = fit_rect(200, 100);
+    fit_rect_t r = fit_rect_mode(200, 100, 240, 160, FIT_INTEGER);
+    fit_rect_t f = fit_rect(200, 100, 240, 160);
     CHECK_EQ(r.w, f.w);
     CHECK_EQ(r.h, f.h);
     CHECK_EQ(r.x, f.x);
     CHECK_EQ(r.y, f.y);
 }
 
+/* A Game Boy's picture is 160x144 (10:9). */
+TEST(fit_rect_game_boy_frame) {
+    fit_rect_t r = fit_rect(1080, 2400, 160, 144); /* upright: full width */
+    CHECK_EQ(r.w, 1080);
+    CHECK_EQ(r.h, 972);
+    CHECK_EQ(r.x, 0);
+    CHECK_EQ(r.y, (2400 - 972) / 2);
+    r = fit_rect(2400, 1080, 160, 144); /* sideways: full height */
+    CHECK_EQ(r.h, 1080);
+    CHECK_EQ(r.w, 1200);
+    CHECK_EQ(r.x, 600);
+    r = fit_rect_mode(1080, 2400, 160, 144, FIT_INTEGER); /* 6x by width */
+    CHECK_EQ(r.w, 960);
+    CHECK_EQ(r.h, 864);
+    CHECK_EQ(r.x, 60);
+    r = fit_rect_mode(100, 100, 160, 144, FIT_INTEGER); /* not even 1x: the plain fit */
+    CHECK_EQ(r.w, 100);
+    CHECK_EQ(r.h, 90);
+    r = fit_rect(100, 100, 0, 144); /* no frame: nothing */
+    CHECK_EQ(r.w, 0);
+    picture_look_t last = {0}, gba = {100, 100, 0, 240, 160, false, 0}, gb = {100, 100, 0, 160, 144, false, 0};
+    CHECK(picture_needs_draw(&last, gba, false));
+    CHECK(!picture_needs_draw(&last, gba, false));
+    CHECK(picture_needs_draw(&last, gb, false)); /* another game's shape: draw again */
+}
+
 TEST(fit_rect_mode_stretch_fills_the_surface) {
-    fit_rect_t r = fit_rect_mode(2424, 1080, FIT_STRETCH);
+    fit_rect_t r = fit_rect_mode(2424, 1080, 240, 160, FIT_STRETCH);
     CHECK_EQ(r.x, 0);
     CHECK_EQ(r.y, 0);
     CHECK_EQ(r.w, 2424);
     CHECK_EQ(r.h, 1080);
-    r = fit_rect_mode(0, 50, FIT_STRETCH);
+    r = fit_rect_mode(0, 50, 240, 160, FIT_STRETCH);
     CHECK_EQ(r.w, 0);
 }
 
 TEST(picture_is_drawn_only_when_something_changed) {
     picture_look_t last = {0};
-    picture_look_t now = {2424, 1080, FIT_ASPECT, false, 0xFF000000u};
+    picture_look_t now = {2424, 1080, FIT_ASPECT, 240, 160, false, 0xFF000000u};
     CHECK(picture_needs_draw(&last, now, false)); /* never drawn on this surface */
     CHECK(!picture_needs_draw(&last, now, false)); /* paused: nothing new */
     CHECK(picture_needs_draw(&last, now, true));   /* a new frame */
@@ -145,7 +171,7 @@ TEST(pacer_reset_starts_again_from_now) {
 
 static triple_buffer_t *tb_new(void) {
     triple_buffer_t *tb = malloc(sizeof *tb);
-    tb_init(tb);
+    tb_init(tb, 240, 160);
     return tb;
 }
 

@@ -21,8 +21,8 @@ android {
         applicationId = "com.tengen.dreamboy"
         minSdk = 26
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = 2
+        versionName = "1.1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         ndk { abiFilters += listOf("x86_64", "arm64-v8a") }
         // -PgbaForceGeneric=ON: the arm64 core with only the plain-C twins of its fast paths (tools/dev.sh GENERIC=1)
@@ -85,7 +85,9 @@ kotlin {
 
 val copyTestRoms by tasks.registering(Copy::class) {
     from(rootProject.file("tests")) {
-        include("expected_frames.json", "roms/jsmolka/*.gba", "roms/tonc/*.gba", "own_roms/*.gba")
+        include("expected_frames.json", "roms/jsmolka/*.gba", "roms/tonc/*.gba", "own_roms/*.gba",
+            "own_roms/*.gb", "own_roms/*.gbc", "roms/gb/acid/*.gb", "roms/gb/acid/*.gbc",
+            "roms/gb/blargg/halt_bug.gb", "roms/gb/blargg/interrupt_time/*.gb")
     }
     into(layout.buildDirectory.dir("generated/testRoms"))
 }

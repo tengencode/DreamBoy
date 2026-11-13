@@ -24,6 +24,7 @@
 
 #include "file_util.h"
 #include "gba.h"
+#include "machine.h"
 #include "png.h"
 
 #define GBA_FPS 59.7275 /* 16777216 cycles/s / 280896 cycles per frame */
@@ -32,7 +33,9 @@
 #define AUDIO_BUFFER_FRAMES 1024
 #define AUDIO_QUEUE_TARGET 3 /* buffers (about one frame each) waiting to play */
 
-static gba_t *gba;
+static machine_t *machine;
+static gba_t *gba; /* the machine's GBA core, for what only a GBA has; NULL for a Game Boy game */
+static int width = 240, height = 160; /* the machine's picture */
 static uint16_t held;
 static uint32_t pixels[240 * 160]; /* 0x00RRGGBB, top-down */
 static int shot_count;
@@ -67,15 +70,15 @@ static uint32_t expand5(uint32_t c) {
 }
 
 static void convert_frame(void) {
-    const uint16_t *fb = gba_framebuffer(gba);
-    for (int i = 0; i < 240 * 160; i++) {
+    const uint16_t *fb = machine_framebuffer(machine);
+    for (int i = 0; i < width * height; i++) {
         uint32_t c = fb[i];
         pixels[i] = expand5(c & 31) << 16 | expand5((c >> 5) & 31) << 8 | expand5((c >> 10) & 31);
     }
 }
 
 static void save_screenshot(const char *path) {
-    if (png_write_bgr555(path, gba_framebuffer(gba), 240, 160) == 0) printf("saved %s\n", path);
+    if (png_write_bgr555(path, machine_framebuffer(machine), width, height) == 0) printf("saved %s\n", path);
     else fprintf(stderr, "cannot write %s\n", path);
 }
 
@@ -97,18 +100,24 @@ static void load_save(void) {
     size_t size;
     uint8_t *data = read_file(save_path, &size);
     if (!data) return;
-    if (gba_load_saveram(gba, data, size) == GBA_OK) printf("loaded %s\n", save_path);
+    if (machine_save_read(machine, data, size) == MACHINE_OK) printf("loaded %s\n", save_path);
     else fprintf(stderr, "ignoring %s: wrong size for this game's save chip\n", save_path);
     free(data);
 }
 
 /* Written to a temporary file first, then swapped in, so a crash never leaves half a save. */
 static void write_save(void) {
-    size_t size = gba_saveram_size(gba);
-    if (!size) return;
+    size_t size = machine_save_size(machine);
+    uint8_t *data = size ? malloc(size) : NULL;
+    if (!data || machine_save_write(machine, data, size) != size) {
+        free(data);
+        return;
+    }
     char tmp[1100];
     snprintf(tmp, sizeof tmp, "%s.tmp", save_path);
-    if (write_file(tmp, gba_saveram(gba), size) == 0 && MoveFileExA(tmp, save_path, MOVEFILE_REPLACE_EXISTING)) {
+    bool ok = write_file(tmp, data, size) == 0 && MoveFileExA(tmp, save_path, MOVEFILE_REPLACE_EXISTING);
+    free(data);
+    if (ok) {
         printf("saved %s\n", save_path);
     } else {
         fprintf(stderr, "cannot write %s\n", save_path);
@@ -122,10 +131,10 @@ static bool audio_open(void) {
     memset(&fmt, 0, sizeof fmt);
     fmt.wFormatTag = WAVE_FORMAT_PCM;
     fmt.nChannels = 2;
-    fmt.nSamplesPerSec = GBA_AUDIO_RATE;
+    fmt.nSamplesPerSec = MACHINE_AUDIO_RATE;
     fmt.wBitsPerSample = 16;
     fmt.nBlockAlign = 4;
-    fmt.nAvgBytesPerSec = GBA_AUDIO_RATE * 4;
+    fmt.nAvgBytesPerSec = MACHINE_AUDIO_RATE * 4;
     memset(wave_hdr, 0, sizeof wave_hdr);
     return waveOutOpen(&wave_out, WAVE_MAPPER, &fmt, 0, 0, CALLBACK_NULL) == MMSYSERR_NOERROR;
 }
@@ -148,7 +157,7 @@ static void audio_submit(void) {
     WAVEHDR *h = &wave_hdr[wave_next];
     while (buffer_busy(h)) Sleep(1);
     if (h->dwFlags & WHDR_PREPARED) waveOutUnprepareHeader(wave_out, h, sizeof *h);
-    size_t frames = gba_audio_read(gba, wave_data[wave_next], AUDIO_BUFFER_FRAMES);
+    size_t frames = machine_audio_read(machine, wave_data[wave_next], AUDIO_BUFFER_FRAMES);
     if (frames == 0) return;
     memset(h, 0, sizeof *h);
     h->lpData = (LPSTR)wave_data[wave_next];
@@ -184,6 +193,7 @@ static void apply_extras(void) {
     int x = ((extra_held & 8) ? 24000 : 0) - ((extra_held & 2) ? 24000 : 0);
     int y = ((extra_held & 4) ? 24000 : 0) - ((extra_held & 1) ? 24000 : 0);
     int turn = ((extra_held & 32) ? 16000 : 0) - ((extra_held & 16) ? 16000 : 0);
+    if (!gba) return;
     gba_set_tilt(gba, (int16_t)x, (int16_t)y);
     gba_set_gyro(gba, (int16_t)turn);
 }
@@ -191,7 +201,8 @@ static void apply_extras(void) {
 static void update_title(HWND hwnd) {
     static char shown[128];
     char title[128];
-    int n = snprintf(title, sizeof title, "gbaview - %s", gba_rom_title(gba));
+    int n = snprintf(title, sizeof title, "gbaview - %s", machine_title(machine));
+    if (!gba) n = 0; /* the extras below are GBA cartridges' */
     if (n > 0 && (gba_cart_hardware(gba) & GBA_HW_SOLAR)) {
         n += snprintf(title + n, sizeof title - (size_t)n, "  light %d", light_level);
     }
@@ -231,17 +242,17 @@ static LRESULT CALLBACK window_proc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             light_level += wp == VK_OEM_6 ? 32 : -32;
             if (light_level < 0) light_level = 0;
             if (light_level > 255) light_level = 255;
-            gba_set_light(gba, (uint8_t)light_level);
+            if (gba) gba_set_light(gba, (uint8_t)light_level);
             return 0;
         }
         extra_held |= extra_bit(wp);
         held |= key_for(wp);
-        gba_set_keys(gba, held);
+        machine_set_keys(machine, held);
         return 0;
     case WM_KEYUP:
         extra_held &= (uint8_t)~extra_bit(wp);
         held &= (uint16_t)~key_for(wp);
-        gba_set_keys(gba, held);
+        machine_set_keys(machine, held);
         return 0;
     case WM_PAINT: {
         PAINTSTRUCT ps;
@@ -251,13 +262,13 @@ static LRESULT CALLBACK window_proc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         BITMAPINFO bmi;
         memset(&bmi, 0, sizeof bmi);
         bmi.bmiHeader.biSize = sizeof bmi.bmiHeader;
-        bmi.bmiHeader.biWidth = 240;
-        bmi.bmiHeader.biHeight = -160; /* negative: rows run top to bottom */
+        bmi.bmiHeader.biWidth = width;
+        bmi.bmiHeader.biHeight = -height; /* negative: rows run top to bottom */
         bmi.bmiHeader.biPlanes = 1;
         bmi.bmiHeader.biBitCount = 32;
         bmi.bmiHeader.biCompression = BI_RGB;
         SetStretchBltMode(dc, COLORONCOLOR); /* nearest neighbour: sharp pixels */
-        StretchDIBits(dc, 0, 0, rc.right, rc.bottom, 0, 0, 240, 160, pixels, &bmi, DIB_RGB_COLORS, SRCCOPY);
+        StretchDIBits(dc, 0, 0, rc.right, rc.bottom, 0, 0, width, height, pixels, &bmi, DIB_RGB_COLORS, SRCCOPY);
         EndPaint(hwnd, &ps);
         return 0;
     }
@@ -308,24 +319,31 @@ int main(int argc, char **argv) {
         fprintf(stderr, "cannot read %s\n", rom_path);
         return 3;
     }
-    gba = gba_create(NULL);
+    machine = machine_create(machine_detect(rom, rom_size, rom_path));
+    if (!machine) {
+        fprintf(stderr, "%s: not a Game Boy, Game Boy Color or Game Boy Advance ROM\n", rom_path);
+        return 1;
+    }
+    gba = machine_gba(machine);
+    width = machine_width(machine);
+    height = machine_height(machine);
     if (bios_path) {
         size_t bios_size;
         uint8_t *bios = read_file(bios_path, &bios_size);
-        gba_err_t err = bios ? gba_load_bios(gba, bios, bios_size) : GBA_ERR_BIOS_SIZE;
+        gba_err_t err = bios && gba ? gba_load_bios(gba, bios, bios_size) : GBA_ERR_BIOS_SIZE;
         free(bios);
         if (err != GBA_OK) {
             fprintf(stderr, "cannot load BIOS %s\n", bios_path);
             return 3;
         }
     }
-    if (gba_load_rom(gba, rom, rom_size) != GBA_OK) {
+    if (machine_load_rom(machine, rom, rom_size) != MACHINE_OK) {
         fprintf(stderr, "cannot load ROM %s\n", rom_path);
         return 3;
     }
     set_save_path(rom_path);
     load_save();
-    gba_set_rtc(gba, (int64_t)time(NULL), local_utc_offset());
+    machine_set_rtc(machine, (int64_t)time(NULL), local_utc_offset());
 
     WNDCLASSA wc;
     memset(&wc, 0, sizeof wc);
@@ -334,10 +352,10 @@ int main(int argc, char **argv) {
     wc.hCursor = LoadCursorA(NULL, (LPCSTR)IDC_ARROW);
     wc.lpszClassName = "gbaview";
     RegisterClassA(&wc);
-    RECT r = {0, 0, 240 * SCALE, 160 * SCALE};
+    RECT r = {0, 0, width * SCALE, height * SCALE};
     AdjustWindowRect(&r, WS_OVERLAPPEDWINDOW, FALSE);
     char title[64];
-    snprintf(title, sizeof title, "gbaview - %s", gba_rom_title(gba));
+    snprintf(title, sizeof title, "gbaview - %s", machine_title(machine));
     HWND hwnd = CreateWindowA("gbaview", title, WS_OVERLAPPEDWINDOW | WS_VISIBLE, CW_USEDEFAULT, CW_USEDEFAULT,
                               r.right - r.left, r.bottom - r.top, NULL, NULL, wc.hInstance, NULL);
     if (!hwnd) {
@@ -362,8 +380,8 @@ int main(int argc, char **argv) {
         if (!running) break;
 
         apply_extras();
-        gba_run_frame(gba);
-        if (gba_saveram_dirty(gba)) save_countdown = 60; /* write once the game has stopped saving */
+        machine_run_frame(machine);
+        if (machine_save_dirty(machine)) save_countdown = 60; /* write once the game has stopped saving */
         else if (save_countdown > 0 && --save_countdown == 0) write_save();
         convert_frame();
         InvalidateRect(hwnd, NULL, FALSE);
@@ -383,7 +401,7 @@ int main(int argc, char **argv) {
             while (audio_queued() >= AUDIO_QUEUE_TARGET) Sleep(1); /* the sound card sets the pace */
         } else {
             static int16_t discard[2048 * 2];
-            gba_audio_read(gba, discard, 2048);
+            machine_audio_read(machine, discard, 2048);
             next += frame_time;
             double now = seconds_now();
             if (now - next > 0.25) next = now; /* far behind (e.g. window dragged): resync instead of racing */
@@ -393,7 +411,7 @@ int main(int argc, char **argv) {
     if (save_countdown > 0) write_save();
     if (sound) audio_close();
     timeEndPeriod(1);
-    gba_destroy(gba);
+    machine_destroy(machine);
     free(rom);
     return 0;
 }

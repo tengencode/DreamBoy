@@ -66,6 +66,7 @@ class MainActivity : ComponentActivity() {
     private var skinError by mutableStateOf<String?>(null) // why an import failed
     private var editLayout by mutableStateOf<Boolean?>(null) // the layout editor: sideways, upright, or closed
     private var editPicture: Bitmap? = null // the paused game's picture behind the editor
+    private var editConsole = Console.GBA // whose layout the editor edits: GBA games', or Game Boy games'
     private var orientationBeforeEditor = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
     private var editGame by mutableStateOf<Triple<String, String, GameSettings.Game>?>(null) // name, id, its settings
     private var askImport by mutableStateOf(false)
@@ -229,6 +230,7 @@ class MainActivity : ComponentActivity() {
                         skin = Skins.at(settings.skin),
                         fitMode = settings.size,
                         delta = activeSkin(),
+                        console = gameConsole,
                         onAction = ::skinAction,
                         onSkinFailed = { toast("This skin's picture could not be drawn") },
                         overlay = { RaPopupLayer(raView, badges, belowSpeedLabel = settings.showSpeed) },
@@ -302,7 +304,7 @@ class MainActivity : ComponentActivity() {
                         onLoad = { menu = MenuPage.LOAD }, onCheats = { menu = MenuPage.CHEATS },
                         onSettings = { settingsPage = SettingsPage.MAIN },
                         onRestart = { askRestart = true }, onQuit = ::quitGame,
-                        locked = hardcoreOn, onAchievements = if (raSet) ({
+                        locked = hardcoreOn, cheatsOff = if (gameConsole != Console.GBA) NO_CHEATS_YET else null, onAchievements = if (raSet) ({
                             raList = NativeBridge.raSummary() to RaAchievement.list(NativeBridge.raAchievements())
                             menu = MenuPage.ACHIEVEMENTS
                         }) else null,
@@ -402,14 +404,14 @@ class MainActivity : ComponentActivity() {
                         version = appVersion(), onOpenGithub = ::openGithub)
                 }
                 editLayout?.let { side ->
-                    LayoutEditor(side, layouts.of(side), editPicture, settings.touchLook,
+                    LayoutEditor(side, layouts.of(side, editConsole.family), editPicture, settings.touchLook,
                         onSave = { edits ->
-                            layouts = layouts.with(side, edits)
+                            layouts = layouts.with(side, edits, editConsole.family)
                             if (!layoutStore.save(layouts)) toast("Couldn't save the layout.")
                             closeLayoutEditor()
                         },
                         onCancel = ::closeLayoutEditor, skin = if (activeSkin() != null) Skins.PLAIN else Skins.at(settings.skin),
-                        fitMode = settings.size)
+                        fitMode = settings.size, console = editConsole)
                 }
                 waitingKey?.let { (bit, device) ->
                     KeyWaitLayer(KeyMap.bindings.first { it.bit == bit }.button, device, onCancel = { waitingKey = null })
@@ -466,7 +468,7 @@ class MainActivity : ComponentActivity() {
         val info = fileInfo(uri)
         val entry = library.games.firstOrNull { it.key == key }
             ?: GameEntry(key, uri.toString(), Library.nameOf(info?.first ?: uri.lastPathSegment ?: "game"), outside = true,
-                size = info?.second ?: 0)
+                size = info?.second ?: 0, console = info?.first?.let(Console::ofName))
         open(entry)
     }
 
@@ -602,7 +604,7 @@ class MainActivity : ComponentActivity() {
         old.edit().clear().apply()
     }
 
-    /** The game's bytes (from a .gba or a .zip), or null. */
+    /** The game's bytes (from a game file or a .zip), or null. */
     private fun readGame(uri: Uri): ByteArray? = try {
         contentResolver.openInputStream(uri)?.use(RomFile::read)
     } catch (e: Exception) {
@@ -687,23 +689,28 @@ class MainActivity : ComponentActivity() {
         val slow = Runnable { if (busy == null) busy = OPENING }
         handler.postDelayed(slow, 300)
         thread(name = "open-game") {
-            val bytes: Any? = try {
-                contentResolver.openInputStream(Uri.parse(entry.uri))?.use(RomFile::read)
+            val read: Any? = try {
+                contentResolver.openInputStream(Uri.parse(entry.uri))?.use(RomFile::readNamed)
             } catch (e: RomFile.NotAGame) {
                 e
             } catch (e: Exception) {
                 null
             }
+            val bytes: Any? = (read as? RomFile.Named)?.bytes ?: read
             val id = (bytes as? ByteArray)?.let(GameId::of)
+            // The console: by the game's own bytes; else by the zip's inner name or what the list knows from the
+            // file's name; a game nothing is known about is tried as a GBA game, as before there were others.
+            val console = (bytes as? ByteArray)?.let { Console.of(it, (read as? RomFile.Named)?.zipName) }
+                ?: entry.console ?: Console.GBA
             runOnUiThread {
                 opening = false
                 handler.removeCallbacks(slow)
                 if (busy == OPENING) busy = null
                 if (isDestroyed) return@runOnUiThread
                 when {
-                    bytes is RomFile.NotAGame -> message = "Not a GBA game."
+                    bytes is RomFile.NotAGame -> message = NOT_A_GAME
                     bytes !is ByteArray || id == null -> message = "Can't open ${entry.name}."
-                    else -> openRead(entry, resumeAuto, bytes, id)
+                    else -> openRead(entry.copy(console = console), resumeAuto, bytes, id)
                 }
             }
         }
@@ -720,14 +727,20 @@ class MainActivity : ComponentActivity() {
         NativeBridge.setBios(bios)
         val own = gameSettings.of(gameId)
         NativeBridge.setGameOverrides(own.saveType, own.clock)
-        if (NativeBridge.loadRom(rom, File(saves, "$gameId.sav").path) != 0) {
-            message = "Not a GBA game."
+        val console = entry.console ?: Console.GBA
+        val loadError = NativeBridge.loadGame(rom, File(saves, "$gameId.sav").path, console.native)
+        if (loadError != 0) { // (the previous game's session is already stopped and saved)
+            message = loadErrorText(loadError)
             return
         }
         if (own == GameSettings.Game()) NativeBridge.cartSetup().let { gameSettings.remember(gameId, it[0], it[1]) }
         hardware = NativeBridge.cartHardware()
         manualLight = null
-        val played = entry.copy(id = gameId, lastPlayed = System.currentTimeMillis())
+        if (console != Console.GBA && ra.signIn == Achievements.SignIn.IN) { // so a signed-in player isn't left wondering
+            raPopups.note(NO_ACHIEVEMENTS_YET, SystemClock.uptimeMillis())
+        }
+        val played = entry.copy(id = gameId, lastPlayed = System.currentTimeMillis(),
+            console = Console.ofNative(NativeBridge.console()) ?: console)
         library.played(played)
         library.save()
         rows = library.rows()
@@ -747,7 +760,8 @@ class MainActivity : ComponentActivity() {
         raBoards = emptyList()
         openBoard = null
         hardcoreOn = false
-        if (ra.loadGame(rom)) waitForAchievements { game -> useAchievements(game); continueOpen(st, resumeAuto) }
+        // RetroAchievements: GBA games only for now (17b) — a Game Boy game is not even identified.
+        if (console == Console.GBA && ra.loadGame(rom)) waitForAchievements { game -> useAchievements(game); continueOpen(st, resumeAuto) }
         else continueOpen(st, resumeAuto)
     }
 
@@ -933,8 +947,13 @@ class MainActivity : ComponentActivity() {
     }
 
     /** The chosen imported Delta skin, or null (a built-in skin). */
+    /** The console of the game being played (GBA with none): its picture's shape, its buttons, its layouts. */
+    private val gameConsole: Console get() = if (playing) current?.console ?: Console.GBA else Console.GBA
+
+    /** The imported (Delta) skin in use — never in a Game Boy game: those skins are made for the GBA (17b). */
     private fun activeSkin(): SkinFiles.Imported? =
-        if (settings.skinImport == 0) null else importedSkins.firstOrNull { it.number == settings.skinImport }
+        if (settings.skinImport == 0 || gameConsole != Console.GBA) null
+        else importedSkins.firstOrNull { it.number == settings.skinImport }
 
     private fun refreshSkins() {
         importedSkins = skinFiles.list()
@@ -1325,8 +1344,11 @@ class MainActivity : ComponentActivity() {
     }
 
     /** The layout editor turns the screen to the edited orientation (the phone may be held either way). */
-    private fun openLayoutEditor(sideways: Boolean) {
-        editPicture = if (playing) NativeBridge.frameBgr555()?.let(States::bitmapOf) else null // paused behind the menu
+    private fun openLayoutEditor(sideways: Boolean, gameBoy: Boolean) {
+        // The Game Boy layouts are edited with the game being played if it is one (its picture, its colours), else a plain one.
+        editConsole = if (!gameBoy) Console.GBA else gameConsole.takeIf { it != Console.GBA } ?: Console.GB
+        editPicture = if (playing && gameConsole.family == editConsole.family) NativeBridge.frameBgr555()?.let(States::bitmapOf)
+            else null // paused behind the menu
         orientationBeforeEditor = if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
             ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
         } else ActivityInfo.SCREEN_ORIENTATION_PORTRAIT

@@ -85,6 +85,15 @@ class TouchControlsView(context: Context) : View(context) {
             }
         }
 
+    /** The game's console: the picture's shape, and whether L and R are there. */
+    var console = Console.GBA
+        set(value) {
+            if (field != value) {
+                field = value
+                relayout()
+            }
+        }
+
     var buzz = true
 
     var onMask: (Int) -> Unit = {}
@@ -144,7 +153,7 @@ class TouchControlsView(context: Context) : View(context) {
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) = relayout()
 
     private fun relayout() {
-        val l = if (width > 0 && height > 0) TouchLayout(width.toFloat(), height.toFloat(), density, sideways, edits, fitMode) else null
+        val l = if (width > 0 && height > 0) TouchLayout(width.toFloat(), height.toFloat(), density, sideways, edits, fitMode, console) else null
         touchLayout = l
         dpadShape.reset()
         if (l != null) {
@@ -312,11 +321,11 @@ class TouchControlsView(context: Context) : View(context) {
         val box = layout.picture
         val frame = picture
         if (frame != null) {
-            val fit = run { // 3:2 inside the box
+            val fit = run { // in the picture's own shape inside the box
                 val w = box.right - box.left
                 val h = box.bottom - box.top
-                val fw = if (w * 2 <= h * 3) w else h * 3 / 2
-                val fh = fw * 2 / 3
+                val fw = if (w * frame.height <= h * frame.width) w else h * frame.width / frame.height
+                val fh = fw * frame.height / frame.width
                 RectF(box.left + (w - fw) / 2, box.top + (h - fh) / 2, box.left + (w + fw) / 2, box.top + (h + fh) / 2)
             }
             canvas.drawBitmap(frame, Rect(0, 0, frame.width, frame.height), fit, null)

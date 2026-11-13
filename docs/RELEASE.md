@@ -59,8 +59,8 @@ sign in to RetroAchievements again (the sign-in is never in backups). Uninstall 
 ## 4. The repo page — once (you, with Claude's commands)
 
 ```bash
-gh repo edit tengencode/DreamBoy --description "DreamBoy: a fast, free Game Boy Advance emulator for Android (Game Boy and Game Boy Color planned)" --homepage "https://github.com/tengencode/DreamBoy/releases/latest"
-gh repo edit tengencode/DreamBoy --add-topic android --add-topic emulator --add-topic gba --add-topic game-boy-advance --add-topic gameboy-advance-emulator --add-topic gba-emulator --add-topic retroachievements --add-topic kotlin --add-topic arm64 --add-topic jetpack-compose
+gh repo edit tengencode/DreamBoy --description "DreamBoy: a fast, free Game Boy, Game Boy Color and Game Boy Advance emulator for Android" --homepage "https://github.com/tengencode/DreamBoy/releases/latest"
+gh repo edit tengencode/DreamBoy --add-topic android --add-topic emulator --add-topic gba --add-topic game-boy-advance --add-topic gameboy-advance-emulator --add-topic gba-emulator --add-topic retroachievements --add-topic kotlin --add-topic arm64 --add-topic jetpack-compose --add-topic gameboy --add-topic gameboy-color --add-topic gb-emulator --add-topic gbc-emulator
 ```
 
 Then on GitHub: the repo → Settings → General → Social preview → upload `docs/images/social-preview.png` (GitHub has no
@@ -115,6 +115,20 @@ Follow the page's existing format.
 
 A pull request to a list that has an Android-emulator or GBA-emulator section, one line in the list's own format:
 `[DreamBoy](https://github.com/tengencode/DreamBoy) - Free, open-source GBA emulator for Android with RetroAchievements.`
+
+### Release notes and a short post for 1.1.0 (Game Boy and Game Boy Color)
+
+> **DreamBoy 1.1.0: Game Boy and Game Boy Color**
+>
+> DreamBoy now plays Game Boy (`.gb`) and Game Boy Color (`.gbc`) games next to your GBA games, with its own new
+> emulator core for them: save states, rewind, fast-forward, in-game saves (the usual `.sav`, clock cartridges
+> included), touch layouts of their own, console skins and box art.
+>
+> Not there yet for these two consoles (GBA games have them): cheats, RetroAchievements, imported Delta skins, and
+> rumble and tilt cartridges. A few rare cartridge types are not supported yet; the app says so when it meets one.
+>
+> Nothing changes for your GBA games, saves and states. Update by installing the new APK over the old one (or let
+> Obtainium do it): https://github.com/tengencode/DreamBoy/releases/latest
 
 ## 6. Later
 

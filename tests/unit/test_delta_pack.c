@@ -1,4 +1,4 @@
-/* The rewind packer (core/src/delta_pack.c): unpacking gives back exactly the other snapshot. */
+/* The rewind packer (core_common/delta_pack.c): unpacking gives back exactly the other snapshot. */
 #include <stdlib.h>
 #include <string.h>
 

@@ -1,7 +1,7 @@
 file(GLOB UNIT_SOURCES CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/*.c)
 add_executable(unit_tests ${UNIT_SOURCES})
-target_link_libraries(unit_tests PRIVATE gbacore)
-target_include_directories(unit_tests PRIVATE ${PROJECT_SOURCE_DIR}/core/src ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(unit_tests PRIVATE gbacore gbcore machine)
+target_include_directories(unit_tests PRIVATE ${PROJECT_SOURCE_DIR}/core/src ${PROJECT_SOURCE_DIR}/core_gb/src ${CMAKE_CURRENT_SOURCE_DIR})
 target_compile_options(unit_tests PRIVATE -Wall -Wextra -Wno-unused-parameter)
 add_test(NAME unit_tests COMMAND unit_tests)
 # The user's own BIOS for the twin tests against the real BIOS (gitignored; those tests skip without it).

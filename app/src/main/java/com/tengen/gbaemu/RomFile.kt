@@ -5,15 +5,26 @@ import java.io.ByteArrayOutputStream
 import java.io.InputStream
 import java.util.zip.ZipInputStream
 
-/** A game's bytes from a `.gba` file, or from the first `.gba` inside a `.zip` (told apart by the zip's first bytes). */
+/**
+ * A game's bytes from a game file (`.gba`, `.gb`, `.gbc`), or from the first game file inside a `.zip` (told apart by
+ * the zip's first bytes).
+ */
 object RomFile {
     const val MAX_SIZE = 32 * 1024 * 1024
+    val GAME_ENDINGS = listOf(".gba", ".gb", ".gbc")
 
-    /** Not a game this app can run: empty, over 32 MiB, or a zip without a `.gba` inside. */
+    private fun isGameName(name: String) = GAME_ENDINGS.any { name.endsWith(it, ignoreCase = true) }
+
+    /** Not a game this app can run: empty, over 32 MiB, or a zip without a game file inside. */
     class NotAGame(message: String) : Exception(message)
 
+    /** A game's bytes and, when it came out of a zip, its file name in there (else null). */
+    class Named(val bytes: ByteArray, val zipName: String?)
+
     /** Reads the game (closes nothing: the caller owns [input]). Throws [NotAGame], or an IOException if reading fails. */
-    fun read(input: InputStream): ByteArray {
+    fun read(input: InputStream): ByteArray = readNamed(input).bytes
+
+    fun readNamed(input: InputStream): Named {
         val buf = BufferedInputStream(input)
         buf.mark(4)
         val head = ByteArray(4)
@@ -27,20 +38,22 @@ object RomFile {
         if (n == 4 && isZip(head)) {
             val zip = ZipInputStream(buf)
             while (true) {
-                val e = zip.nextEntry ?: throw NotAGame("no .gba file inside this zip")
-                if (!e.isDirectory && e.name.endsWith(".gba", ignoreCase = true)) return limited(zip)
+                val e = zip.nextEntry ?: throw NotAGame("no game file inside this zip")
+                if (!e.isDirectory && isGameName(e.name)) return Named(limited(zip), e.name)
             }
         }
-        return limited(buf)
+        return Named(limited(buf), null)
     }
 
-    /** True if [input] is a zip holding a `.gba` file (reads only as far as that file's name). */
-    fun zipHasGame(input: InputStream): Boolean = try {
+    /** The name of the first game file in the zip [input] (reads only as far as that name), or null: none, or no zip. */
+    fun zipGameName(input: InputStream): String? = try {
         val zip = ZipInputStream(BufferedInputStream(input))
-        generateSequence { zip.nextEntry }.any { !it.isDirectory && it.name.endsWith(".gba", ignoreCase = true) }
+        generateSequence { zip.nextEntry }.firstOrNull { !it.isDirectory && isGameName(it.name) }?.name
     } catch (e: Exception) {
-        false
+        null
     }
+
+    fun zipHasGame(input: InputStream): Boolean = zipGameName(input) != null
 
     private fun isZip(head: ByteArray) = head[0] == 'P'.code.toByte() && head[1] == 'K'.code.toByte() &&
         head[2] == 3.toByte() && head[3] == 4.toByte()

@@ -137,5 +137,23 @@ class Output(unittest.TestCase):
                          ["game error (level 1): ASSERTION FAILED  FILE=[src/malloc.c] (frame 7229, 2 times)"])
 
 
+class GameFiles(unittest.TestCase):
+    def test_picks_the_one_game_in_a_zip(self):
+        self.assertEqual(gc.game_member(["readme.txt", "game.GBA"]), "game.GBA")
+        self.assertEqual(gc.game_member(["a/b/shock.gb", "__MACOSX/shock.gb", "notes.md"]), "a/b/shock.gb")
+        self.assertEqual(gc.game_member(["city.gbc"]), "city.gbc")
+        for bad in [["a.gba", "b.gb"], ["readme.txt"], []]:
+            with self.assertRaises(ValueError):
+                gc.game_member(bad)
+
+    def test_game_boy_games_have_no_shoulder_buttons_or_rotation_sensor(self):
+        gc.check_keys("x.gba", [gc.key_mask("L+R+CW"), gc.key_mask("A")])
+        gc.check_keys("x.gb", [gc.key_mask("A+B+START+SELECT+UP"), 0])
+        for keys in ["L", "R", "CW", "CCW", "A+R"]:
+            for name in ["x.gb", "x.GBC"]:
+                with self.assertRaises(ValueError):
+                    gc.check_keys(name, [0, gc.key_mask(keys)])
+
+
 if __name__ == "__main__":
     unittest.main()

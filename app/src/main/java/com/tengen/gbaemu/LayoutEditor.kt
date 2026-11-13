@@ -41,7 +41,7 @@ import kotlin.math.roundToInt
 @Composable
 fun LayoutEditor(sideways: Boolean, start: Map<LayoutItem, Place>, picture: Bitmap?, look: Int,
                  onSave: (Map<LayoutItem, Place>) -> Unit, onCancel: () -> Unit, skin: Skin = Skins.PLAIN,
-                 fitMode: Int = Settings.SIZE_FIT) {
+                 fitMode: Int = Settings.SIZE_FIT, console: Console = Console.GBA) {
     var edits by remember { mutableStateOf(start) }
     var selected by remember { mutableStateOf<LayoutItem?>(null) }
     BackHandler { onCancel() }
@@ -57,6 +57,7 @@ fun LayoutEditor(sideways: Boolean, start: Map<LayoutItem, Place>, picture: Bitm
                 v.look = look
                 v.skin = skin
                 v.fitMode = fitMode
+                v.console = console
                 v.picture = picture
                 v.selected = selected
                 v.onSelect = { selected = it }
@@ -66,7 +67,7 @@ fun LayoutEditor(sideways: Boolean, start: Map<LayoutItem, Place>, picture: Bitm
         )
         if (!turnedRight) return@BoxWithConstraints // a moment while the screen turns
         val layout = TouchLayout(constraints.maxWidth.toFloat(), constraints.maxHeight.toFloat(),
-            LocalDensity.current.density, sideways, edits)
+            LocalDensity.current.density, sideways, edits, console = console)
         // The bar away from the picked item (nothing picked: at the top, where upright the picture is big enough).
         val atTop = selected?.let { layout.box(it).cy > layout.height / 2 } ?: true
         Surface(

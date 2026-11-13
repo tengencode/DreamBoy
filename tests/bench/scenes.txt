@@ -2,3 +2,6 @@
 # scenes.local.txt next to this file (same format; gitignored, never in the repository); tools/dev.sh bench reads both. name | rom | save | keys | warm-up frames | timed frames | picture hash | sound hash
 m7_demo    | tonc/m7_demo.gba | - | 60:UP,400:UP+LEFT,520:UP,900:UP+RIGHT,1000:UP,1300:LEFT,1400:DOWN,1700:DOWN+RIGHT,1800:- | 60 | 1800 | 8d17421337b37d36 | 0e1ae05b39c9d605
 snd1_demo  | tonc/snd1_demo.gba | - | 100:A,110:-,300:B,310:-,500:UP,510:-,700:DOWN,710:-,900:LEFT,910:-,1100:RIGHT,1110:-,1300:A,1310:-,1500:B,1510:- | 60 | 1800 | 45a2cbd3db7573b9 | 06984b8842381435
+gb_ucity     | homebrew/ucity.gbc | - | 200:A,240:-,400:START,440:-,600:LEFT,700:RIGHT,800:UP,900:DOWN,1000:A,1040:-,1200:B,1240:-,1400:RIGHT,1600:DOWN,1800:- | 60 | 1800 | 7f0352b2b7d31200 | bca596cda06b91a1
+gb_geometrix | homebrew/geometrix.gbc | - | 200:A,240:-,400:START,440:-,600:LEFT,700:RIGHT,800:UP,900:DOWN,1000:A,1040:-,1200:B,1240:-,1400:RIGHT,1600:DOWN,1800:- | 60 | 1800 | f659e0e8cd97e85c | 399ac512e69f5851
+gb_libbet    | homebrew/libbet.gb | - | 200:A,240:-,400:START,440:-,600:LEFT,700:RIGHT,800:UP,900:DOWN,1000:A,1040:-,1200:B,1240:-,1400:RIGHT,1600:DOWN,1800:- | 60 | 1800 | 9df987ef6cc7f11f | 48e94ef562de5e85

@@ -16,6 +16,7 @@
 
 #include "gba_internal.h"
 #include "rewind.h"
+#include "rewind_ring.h"
 
 #define STATE_FORMAT 1u
 #define HEADER_SIZE 16u
@@ -151,7 +152,7 @@ size_t gba_state_save(const gba_t *g, void *buf, size_t cap) {
 
 gba_err_t gba_state_load(gba_t *g, const void *buf, size_t len) {
     gba_err_t err = state_load(g, buf, len);
-    if (err == GBA_OK) rewind_clear(g->rewind);
+    if (err == GBA_OK) rewind_ring_clear(g->rewind);
     return err;
 }
 

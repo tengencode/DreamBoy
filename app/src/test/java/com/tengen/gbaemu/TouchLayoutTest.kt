@@ -7,10 +7,44 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class TouchLayoutTest {
+    @Test
+    fun aGameBoyGameHasItsOwnPictureShapeAndNoShoulderButtons() {
+        val gb = TouchLayout(1080f, 1700f, 3f, sideways = false, console = Console.GB)
+        assertEquals(TouchLayout.Box(0f, 0f, 1080f, 972f), gb.picture) // full width, 10:9
+        assertEquals(TouchLayout.Box(0f, 0f, 1080f, 972f), gb.game)
+        assertEquals(6, gb.buttons.size) // rewind, fast-forward, A, B, Select, Start
+        assertTrue(gb.buttons.none { it.bit == KeyMap.L || it.bit == KeyMap.R })
+        assertEquals(listOf(LayoutItem.PICTURE, LayoutItem.DPAD, LayoutItem.REWIND, LayoutItem.FAST, LayoutItem.A, LayoutItem.B,
+            LayoutItem.SELECT, LayoutItem.START), gb.items)
+        // where a GBA game has its L button, a finger presses nothing
+        val gba = TouchLayout(1080f, 1700f, 3f, sideways = false)
+        val l = gba.box(LayoutItem.L)
+        assertEquals(KeyMap.L, gba.buttonsAt(l.cx, l.cy))
+        assertEquals(8, gba.buttons.size)
+        assertEquals(10, gba.items.size)
+        val gbcSide = TouchLayout(2400f, 1080f, 3f, sideways = true, console = Console.GBC)
+        assertEquals(0, gbcSide.buttonsAt(48f * 3, 20f * 3 + 16 * 3)) // L's place sideways
+        assertEquals(TouchLayout.Box(600f, 0f, 1800f, 1080f), gbcSide.game) // 10:9 by the height
+        val whole = TouchLayout(2400f, 1080f, 3f, true, fitMode = Settings.SIZE_INTEGER, console = Console.GB)
+        assertEquals(TouchLayout.Box(640f, 36f, 1760f, 1044f), whole.game) // 7 x 160 by 7 x 144
+        // every item of a Game Boy layout can be found, moved and is kept
+        val moved = gb.with(LayoutItem.A, Place(0.5f, 0.8f, 1.5f))
+        assertEquals(Console.GB, moved.console)
+        assertEquals(LayoutItem.A, moved.itemAt(540f, 0.8f * 1700f))
+        for (item in gb.items) assertEquals(item, gb.itemAt(gb.box(item).cx, gb.box(item).cy).takeIf { item != LayoutItem.PICTURE } ?: item)
+    }
+
     private val density = 2.625f // Pixel 9
     private val upright = TouchLayout(1080f, 1700f, density, sideways = false)
     private val sideways = TouchLayout(2400f, 1080f, density, sideways = true)
     private val delta = 0.01f
+
+    @Test
+    fun sidewaysAGameBoyGameHasNoButtonOverTheGame() { // its picture is narrow: Select and Start go to the side bars
+        val gb = TouchLayout(2400f, 1080f, 3f, sideways = true, console = Console.GB)
+        assertTrue(gb.buttons.none { gb.overGame(it) })
+        assertTrue(gb.box(LayoutItem.SELECT).right < gb.game.left && gb.box(LayoutItem.START).left > gb.game.right)
+    }
 
     private fun TouchLayout.button(bit: Int) = buttons.first { it.bit == bit }
 

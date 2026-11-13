@@ -11,7 +11,10 @@ if(GBA_SANITIZE)
     add_link_options(-fsanitize=address,undefined)
 endif()
 
+add_subdirectory(core_common) # the rewind ring both cores share
 add_subdirectory(core)
+add_subdirectory(core_gb) # the Game Boy / Game Boy Color core (milestone 17)
+add_subdirectory(machine) # one layer over both cores
 
 # The speed benchmark: on the PC with the other tools, for Android on its own (tools/dev.sh phone-bench).
 option(GBA_BENCH_ONLY "Build only the core, gbabench and the unit tests (Android executables for the phone)" OFF)
@@ -105,6 +108,37 @@ if(NOT ANDROID)
                      COMMAND testrunner ${PROJECT_SOURCE_DIR}/tests/roms/${f_rom} --frames ${f_frames}
                              --rewind-at ${f_rewind_at}:${f_rewind_steps} --expect-hash ${f_hash} ${audio_args})
             set_tests_properties(rewind_${f_name} PROPERTIES SKIP_RETURN_CODE 77)
+        endforeach()
+    endif()
+
+    # Game Boy / Game Boy Color test ROMs (tests/roms/gb/, fetched by tools/fetch_test_roms.py): tests/gb_tests.json
+    # lists each ROM and how it reports - "serial" / "memtext" (the text to find, default "Passed") or "mooneye".
+    set(GB_TESTS_FILE ${PROJECT_SOURCE_DIR}/tests/gb_tests.json)
+    set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${GB_TESTS_FILE})
+    file(READ ${GB_TESTS_FILE} GB_TESTS_JSON)
+    string(JSON gb_count LENGTH "${GB_TESTS_JSON}" tests)
+    if(gb_count GREATER 0)
+        math(EXPR last_gb "${gb_count} - 1")
+        foreach(i RANGE ${last_gb})
+            string(JSON g_name GET "${GB_TESTS_JSON}" tests ${i} name)
+            string(JSON g_rom GET "${GB_TESTS_JSON}" tests ${i} rom)
+            string(JSON g_mode GET "${GB_TESTS_JSON}" tests ${i} mode)
+            string(JSON g_expect ERROR_VARIABLE no_expect GET "${GB_TESTS_JSON}" tests ${i} expect)
+            if(no_expect)
+                set(g_expect Passed)
+            endif()
+            string(JSON g_frames ERROR_VARIABLE no_frames GET "${GB_TESTS_JSON}" tests ${i} frames)
+            if(no_frames)
+                set(g_frames 2400)
+            endif()
+            if(g_mode STREQUAL "mooneye")
+                set(g_args --gb-mooneye)
+            else()
+                set(g_args --gb-${g_mode} ${g_expect})
+            endif()
+            add_test(NAME gb_${g_name}
+                     COMMAND testrunner "${PROJECT_SOURCE_DIR}/tests/roms/gb/${g_rom}" ${g_args} --frames ${g_frames})
+            set_tests_properties(gb_${g_name} PROPERTIES SKIP_RETURN_CODE 77)
         endforeach()
     endif()
 

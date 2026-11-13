@@ -43,7 +43,7 @@ fun AboutPage(version: String, onGithub: () -> Unit, onPage: (SettingsPage) -> U
             Text("Version $version", style = MaterialTheme.typography.bodySmall.merge(Tabular),
                 color = MaterialTheme.colorScheme.onSurfaceVariant)
             Spacer(Modifier.height(4.dp))
-            Text("A Game Boy Advance emulator for Android. Game Boy and Game Boy Color support is planned.",
+            Text("A Game Boy, Game Boy Color and Game Boy Advance emulator for Android.",
                 style = MaterialTheme.typography.bodyLarge)
             Spacer(Modifier.height(8.dp))
             Text("Free software under the GPL 3.0 or later. No ads and no tracking.", style = MaterialTheme.typography.bodySmall,

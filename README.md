@@ -1,6 +1,6 @@
 # DreamBoy
 
-**A fast, free Game Boy Advance emulator for Android.** Game Boy and Game Boy Color support is planned.
+**A fast, free Game Boy, Game Boy Color and Game Boy Advance emulator for Android.**
 
 [![Get it on GitHub](docs/images/get-it-on-github.png)](https://github.com/tengencode/DreamBoy/releases/latest)
 
@@ -8,18 +8,27 @@
 |---|---|---|---|
 | ![The game list](docs/images/screenshot-1.png) | ![A game with touch controls](docs/images/screenshot-2.png) | ![The pause menu](docs/images/screenshot-3.png) | ![A console skin](docs/images/screenshot-4.png) |
 
-DreamBoy's emulator core is written in C with hand-written ARM64 assembly, so it runs games at full speed on cheap and
-old phones. It's free and open source (GPL-3.0), with no ads, no tracking and no account needed.
+DreamBoy's emulator cores are its own, written in C (the Game Boy Advance one with hand-written ARM64 assembly), so it
+runs games at full speed on cheap and old phones. It's free and open source (GPL-3.0), with no ads, no tracking and no
+account needed.
 
 ## Features
 
+For every game (`.gba`, `.gb`, `.gbc`, or one of them in a `.zip`):
+
 - Save states (10 slots and a quick slot), rewind and fast-forward
-- Cheats: Action Replay, GameShark, CodeBreaker, raw codes and libretro `.cht` files
-- Touch controls with a layout editor, 13 console skins, imported Delta skins (`.deltaskin`), keyboards and gamepads
-- Tilt, gyro, solar sensor and rumble cartridges, and the real-time clock
-- [RetroAchievements](https://retroachievements.org): achievements and leaderboards (sign in with your own account)
+- Touch controls with a layout editor, 13 console skins, keyboards and gamepads
+- In-game saves in the usual `.sav` format, and the real-time clock of cartridges that have one
 - Box art for your game list, and backup and restore of everything as one `.zip`
-- A built-in BIOS; your own BIOS file is optional
+
+For Game Boy Advance games today, for Game Boy and Game Boy Color games in a later version:
+
+- Cheats: Action Replay, GameShark, CodeBreaker, raw codes and libretro `.cht` files
+- [RetroAchievements](https://retroachievements.org): achievements and leaderboards (sign in with your own account)
+- Imported Delta skins (`.deltaskin`)
+- Tilt, gyro, solar sensor and rumble cartridges
+
+Game Boy Advance games use a built-in BIOS (your own BIOS file is optional); Game Boy games need none.
 
 **No games or BIOS come with the app.** Use games you own.
 
@@ -36,14 +45,15 @@ DreamBoy needs Android 8 or newer. To get new versions automatically, add this p
 ## RetroAchievements
 
 Sign in under Settings → RetroAchievements with your own retroachievements.org account. Achievements unlock and
-leaderboards can be viewed. Hardcore mode, and with it sending leaderboard scores, waits until RetroAchievements approves
-DreamBoy, which they consider once an emulator has been public for six months.
+leaderboards can be viewed in Game Boy Advance games. Hardcore mode, and with it sending leaderboard scores, waits until
+RetroAchievements approves DreamBoy, which they consider once an emulator has been public for six months.
 
 ## How it was made
 
 DreamBoy was built with a lot of help from an AI assistant (Claude); every commit says so. Its correctness rests on
-tests rather than trust: hundreds of unit tests, public CPU and graphics test ROMs, frame and sound fingerprints, the
-mGBA test suite, on-device tests, and a check that plays dozens of games by script. Bug reports are welcome.
+tests rather than trust: hundreds of unit tests, public CPU, graphics and sound test ROMs for all three consoles, frame
+and sound fingerprints, the mGBA test suite, on-device tests, and a check that plays dozens of games by script. Bug
+reports are welcome.
 
 ## Building
 

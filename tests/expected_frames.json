@@ -1,6 +1,44 @@
 {
   "frames": [
     {
+      "name": "own_gb_demo",
+      "rom": "../own_roms/gb_demo.gb",
+      "frames": 200,
+      "hash": "efc84897a4a10f25",
+      "audio": "3378ac766cbf75d5"
+    },
+    {
+      "name": "own_gbc_demo",
+      "rom": "../own_roms/gbc_demo.gbc",
+      "frames": 200,
+      "hash": "825002709a5a4f25",
+      "audio": "3378ac766cbf75d5"
+    },
+    {
+      "name": "gb_cgb_acid2",
+      "rom": "gb/acid/cgb-acid2.gbc",
+      "frames": 60,
+      "hash": "78ce869d9b004a6f"
+    },
+    {
+      "name": "gb_blargg_halt_bug",
+      "rom": "gb/blargg/halt_bug.gb",
+      "frames": 400,
+      "hash": "655c3ae9d19ac067"
+    },
+    {
+      "name": "gb_blargg_interrupt_time",
+      "rom": "gb/blargg/interrupt_time/interrupt_time.gb",
+      "frames": 400,
+      "hash": "fedf697ad03e5839"
+    },
+    {
+      "name": "gb_dmg_acid2",
+      "rom": "gb/acid/dmg-acid2.gb",
+      "frames": 60,
+      "hash": "39f940576d2d1473"
+    },
+    {
       "name": "jsmolka_arm",
       "rom": "jsmolka/arm.gba",
       "frames": 10,

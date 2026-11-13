@@ -5,17 +5,17 @@
 #include "egl_ctx.h"
 #include "video_gl.h"
 
-bool gl_readback(const uint16_t *pixels, int width, int height, int fit_mode, bool smooth, uint32_t background,
+bool gl_readback(const uint16_t *pixels, int frame_w, int frame_h, int width, int height, int fit_mode, bool smooth, uint32_t background,
                  uint32_t *out) {
     egl_ctx_t e;
     if (!egl_ctx_init(&e, true)) return false;
     const EGLint pb_attrs[] = {EGL_WIDTH, width, EGL_HEIGHT, height, EGL_NONE};
     EGLSurface s = eglCreatePbufferSurface(e.display, e.config, pb_attrs);
     bool ok = s != EGL_NO_SURFACE && eglMakeCurrent(e.display, s, s, e.context);
-    video_gl_t v = {0, 0, 0, 0};
+    video_gl_t v = {0};
     if (ok) ok = video_gl_init(&v);
     if (ok) {
-        video_gl_upload(&v, pixels);
+        video_gl_upload(&v, pixels, frame_w, frame_h);
         video_gl_draw(&v, width, height, fit_mode, smooth, background);
         glPixelStorei(GL_PACK_ALIGNMENT, 4);
         glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, out);

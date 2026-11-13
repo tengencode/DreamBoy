@@ -5,7 +5,8 @@ import java.net.URLEncoder
 
 /**
  * Box art and cheat files from libretro (10b). [run] works through the game list one game at a time until [stop]:
- * libretro's game list first (kept 30 days as `names.tsv`), then each game that needs a lookup ([BoxArt]): its
+ * libretro's game list first (one per console, each kept 30 days: `names.tsv` for GBA, `names-gb.tsv`,
+ * `names-gbc.tsv`), then each game that needs a lookup ([BoxArt]): its
  * fingerprint and header code → its name → its box, shrunk and saved. Pure — downloading, reading a game and shrinking
  * a picture are passed in — so it is tested on the PC; MainActivity runs it on a background thread.
  */
@@ -29,32 +30,61 @@ class BoxArtHelper(
         stopped = true
     }
 
+    /** A console's game list and when it was downloaded. */
+    private class Listed(val names: GameNames, val time: Long)
+
+    /** Each console's list, loaded (or found missing: null) the first time a game of that console needs it. */
+    private val lists = HashMap<Console, Listed?>()
+
+    private fun list(console: Console): Listed? {
+        if (console !in lists) lists[console] = load(console)
+        return lists[console]
+    }
+
+    /**
+     * The game's name in libretro's lists and the console list it was found in. A Game Boy game is looked up in its
+     * own console's list, then in the other Game Boy list (colour-enhanced games appear in either); only GBA games
+     * have a header [code] to fall back on.
+     */
+    private fun find(console: Console, id: String, code: String): Pair<String, Console>? {
+        list(console)?.names?.find(id, code)?.let { return it to console }
+        val other = when (console) {
+            Console.GB -> Console.GBC
+            Console.GBC -> Console.GB
+            Console.GBA -> return null
+        }
+        return list(other)?.names?.find(id, "")?.let { it to other }
+    }
+
     /**
      * Looks up [games] in turn. [onId] gets a game's fingerprint when it had to be read; [onPicture] follows each new
      * box. A box missing on the server is remembered as none; any other failure ends the run (tried again next time);
-     * a picture that can't be read is skipped (tried again next time).
+     * a picture that can't be read is skipped (tried again next time). A console's game list is downloaded only when
+     * one of [games] is for that console; games whose list can't be had are left for next time.
      */
     fun run(games: List<GameEntry>, onId: (GameEntry, String) -> Unit, onPicture: () -> Unit) {
-        val names = names() ?: return
         for (g in games) {
             if (stopped) return
-            if (g.id.isNotEmpty() && !boxArt.needsLookup(g.id, listTime)) continue
+            val console = g.console ?: Console.GBA
+            val own = list(console) ?: continue
+            if (g.id.isNotEmpty() && !boxArt.needsLookup(g.id, own.time)) continue
             var id = g.id
-            var name = if (id.isEmpty()) null else names.find(id, "")
-            if (name == null) {
+            var found = if (id.isEmpty()) null else find(console, id, "")
+            if (found == null) {
                 val rom = readGame(g) ?: continue
                 if (id.isEmpty()) {
                     id = GameId.of(rom)
                     onId(g, id)
-                    if (!boxArt.needsLookup(id, listTime)) continue
+                    if (!boxArt.needsLookup(id, own.time)) continue
                 }
-                name = names.find(id, GameNames.code(rom))
+                found = find(console, id, if (console == Console.GBA) GameNames.code(rom) else "")
             }
-            if (name == null) {
+            if (found == null) {
                 boxArt.none(id, "", now())
                 continue
             }
-            when (val r = fetch(BOX_URL + encode(GameNames.pictureName(name) + ".png"), MAX_PICTURE)) {
+            val (name, system) = found
+            when (val r = fetch(boxUrl(system) + encode(GameNames.pictureName(name) + ".png"), MAX_PICTURE)) {
                 is Net.Got -> {
                     val jpeg = shrink(r.bytes) ?: continue
                     boxArt.found(id, name, jpeg, now())
@@ -66,27 +96,24 @@ class BoxArtHelper(
         }
     }
 
-    /** The game list: the kept one if younger than 30 days, else downloaded (the old one if that fails); null if none. */
-    fun names(): GameNames? {
-        val file = File(dir, "names.tsv")
+    /** The GBA game list (also for cheat files, which exist for GBA games only). */
+    fun names(): GameNames? = list(Console.GBA)?.also { listTime = it.time }?.names
+
+    /** A console's game list: the kept one if younger than 30 days, else downloaded (the old one if that fails); null if none. */
+    private fun load(console: Console): Listed? {
+        val file = File(dir, NAMES_FILE.getValue(console))
         val kept = readKept(file)
-        if (kept != null && now() - kept.first < MONTH) {
-            listTime = kept.first
-            return GameNames.fromTsv(kept.second)
-        }
-        val got = fetch(NAMES_URL, MAX_LIST)
+        if (kept != null && now() - kept.first < MONTH) return Listed(GameNames.fromTsv(kept.second), kept.first)
+        val got = fetch(namesUrl(console), MAX_LIST)
         if (got is Net.Got) {
             val names = GameNames.fromDat(got.bytes.toString(Charsets.UTF_8))
             if (names.rows.isNotEmpty()) {
                 val t = now()
                 writeKept(file, t, names.toTsv())
-                listTime = t
-                return names
+                return Listed(names, t)
             }
         }
-        if (kept == null) return null
-        listTime = kept.first
-        return GameNames.fromTsv(kept.second)
+        return kept?.let { Listed(GameNames.fromTsv(it.second), it.first) }
     }
 
     /** libretro's cheat files for the game called [name], as (label, file); null if the list can't be had. */
@@ -134,6 +161,16 @@ class BoxArtHelper(
         private const val SYSTEM = "Nintendo%20-%20Game%20Boy%20Advance"
         const val NAMES_URL = "https://raw.githubusercontent.com/libretro/libretro-database/master/metadat/no-intro/$SYSTEM.dat"
         const val BOX_URL = "https://thumbnails.libretro.com/$SYSTEM/Named_Boxarts/"
+
+        /** libretro's name for each console's lists and pictures, and the file each list is kept in (the GBA's as in 1.0). */
+        private val SYSTEMS = mapOf(Console.GBA to SYSTEM, Console.GB to "Nintendo%20-%20Game%20Boy",
+            Console.GBC to "Nintendo%20-%20Game%20Boy%20Color")
+        private val NAMES_FILE = mapOf(Console.GBA to "names.tsv", Console.GB to "names-gb.tsv", Console.GBC to "names-gbc.tsv")
+
+        fun namesUrl(console: Console) =
+            "https://raw.githubusercontent.com/libretro/libretro-database/master/metadat/no-intro/${SYSTEMS.getValue(console)}.dat"
+
+        fun boxUrl(console: Console) = "https://thumbnails.libretro.com/${SYSTEMS.getValue(console)}/Named_Boxarts/"
         const val CHEAT_LIST_URL = "https://api.github.com/repos/libretro/libretro-database/contents/cht/$SYSTEM"
         const val CHEAT_URL = "https://raw.githubusercontent.com/libretro/libretro-database/master/cht/$SYSTEM/"
 

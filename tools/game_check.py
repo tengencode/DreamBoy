@@ -11,7 +11,7 @@ own error messages), the log and the game's own messages (mGBA's debug-print reg
 locked in the list ("-" = not locked yet); exit 1 when any differs.
 --lock plays the named game (or all) the same way and writes its SHA-256, hashes and log into the list.
 Games come from --games (source "user"), tests/roms/ (source "test") or tests/roms/homebrew/ (a download URL); a
-.zip is unpacked (its one .gba). A save file is copied into build/check/work/ first, so the user's file is never
+.zip is unpacked (its one .gba, .gb or .gbc). A save file is copied into build/check/work/ first, so the user's file is never
 written. Run it through tools/dev.sh games (which builds build/check and passes --runner and --games).
 """
 import argparse
@@ -202,18 +202,37 @@ def folder(game, games_dir):
     return HOMEBREW
 
 
+GAME_ENDINGS = (".gba", ".gb", ".gbc")
+
+
+def game_member(names):
+    """The one game file (.gba, .gb or .gbc) among a zip's member names."""
+    members = [n for n in names if n.lower().endswith(GAME_ENDINGS) and not n.startswith("__MACOSX/")]
+    if len(members) != 1:
+        raise ValueError(f"{len(members)} game files inside, expected 1")
+    return members[0]
+
+
+def check_keys(file_name, masks):
+    """A Game Boy or Game Boy Color game has no L, R or rotation sensor: a script using them is a mistake."""
+    extra = (1 << KEY_BITS["R"]) | (1 << KEY_BITS["L"]) | (1 << KEY_BITS["CW"]) | (1 << KEY_BITS["CCW"])
+    if not file_name.lower().endswith(".gba") and any(m & extra for m in masks):
+        raise ValueError(f"{file_name}: L, R, CW and CCW are not Game Boy buttons")
+
+
 def rom_bytes(game, games_dir):
-    """The game's .gba bytes, or None when the file is missing."""
+    """The game's bytes and its file name (the member's, for a zip), or None when the file is missing."""
     path = folder(game, games_dir) / game["file"]
     if not path.exists():
         return None
     if path.suffix.lower() != ".zip":
-        return path.read_bytes()
+        return path.read_bytes(), path.name
     with zipfile.ZipFile(path) as z:
-        members = [n for n in z.namelist() if n.lower().endswith(".gba") and not n.startswith("__MACOSX/")]
-        if len(members) != 1:
-            raise ValueError(f"{path.name}: {len(members)} .gba files inside, expected 1")
-        return z.read(members[0])
+        try:
+            member = game_member(z.namelist())
+        except ValueError as e:
+            raise ValueError(f"{path.name}: {e}") from None
+        return z.read(member), member
 
 
 def run_text(cmd):
@@ -225,18 +244,24 @@ def run_text(cmd):
 
 def run_game(game, args, pictures):
     """Plays one game; a result dict, or None when its file is missing."""
-    rom = rom_bytes(game, args.games)
-    if rom is None:
+    found = rom_bytes(game, args.games)
+    if found is None:
         return None
+    rom, rom_name = found
+    is_gba = rom_name.lower().endswith(".gba")
+    rom_file = "game" + Path(rom_name).suffix.lower()
     work = WORK / game["name"]
     if work.exists():
         shutil.rmtree(work)
     (work / "shots").mkdir(parents=True)
-    (work / "game.gba").write_bytes(rom)
+    (work / rom_file).write_bytes(rom)
     masks = expand_keys(game["keys"], game["frames"])
+    check_keys(rom_name, masks)
     (work / "keys.txt").write_text(key_events(masks))
-    cmd = [args.runner, str(work / "game.gba"), "--frames", str(game["frames"]), "--rtc", str(CLOCK),
-           "--keys", "@" + str(work / "keys.txt"), "--hash", "--audio-hash", "--notes"]
+    cmd = [args.runner, str(work / rom_file), "--frames", str(game["frames"]), "--rtc", str(CLOCK),
+           "--keys", "@" + str(work / "keys.txt"), "--hash", "--audio-hash"]
+    if is_gba:
+        cmd.append("--notes")  # the warning log is the GBA core's
     if game["save"] != "-":
         save = folder(game, args.games) / game["save"]
         if not save.exists():

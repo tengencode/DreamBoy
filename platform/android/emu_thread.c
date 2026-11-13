@@ -30,7 +30,10 @@
 #define REWIND_EVERY 4            /* frames between snapshots; rewinding steps back one per 1/60 s */
 
 struct emu {
-    gba_t *g;
+    machine_t *m;
+    gba_t *g; /* the machine's Game Boy Advance core, for what only that console has; NULL for a Game Boy game */
+    size_t pixels;    /* in a frame */
+    int clock_frames; /* a Game Boy cartridge clock is told the time about once a second */
     triple_buffer_t tb;
     pthread_t thread;
     bool started;
@@ -143,7 +146,7 @@ static size_t target_frames(emu_t *e) {
 static void feed_sound(emu_t *e, int speed) {
     int16_t in[1024 * 2];
     size_t n;
-    while ((n = gba_audio_read(e->g, in, 1024)) > 0) {
+    while ((n = machine_audio_read(e->m, in, 1024)) > 0) {
         if (!e->out || speed == EMU_FF_MAX) continue;
         double fill = (double)audio_ring_queued(&e->ring) / (2.0 * (double)target_frames(e));
         double ratio = rate_control_ratio(audio_out_rate(e->out), fill) / (speed >= 2 ? speed : 1);
@@ -184,9 +187,11 @@ static void sound_pace(emu_t *e) {
 static void apply_sensors(emu_t *e) {
     int x = atomic_load(&e->tilt_x), y = atomic_load(&e->tilt_y);
     int turn = atomic_load(&e->turn), light = atomic_load(&e->light);
-    gba_set_tilt(e->g, (int16_t)x, (int16_t)y);
-    gba_set_gyro(e->g, (int16_t)turn);
-    gba_set_light(e->g, (uint8_t)light);
+    if (e->g) {
+        gba_set_tilt(e->g, (int16_t)x, (int16_t)y);
+        gba_set_gyro(e->g, (int16_t)turn);
+        gba_set_light(e->g, (uint8_t)light);
+    }
     atomic_store(&e->seen[0], x);
     atomic_store(&e->seen[1], y);
     atomic_store(&e->seen[2], turn);
@@ -195,9 +200,12 @@ static void apply_sensors(emu_t *e) {
 
 /* The core's save bytes into the save file (nothing without a path or a chip of known size). */
 static void write_save(emu_t *e) {
-    size_t size = gba_saveram_size(e->g);
+    size_t size = machine_save_size(e->m);
     if (!e->save_path || !size) return;
-    if (!save_file_write(e->save_path, gba_saveram(e->g), size)) {
+    uint8_t *save = malloc(size);
+    bool ok = save && machine_save_write(e->m, save, size) == size && save_file_write(e->save_path, save, size);
+    free(save);
+    if (!ok) {
         LOGW("cannot write the save file %s", e->save_path);
         atomic_store(&e->save_failed, true);
         save_timer_frame(&e->save_timer, true); /* still pending: tried again in about 1 s, and at pause / stop */
@@ -206,7 +214,7 @@ static void write_save(emu_t *e) {
 
 /* Pause, stop: write now if the game saved since the last write. */
 static void flush_save(emu_t *e) {
-    if (gba_saveram_dirty(e->g)) save_timer_frame(&e->save_timer, true);
+    if (machine_save_dirty(e->m)) save_timer_frame(&e->save_timer, true);
     if (save_timer_flush(&e->save_timer)) write_save(e);
 }
 
@@ -219,8 +227,8 @@ static void clock_wait(frame_pacer_t *pacer) {
 }
 
 static void keep_rewind_stats(emu_t *e) {
-    size_t snaps, bytes;
-    gba_debug_rewind_stats(e->g, &snaps, &bytes);
+    size_t snaps = 0, bytes = 0;
+    if (e->g) gba_debug_rewind_stats(e->g, &snaps, &bytes);
     atomic_store(&e->rw_snaps, (long long)snaps);
     atomic_store(&e->rw_bytes, (long long)bytes);
 }
@@ -250,26 +258,30 @@ static void check_achievements(emu_t *e) {
 static void play_frame(emu_t *e, int speed) {
     unsigned keys = key_latch_take(&e->keys);
     atomic_fetch_or(&e->keys_seen, keys);
-    gba_set_keys(e->g, (uint16_t)keys);
+    machine_set_keys(e->m, (uint16_t)keys);
     apply_sensors(e);
-    gba_run_frame(e->g);
+    if (!e->g && ++e->clock_frames >= 60) {
+        e->clock_frames = 0;
+        machine_set_rtc(e->m, (int64_t)time(NULL), 0);
+    }
+    machine_run_frame(e->m);
     check_achievements(e);
-    atomic_store(&e->rumble, gba_rumble_active(e->g) != 0);
-    memcpy(tb_back(&e->tb), gba_framebuffer(e->g), sizeof(uint16_t) * TB_PIXELS);
+    atomic_store(&e->rumble, e->g && gba_rumble_active(e->g) != 0);
+    memcpy(tb_back(&e->tb), machine_framebuffer(e->m), sizeof(uint16_t) * e->pixels);
     tb_publish(&e->tb);
     feed_sound(e, speed);
-    if (save_timer_frame(&e->save_timer, gba_saveram_dirty(e->g))) write_save(e);
+    if (save_timer_frame(&e->save_timer, machine_save_dirty(e->m))) write_save(e);
     atomic_fetch_add(&e->frames, 1);
 }
 
 /* One step back while rewinding: the snapshot's picture at once; its unread sound is dropped (silence). */
 static void rewind_step(emu_t *e) {
-    if (gba_rewind_step_back(e->g)) atomic_fetch_add(&e->rw_steps, 1);
+    if (machine_rewind_step_back(e->m)) atomic_fetch_add(&e->rw_steps, 1);
     int16_t drop[1024 * 2];
-    while (gba_audio_read(e->g, drop, 1024) > 0) {
+    while (machine_audio_read(e->m, drop, 1024) > 0) {
     }
     atomic_store(&e->rumble, false);
-    memcpy(tb_back(&e->tb), gba_framebuffer(e->g), sizeof(uint16_t) * TB_PIXELS);
+    memcpy(tb_back(&e->tb), machine_framebuffer(e->m), sizeof(uint16_t) * e->pixels);
     tb_publish(&e->tb);
 }
 
@@ -369,7 +381,7 @@ static void load_save(emu_t *e) {
     size_t size = 0;
     uint8_t *data = e->save_path ? save_file_load(e->save_path, &size) : NULL;
     if (data) {
-        e->save_status = gba_load_saveram(e->g, data, size) == GBA_OK ? EMU_SAVE_LOADED : EMU_SAVE_MISFIT;
+        e->save_status = machine_save_read(e->m, data, size) == MACHINE_OK ? EMU_SAVE_LOADED : EMU_SAVE_MISFIT;
         char aside[1024];
         if (e->save_status == EMU_SAVE_MISFIT && snprintf(aside, sizeof aside, "%s.misfit", e->save_path) < (int)sizeof aside &&
             !save_file_replace(aside, data, size)) {
@@ -377,41 +389,57 @@ static void load_save(emu_t *e) {
         }
         free(data);
     } else {
-        e->save_status = known_save_chip(gba_save_type(e->g)) ? EMU_SAVE_EMPTY : EMU_SAVE_NONE;
+        bool saves = e->g ? known_save_chip(gba_save_type(e->g)) : machine_save_size(e->m) > 0;
+        e->save_status = saves ? EMU_SAVE_EMPTY : EMU_SAVE_NONE;
     }
 }
 
 emu_options_t emu_options_default(void) {
-    emu_options_t o = {NULL, 0, EMU_AUTO, EMU_AUTO, EMU_REWIND_DEFAULT, true, 2, NULL};
+    emu_options_t o = {NULL, 0, EMU_AUTO, EMU_AUTO, EMU_REWIND_DEFAULT, true, 2, NULL, EMU_AUTO};
     return o;
 }
 
 emu_t *emu_create(const uint8_t *rom, size_t size, const char *save_path, const emu_options_t *opt, gba_err_t *err) {
     emu_options_t o = opt ? *opt : emu_options_default();
     emu_t *e = calloc(1, sizeof *e);
-    if (!e || !(e->g = gba_create(NULL))) {
+    /* Which console: as the caller says, else by the ROM's header; a ROM with no header to go by is taken for a
+     * Game Boy Advance one (as before there were two consoles). */
+    machine_kind_t kind = o.console == EMU_CONSOLE_GB    ? MACHINE_GB
+                          : o.console == EMU_CONSOLE_GBC ? MACHINE_GBC
+                          : o.console == EMU_CONSOLE_GBA ? MACHINE_GBA
+                                                         : machine_detect(rom, size, NULL);
+    if (kind == MACHINE_NONE) kind = MACHINE_GBA;
+    if (!e || !(e->m = machine_create(kind))) {
         free(e);
         *err = GBA_ERR_NOMEM;
         return NULL;
     }
-    *err = o.bios ? gba_load_bios(e->g, o.bios, o.bios_size) : GBA_OK;
-    if (*err == GBA_OK) *err = gba_load_rom(e->g, rom, size);
+    e->g = machine_gba(e->m);
+    *err = o.bios && e->g ? gba_load_bios(e->g, o.bios, o.bios_size) : GBA_OK;
+    if (*err == GBA_OK) {
+        int load = machine_load_rom(e->m, rom, size);
+        *err = load == MACHINE_OK            ? GBA_OK
+               : load == MACHINE_ERR_UNSUPPORTED ? EMU_ERR_UNSUPPORTED
+               : load == MACHINE_ERR_NOMEM       ? GBA_ERR_NOMEM
+                                                 : GBA_ERR_ROM_SIZE;
+    }
     if (*err != GBA_OK) {
-        gba_destroy(e->g);
+        machine_destroy(e->m);
         free(e);
         return NULL;
     }
+    e->pixels = (size_t)machine_width(e->m) * (size_t)machine_height(e->m);
     /* Game settings, before the save file is read (a forced save type blanks the save memory). */
-    if (o.save_type != EMU_AUTO) gba_set_save_type(e->g, (gba_save_type_t)o.save_type);
-    if (o.clock != EMU_AUTO) {
+    if (e->g && o.save_type != EMU_AUTO) gba_set_save_type(e->g, (gba_save_type_t)o.save_type);
+    if (e->g && o.clock != EMU_AUTO) {
         uint32_t hw = gba_cart_hardware(e->g);
         gba_set_cart_hardware(e->g, o.clock ? hw | GBA_HW_RTC : hw & ~(uint32_t)GBA_HW_RTC);
     }
     time_t now = time(NULL);
     struct tm local;
     localtime_r(&now, &local);
-    gba_set_rtc(e->g, (int64_t)now, (int32_t)local.tm_gmtoff);
-    tb_init(&e->tb);
+    machine_set_rtc(e->m, (int64_t)now, (int32_t)local.tm_gmtoff);
+    tb_init(&e->tb, machine_width(e->m), machine_height(e->m));
     pthread_mutex_init(&e->lock, NULL);
     pthread_condattr_t attr; /* emu_pause's time limit counts on the monotonic clock */
     pthread_condattr_init(&attr);
@@ -451,8 +479,8 @@ emu_t *emu_create(const uint8_t *rom, size_t size, const char *save_path, const 
     atomic_init(&e->rw_bytes, 0);
     atomic_init(&e->rw_steps, 0);
     atomic_init(&e->ra_reset, false);
-    e->ra = o.ra;
-    if (o.rewind_budget && gba_rewind_configure(e->g, o.rewind_budget, REWIND_EVERY) != GBA_OK) {
+    e->ra = e->g ? o.ra : NULL; /* no achievements for Game Boy games yet: no session, so no hardcore limits */
+    if (o.rewind_budget && machine_rewind_configure(e->m, o.rewind_budget, REWIND_EVERY) != MACHINE_OK) {
         LOGW("no memory for rewind: rewind off");
     }
     return e;
@@ -539,11 +567,20 @@ void emu_set_light(emu_t *e, int level) {
 }
 
 uint32_t emu_cart_hardware(const emu_t *e) {
-    return gba_cart_hardware(e->g);
+    return e->g ? gba_cart_hardware(e->g) : 0;
 }
 
 gba_save_type_t emu_save_type(const emu_t *e) {
-    return gba_save_type(e->g);
+    return e->g ? gba_save_type(e->g) : GBA_SAVE_NONE;
+}
+
+int emu_console(const emu_t *e) {
+    return (int)machine_kind(e->m) - 1;
+}
+
+void emu_frame_size(const emu_t *e, int *width, int *height) {
+    *width = machine_width(e->m);
+    *height = machine_height(e->m);
 }
 
 bool emu_rumble_active(emu_t *e) {
@@ -560,8 +597,7 @@ emu_save_status_t emu_save_status(const emu_t *e) {
 
 gba_err_t emu_import_save(emu_t *e, const uint8_t *data, size_t size) {
     if (e->started) return GBA_ERR_SAVE_SIZE; /* only before start: the thread owns the core then */
-    gba_err_t err = gba_load_saveram(e->g, data, size);
-    if (err != GBA_OK) return err;
+    if (machine_save_read(e->m, data, size) != MACHINE_OK) return GBA_ERR_SAVE_SIZE;
     e->save_status = EMU_SAVE_LOADED;
     write_save(e);
     return GBA_OK;
@@ -584,9 +620,9 @@ static void core_give(emu_t *e) {
 
 bool emu_state_save(emu_t *e, const char *path) {
     if (!core_take(e)) return false;
-    size_t size = gba_state_size(e->g);
+    size_t size = machine_state_size(e->m);
     uint8_t *buf = malloc(size);
-    bool ok = buf && gba_state_save(e->g, buf, size) == size && save_file_replace(path, buf, size);
+    bool ok = buf && machine_state_save(e->m, buf, size) == size && save_file_replace(path, buf, size);
     free(buf);
     core_give(e);
     return ok;
@@ -596,7 +632,7 @@ gba_err_t emu_state_load(emu_t *e, const char *path) {
     if (hardcore(e) || !core_take(e)) return GBA_ERR_STATE; /* hardcore: no state loads (14) */
     size_t size = 0;
     uint8_t *buf = save_file_load(path, &size);
-    gba_err_t err = buf ? gba_state_load(e->g, buf, size) : GBA_ERR_STATE;
+    gba_err_t err = buf && machine_state_load(e->m, buf, size) == MACHINE_OK ? GBA_OK : GBA_ERR_STATE;
     free(buf);
     if (err == GBA_OK) {
         save_timer_frame(&e->save_timer, true); /* the loaded save chip → the save file */
@@ -607,6 +643,7 @@ gba_err_t emu_state_load(emu_t *e, const char *path) {
 }
 
 gba_err_t emu_cheats_set(emu_t *e, const char *const *texts, const gba_cheat_type_t *types, size_t count) {
+    if (!e->g) return count ? GBA_ERR_CHEAT : GBA_OK; /* no cheats for Game Boy games yet (17b) */
     if (!core_take(e)) return GBA_ERR_CHEAT;
     gba_err_t err;
     if (hardcore(e)) { /* hardcore: no cheats (14) */
@@ -621,7 +658,7 @@ gba_err_t emu_cheats_set(emu_t *e, const char *const *texts, const gba_cheat_typ
 
 bool emu_frame(emu_t *e, uint16_t out[240 * 160]) {
     if (!core_take(e)) return false;
-    memcpy(out, gba_framebuffer(e->g), sizeof(uint16_t) * 240 * 160);
+    memcpy(out, machine_framebuffer(e->m), sizeof(uint16_t) * e->pixels);
     core_give(e);
     return true;
 }
@@ -631,12 +668,12 @@ bool emu_save_error(emu_t *e) {
 }
 
 size_t emu_debug_saveram(emu_t *e, const uint8_t **data) {
-    *data = gba_saveram(e->g);
-    return gba_saveram_size(e->g);
+    *data = e->g ? gba_saveram(e->g) : NULL;
+    return e->g ? gba_saveram_size(e->g) : 0;
 }
 
 uint32_t emu_debug_peek32(emu_t *e, uint32_t addr) {
-    if (!core_take(e)) return 0xDEADDEADu;
+    if (!e->g || !core_take(e)) return 0xDEADDEADu;
     uint32_t v = gba_debug_peek32(e->g, addr);
     core_give(e);
     return v;
@@ -678,7 +715,7 @@ void emu_destroy(emu_t *e) {
     pthread_cond_broadcast(&e->wake);
     pthread_mutex_unlock(&e->lock);
     if (e->started) pthread_join(e->thread, NULL);
-    gba_destroy(e->g);
+    machine_destroy(e->m);
     pthread_mutex_destroy(&e->lock);
     pthread_mutex_destroy(&e->core_lock);
     pthread_cond_destroy(&e->wake);

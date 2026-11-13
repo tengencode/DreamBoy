@@ -18,15 +18,19 @@ bash tools/dev.sh androidtest   # the on-device tests on the phone emulator
 ```
 
 `tools/dev.sh` lists every command at its top. Test ROMs are downloaded, and checked against pinned SHA-256 sums, with
-`python tools/fetch_test_roms.py`. They are never committed.
+`python tools/fetch_test_roms.py`. They are never committed. Which Game Boy test ROMs must pass is listed in
+`tests/gb_tests.json`.
 
 To check your own games, list them in `tests/games/games.local.txt` and `tests/bench/scenes.local.txt`. Both are
 gitignored, and their format is described in `tests/games/games.txt` and `tests/bench/scenes.txt`.
 
 ## Layout
 
-- `core/`: the emulator (CPU, memory, graphics, sound, save chips, cartridge hardware, the built-in BIOS, save states,
-  cheats), plain C11 with ARM64 fast paths in `core/arch/arm64`, each with a plain-C twin it is tested against
+- `core/`: the Game Boy Advance emulator (CPU, memory, graphics, sound, save chips, cartridge hardware, the built-in
+  BIOS, save states, cheats), plain C11 with ARM64 fast paths in `core/arch/arm64`, each with a plain-C twin it is
+  tested against
+- `core_gb/`: the Game Boy and Game Boy Color emulator (in work: the PC tools run it, the app does not yet), plain C11
+- `core_common/`: what both share (the rewind history); `machine/`: one set of calls over both emulators
 - `platform/android/`: OpenGL ES, AAudio, threads and JNI; `platform/ra/`: the RetroAchievements glue
 - `app/`: the Kotlin app
 - `tools/`: the PC test runner, viewer, speed bench and helper scripts

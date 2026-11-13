@@ -34,6 +34,7 @@
 #include "file_util.h"
 #include "frame_hash.h"
 #include "gba.h"
+#include "machine.h"
 #include "key_script.h"
 #include "png.h"
 #include "ra.h"
@@ -150,7 +151,7 @@ static uint8_t *read_game_file(const char *roms, const char *name, size_t *size)
     char path[1024];
     snprintf(path, sizeof path, "%s/%s", roms, name);
     uint8_t *data = read_file(path, size);
-    if (!data && !strncmp(name, "tonc/", 5)) {
+    if (!data && (!strncmp(name, "tonc/", 5) || !strncmp(name, "homebrew/", 9))) { /* public test files */
         snprintf(path, sizeof path, "tests/roms/%s", name);
         data = read_file(path, size);
     }
@@ -227,20 +228,20 @@ static void profile_stop(void) {}
 #endif
 
 /* A new machine with the scene's game, its save and the fixed clock; NULL (printed) when it does not load. */
-static gba_t *new_machine(const scene_t *sc, const uint8_t *rom, size_t rom_size, const uint8_t *save, size_t save_size) {
-    gba_t *g = gba_create(NULL);
-    if (!g || gba_load_rom(g, rom, rom_size) != GBA_OK) {
+static machine_t *new_machine(const scene_t *sc, const uint8_t *rom, size_t rom_size, const uint8_t *save, size_t save_size) {
+    machine_t *m = machine_create(machine_detect(rom, rom_size, sc->rom));
+    if (!m || machine_load_rom(m, rom, rom_size) != MACHINE_OK) {
         fprintf(stderr, "%s: cannot load %s\n", sc->name, sc->rom);
-        gba_destroy(g);
+        machine_destroy(m);
         return NULL;
     }
-    gba_set_rtc(g, CLOCK_SECONDS, 0);
-    if (save && gba_load_saveram(g, save, save_size) != GBA_OK) {
+    machine_set_rtc(m, CLOCK_SECONDS, 0);
+    if (save && machine_save_read(m, save, save_size) != MACHINE_OK) {
         fprintf(stderr, "%s: the save does not fit this game's save chip\n", sc->name);
-        gba_destroy(g);
+        machine_destroy(m);
         return NULL;
     }
-    return g;
+    return m;
 }
 
 /* --ra n: one RetroAchievements client with n made-up achievements, signed in to the pretend server. */
@@ -318,21 +319,22 @@ static bool bench_ra_start(int n) {
 }
 
 /* Frames [from, to) of the scene: its keys, the sound into *sound, the screenshots asked for. */
-static void play(gba_t *g, const scene_t *sc, long from, long to, uint64_t *sound, const shot_t *shots, int shot_count) {
+static void play(machine_t *m, const scene_t *sc, long from, long to, uint64_t *sound, const shot_t *shots, int shot_count) {
     int16_t buf[1024 * 2];
     size_t n;
+    gba_t *g = machine_gba(m); /* NULL: a Game Boy game (no rotation sensor; --ra's made-up achievements skip it) */
     for (long frame = from; frame < to; frame++) {
         uint16_t keys = key_script_at(&sc->keys, frame);
-        gba_set_keys(g, keys & 0x3FF);
-        gba_set_gyro(g, (keys & KEY_CW) ? SPIN_RATE : (keys & KEY_CCW) ? -SPIN_RATE : 0);
-        gba_run_frame(g);
-        if (bench_ra) {
+        machine_set_keys(m, keys & 0x3FF);
+        if (g) gba_set_gyro(g, (keys & KEY_CW) ? SPIN_RATE : (keys & KEY_CCW) ? -SPIN_RATE : 0);
+        machine_run_frame(m);
+        if (bench_ra && g) {
             ra_memory_t m = {gba_iwram(g), gba_ewram(g), gba_saveram(g), gba_saveram_size(g)};
             ra_do_frame(bench_ra, &m);
         }
-        while ((n = gba_audio_read(g, buf, 1024)) > 0) *sound = audio_hash_update(*sound, buf, n * 2);
+        while ((n = machine_audio_read(m, buf, 1024)) > 0) *sound = audio_hash_update(*sound, buf, n * 2);
         for (int i = 0; i < shot_count; i++)
-            if (shots[i].frame == frame && png_write_bgr555(shots[i].path, gba_framebuffer(g), 240, 160) != 0)
+            if (shots[i].frame == frame && png_write_bgr555(shots[i].path, machine_framebuffer(m), machine_width(m), machine_height(m)) != 0)
                 fprintf(stderr, "cannot write %s\n", shots[i].path);
     }
 }
@@ -405,23 +407,23 @@ int main(int argc, char **argv) {
         if (!rom || (strcmp(sc->save, "-") && !save)) return 3;
         /* The warm-up once (on any core); every timed run starts from a state of its end in a new machine. */
         if (cpu >= 0) pin_to_cpu(-1);
-        gba_t *g = new_machine(sc, rom, rom_size, save, save_size);
+        machine_t *g = new_machine(sc, rom, rom_size, save, save_size);
         if (!g) return 3;
         uint64_t warm_sound = AUDIO_HASH_INIT;
         play(g, sc, 0, sc->warmup, &warm_sound, shots, shot_count);
-        size_t state_size = gba_state_size(g);
+        size_t state_size = machine_state_size(g);
         uint8_t *state = malloc(state_size);
-        if (!state || gba_state_save(g, state, state_size) != state_size) {
+        if (!state || machine_state_save(g, state, state_size) != state_size) {
             fprintf(stderr, "%s: cannot save the warm-up state\n", sc->name);
             return 3;
         }
-        gba_destroy(g);
+        machine_destroy(g);
         if (cpu >= 0) pin_to_cpu(cpu);
         run_result_t best = {0}, first = {0};
         for (int r = 0; r < runs; r++) {
             run_result_t res;
             g = new_machine(sc, rom, rom_size, save, save_size);
-            if (!g || gba_state_load(g, state, state_size) != GBA_OK) {
+            if (!g || machine_state_load(g, state, state_size) != MACHINE_OK) {
                 fprintf(stderr, "%s: cannot load the warm-up state\n", sc->name);
                 return 3;
             }
@@ -431,8 +433,8 @@ int main(int argc, char **argv) {
             play(g, sc, sc->warmup, sc->warmup + sc->timed, &res.sound, shots, r == 0 ? shot_count : 0);
             res.seconds = now_seconds() - start;
             if (profile) profile_stop();
-            res.picture = frame_hash(gba_framebuffer(g));
-            gba_destroy(g);
+            res.picture = frame_hash(machine_framebuffer(g), (size_t)machine_width(g) * (size_t)machine_height(g));
+            machine_destroy(g);
             if (r == 0) first = best = res;
             else {
                 if (res.picture != first.picture || res.sound != first.sound) {

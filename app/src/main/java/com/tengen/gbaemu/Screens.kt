@@ -189,6 +189,13 @@ fun playedText(lastPlayed: Long, now: Long = System.currentTimeMillis()): String
     }
 }
 
+/**
+ * A cartridge's grip-strip line: the console's printed mark (once the console is known), then when it was played,
+ * then "outside the folder": "GBC · Today". The mark comes first so a column of carts reads as a column of marks.
+ */
+fun gripLine(console: Console?, played: String, outside: Boolean = false): String =
+    listOfNotNull(console?.mark, played, "outside the folder".takeIf { outside }).joinToString(" · ")
+
 /** The grid's one-line form (12): "Today", "Yesterday", a date, or "Never played" — no time, so it fits with large text. */
 fun playedDay(lastPlayed: Long, now: Long = System.currentTimeMillis()): String {
     if (lastPlayed <= 0) return "Never played"
@@ -275,7 +282,7 @@ private fun EmptyLibrary(folderName: String?, scanning: Boolean, onChangeFolder:
         }
         if (!scanning) {
             Spacer(Modifier.height(20.dp))
-            Text("Put .gba or .zip files there, or pick another folder.", textAlign = TextAlign.Center,
+            Text("Put .gba, .gb, .gbc or .zip files there, or pick another folder.", textAlign = TextAlign.Center,
                 color = MaterialTheme.colorScheme.onSurfaceVariant)
             Spacer(Modifier.height(20.dp))
             Button(onClick = onChangeFolder, modifier = Modifier.heightIn(min = 52.dp)) {
@@ -367,7 +374,7 @@ private fun ContinueButton(onClick: () -> Unit) {
 
 @Composable
 private fun PlayedText(game: GameEntry, modifier: Modifier) {
-    Text(playedText(game.lastPlayed), style = MaterialTheme.typography.bodyMedium.merge(Tabular),
+    Text(gripLine(game.console, playedText(game.lastPlayed)), style = MaterialTheme.typography.bodyMedium.merge(Tabular),
         color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2, modifier = modifier)
 }
 
@@ -419,7 +426,7 @@ private fun GameCartridge(game: GameEntry, refresh: Int, picture: (GameEntry) ->
         }
         Row(Modifier.fillMaxWidth().gripRidges(LocalPak.current.shade).padding(start = 2.dp, bottom = 12.dp),
             verticalAlignment = Alignment.CenterVertically) {
-            Text(playedDay(game.lastPlayed) + if (game.outside) " · outside the folder" else "",
+            Text(gripLine(game.console, playedDay(game.lastPlayed), game.outside),
                 style = MaterialTheme.typography.bodySmall.merge(Tabular), color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
             IconButton(onClick = { onHold(game) }) {
@@ -429,13 +436,14 @@ private fun GameCartridge(game: GameEntry, refresh: Int, picture: (GameEntry) ->
     }
 }
 
-/** The picture of where the game was left (3:2, sharp pixels), or a placeholder. */
+/** The picture of where the game was left (sharp pixels, in its own shape inside the 3:2 frame — a Game Boy's
+ *  picture is narrower: the label's paper shows beside it), or a placeholder. */
 @Composable
 private fun LeftPicture(bitmap: Bitmap?, big: Boolean, modifier: Modifier, corners: Dp = 8.dp) {
     val frame = modifier.aspectRatio(1.5f).clip(RoundedCornerShape(corners))
     if (bitmap != null) {
-        Image(bitmap.asImageBitmap(), contentDescription = null, modifier = frame,
-            contentScale = ContentScale.FillBounds, filterQuality = FilterQuality.None)
+        Image(bitmap.asImageBitmap(), contentDescription = null, modifier = frame.background(Color(Palette.LABEL_STOCK)),
+            contentScale = ContentScale.Fit, filterQuality = FilterQuality.None)
     } else {
         Box(frame.background(Color(Palette.LABEL_STOCK)), contentAlignment = Alignment.Center) { BlankLabel(big) }
     }
@@ -457,7 +465,8 @@ fun GameHoldMenu(game: GameEntry, onStartFresh: () -> Unit, onImport: () -> Unit
         SheetItem(Icons.Filled.Replay, "Start fresh (from the title screen)", onClick = onStartFresh),
         SheetItem(Icons.Filled.FileDownload, "Import save", onClick = onImport),
         SheetItem(Icons.Filled.FileUpload, "Export save", onClick = onExport),
-        SheetItem(Icons.Filled.Tune, "Game settings", onClick = onGameSettings),
+        // (a Game Boy cartridge says itself what it saves with, and its clock is always on: nothing to set)
+        if (game.console == null || game.console == Console.GBA) SheetItem(Icons.Filled.Tune, "Game settings", onClick = onGameSettings) else null,
         SheetItem(Icons.Filled.Image, "Choose box art", onClick = onChooseBox),
         if (hasBox) SheetItem(Icons.Filled.HideImage, "Remove box art", onClick = onRemoveBox) else null,
         onRemove?.let { SheetItem(Icons.Filled.RemoveCircleOutline, "Remove from list", danger = true, onClick = it) },
@@ -535,7 +544,8 @@ internal fun MenuLayer(maxWidth: Dp = 440.dp, content: @Composable ColumnScope.(
 @Composable
 fun GameMenu(title: String, fastSpeed: Int, onFastSpeed: (Int) -> Unit, onResume: () -> Unit, onSave: () -> Unit,
              onLoad: () -> Unit, onCheats: () -> Unit, onSettings: () -> Unit, onRestart: () -> Unit, onQuit: () -> Unit,
-             locked: Boolean = false, onAchievements: (() -> Unit)? = null, onLeaderboards: (() -> Unit)? = null) {
+             locked: Boolean = false, onAchievements: (() -> Unit)? = null, onLeaderboards: (() -> Unit)? = null,
+             cheatsOff: String? = null) {
     BoxWithConstraints {
         val wide = maxWidth > maxHeight && maxHeight < 520.dp
         MenuLayer(maxWidth = if (wide) 720.dp else 420.dp) {
@@ -548,7 +558,7 @@ fun GameMenu(title: String, fastSpeed: Int, onFastSpeed: (Int) -> Unit, onResume
                         RestartQuit(onRestart, onQuit)
                     }
                     Column(Modifier.weight(1f).align(Alignment.CenterVertically)) {
-                        MenuTilesCut(onSave, onLoad, onCheats, onSettings, locked, onAchievements, onLeaderboards)
+                        MenuTilesCut(onSave, onLoad, onCheats, onSettings, locked, onAchievements, onLeaderboards, cheatsOff)
                     }
                 }
             } else {
@@ -557,7 +567,7 @@ fun GameMenu(title: String, fastSpeed: Int, onFastSpeed: (Int) -> Unit, onResume
                     Spacer(Modifier.height(16.dp))
                     ResumeButton(onResume)
                     Spacer(Modifier.height(14.dp))
-                    MenuTiles(onSave, onLoad, onCheats, onSettings, locked, onAchievements, onLeaderboards)
+                    MenuTiles(onSave, onLoad, onCheats, onSettings, locked, onAchievements, onLeaderboards, cheatsOff)
                     SpeedChoices(fastSpeed, onFastSpeed)
                     RestartQuit(onRestart, onQuit)
                 }
@@ -577,8 +587,9 @@ private fun ResumeButton(onResume: () -> Unit) {
 
 @Composable
 private fun MenuTiles(onSave: () -> Unit, onLoad: () -> Unit, onCheats: () -> Unit, onSettings: () -> Unit,
-                      locked: Boolean = false, onAchievements: (() -> Unit)? = null, onLeaderboards: (() -> Unit)? = null) {
-    val rows = menuRows(onSave, onLoad, onCheats, onSettings, locked, onAchievements, onLeaderboards)
+                      locked: Boolean = false, onAchievements: (() -> Unit)? = null, onLeaderboards: (() -> Unit)? = null,
+                      cheatsOff: String? = null) {
+    val rows = menuRows(onSave, onLoad, onCheats, onSettings, locked, onAchievements, onLeaderboards, cheatsOff)
     Column {
         rows.forEachIndexed { i, row ->
             if (i > 0) HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
@@ -590,21 +601,24 @@ private fun MenuTiles(onSave: () -> Unit, onLoad: () -> Unit, onCheats: () -> Un
 /** Sideways the rows sit in their own column; on a short screen it scrolls, cut partway through a row so it plainly goes on. */
 @Composable
 private fun ColumnScope.MenuTilesCut(onSave: () -> Unit, onLoad: () -> Unit, onCheats: () -> Unit, onSettings: () -> Unit,
-                                     locked: Boolean, onAchievements: (() -> Unit)?, onLeaderboards: (() -> Unit)?) {
-    val rows = menuRows(onSave, onLoad, onCheats, onSettings, locked, onAchievements, onLeaderboards)
+                                     locked: Boolean, onAchievements: (() -> Unit)?, onLeaderboards: (() -> Unit)?,
+                                     cheatsOff: String?) {
+    val rows = menuRows(onSave, onLoad, onCheats, onSettings, locked, onAchievements, onLeaderboards, cheatsOff)
     CutList(rows.size, rows.size) { i -> rows[i]() }
 }
 
-/** The pause menu's rows, in order: Save state, Load state, Achievements and Leaderboards (games that have them), Cheats, Settings. */
+/** The pause menu's rows, in order: Save state, Load state, Achievements and Leaderboards (games that have them), Cheats, Settings.
+ *  [cheatsOff]: why this game has no cheats (a Game Boy game, for now) — the row stays in place, off, with that under it. */
 private fun menuRows(onSave: () -> Unit, onLoad: () -> Unit, onCheats: () -> Unit, onSettings: () -> Unit, locked: Boolean,
-                     onAchievements: (() -> Unit)?, onLeaderboards: (() -> Unit)?): List<@Composable () -> Unit> {
+                     onAchievements: (() -> Unit)?, onLeaderboards: (() -> Unit)?, cheatsOff: String?): List<@Composable () -> Unit> {
     val off = "Off in hardcore mode"
     return buildList {
         add { MenuRow(Icons.Filled.Save, "Save state", onSave) }
         add { MenuRow(Icons.Filled.FolderOpen, "Load state", onLoad, enabled = !locked, note = if (locked) off else null) }
         if (onAchievements != null) add { MenuRow(Icons.Filled.EmojiEvents, "Achievements", onAchievements) }
         if (onLeaderboards != null) add { MenuRow(Icons.Filled.Leaderboard, "Leaderboards", onLeaderboards) }
-        add { MenuRow(Icons.Filled.AutoFixHigh, "Cheats", onCheats, enabled = !locked, note = if (locked) off else null) }
+        add { MenuRow(Icons.Filled.AutoFixHigh, "Cheats", onCheats, enabled = !locked && cheatsOff == null,
+            note = cheatsOff ?: if (locked) off else null) }
         add { MenuRow(Icons.Filled.Settings, "Settings", onSettings) }
     }
 }
@@ -691,7 +705,7 @@ private fun SaveSticker(slot: Int, picture: Bitmap?, date: Pair<String, String>?
         if (picture != null) {
             Image(picture.asImageBitmap(), contentDescription = name.lowercase(),
                 modifier = Modifier.fillMaxWidth().aspectRatio(1.5f).clip(RoundedCornerShape(3.dp)),
-                contentScale = ContentScale.FillBounds, filterQuality = FilterQuality.None)
+                contentScale = ContentScale.Fit, filterQuality = FilterQuality.None)
             Text(date?.let { "${it.first} · ${it.second}" } ?: "", style = MaterialTheme.typography.bodySmall.merge(Tabular),
                 color = soft, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(start = 1.dp, top = 6.dp))
         } else {
@@ -966,12 +980,13 @@ fun GameScreen(controlsHidden: Boolean, fastOn: Boolean, onTouchMask: (Int) -> U
                onManualLight: (Int?) -> Unit = {}, touchLook: Int = Settings.LOOK_NORMAL, buzz: Boolean = true,
                layouts: LayoutStore.Layouts = LayoutStore.Layouts(), showSpeed: Boolean = false, skin: Skin = Skins.PLAIN,
                fitMode: Int = Settings.SIZE_FIT, delta: SkinFiles.Imported? = null, onAction: (DeltaSkin.Action) -> Unit = {},
-               onSkinFailed: () -> Unit = {}, overlay: @Composable BoxScope.() -> Unit = {}) {
+               onSkinFailed: () -> Unit = {}, console: Console = Console.GBA,
+               overlay: @Composable BoxScope.() -> Unit = {}) {
     // The skin's body round the picture: here, and inside the game's surface by OpenGL (NativeBridge.setBackground);
     // black with a Delta skin (9).
     BoxWithConstraints(Modifier.fillMaxSize().background(if (delta != null) Color.Black else Color(skin.body))) {
         val sideways = maxWidth > maxHeight
-        val edits = layouts.of(sideways)
+        val edits = layouts.of(sideways, console.family)
         val density = LocalDensity.current
         val w = constraints.maxWidth.toFloat()
         val h = constraints.maxHeight.toFloat()
@@ -981,7 +996,7 @@ fun GameScreen(controlsHidden: Boolean, fastOn: Boolean, onTouchMask: (Int) -> U
         // The game's surface in the Delta skin's game box, or the layout's picture box (upright by default: full width
         // at the top; sideways: the whole screen, the game fitted inside); the buttons over the whole screen.
         val pic = if (face != null) DeltaLayout(face, w, h, sideways).game
-            else TouchLayout(w, h, density.density, sideways, edits).picture
+            else TouchLayout(w, h, density.density, sideways, edits, console = console).picture
         AndroidView(
             modifier = Modifier.offset { IntOffset(pic.left.roundToInt(), pic.top.roundToInt()) }
                 .requiredSize(with(density) { (pic.right - pic.left).toDp() }, with(density) { (pic.bottom - pic.top).toDp() }),
@@ -1009,6 +1024,7 @@ fun GameScreen(controlsHidden: Boolean, fastOn: Boolean, onTouchMask: (Int) -> U
             factory = { TouchControlsView(it).also { onTouchMask(0) } }, // a new view (e.g. after turning): nothing held
             update = { v ->
                 v.sideways = sideways
+                v.console = console
                 v.edits = edits
                 v.hidden = controlsHidden
                 v.fastOn = fastOn

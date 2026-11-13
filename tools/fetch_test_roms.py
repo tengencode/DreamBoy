@@ -5,6 +5,9 @@
 - Tonc demos: tonc-bin.zip from coranac.com; only the demos listed in TONC_DEMOS are kept.
 - mGBA test suite: suite-latest.zip from mGBA's storage, SHA-256 pinned; suite.gba is kept.
 - Homebrew games for the game check: pinned URLs, sizes and SHA-256s (HOMEBREW), in tests/roms/homebrew/.
+- Game Boy / Game Boy Color test ROMs (milestone 17), in tests/roms/gb/: blargg's test ROMs (a pinned commit of the
+  retrio/gb-test-roms collection), the mooneye test suite's prebuilt package, dmg-acid2 and cgb-acid2 with their
+  reference pictures. Every one is checked against a pinned SHA-256.
 Files that are already present with the right size are not downloaded again.
 """
 import hashlib
@@ -106,6 +109,47 @@ HOMEBREW = {
 }
 
 
+# Game Boy / Game Boy Color test ROMs, downloaded with the user's OK on 2026-11-12 (never committed). Each was
+# downloaded twice and the copies matched before pinning.
+BLARGG_COMMIT = "c240dd7d700e5c0b00a7bbba52b53e4ee67b5f15"  # github.com/retrio/gb-test-roms
+BLARGG_ROMS = 58  # .gb files in it
+BLARGG_SHA256 = "bb4d10f439b35800c5cad254f8b653b2240149674a9e14ee9d632bf1c134ccce"  # of the sorted "<path> <sha256 of the file>" lines of those ROMs (GitHub's zip itself may change)
+MOONEYE = "mts-20240926-1737-443f6e1"  # gekkio.fi/files/mooneye-test-suite
+MOONEYE_SHA256 = "5cf50314cd3d42ec8f423b0a71b9ab6dbfad2386d8d88f03687af1b5b5baba71"  # of the .zip
+GB_ACID = {  # local name in tests/roms/gb/acid/: (URL, size in bytes, SHA-256)
+    "dmg-acid2.gb": ("https://github.com/mattcurrie/dmg-acid2/releases/download/v1.0/dmg-acid2.gb", 32768,
+                     "464e14b7d42e7feea0b7ede42be7071dc88913f75b9ffa444299424b63d1dff1"),
+    "dmg-acid2.png": ("https://raw.githubusercontent.com/mattcurrie/dmg-acid2/v1.0/img/reference-dmg.png", 787,
+                      "ca966d50895c7efef05838590d148c2cbfd7fba57dab986f25b35b4da71abb57"),
+    "cgb-acid2.gbc": ("https://github.com/mattcurrie/cgb-acid2/releases/download/v1.1/cgb-acid2.gbc", 32768,
+                      "197fb0bcec544f0400527fc707e0a94f55435974986e6986b424ace5de81720e"),
+    "cgb-acid2.png": ("https://raw.githubusercontent.com/mattcurrie/cgb-acid2/v1.1/img/reference.png", 870,
+                      "9ea9c262c5383353e77d715d021a0f7c5ccbe438f88082cb225756e50c4fdf01"),
+}
+
+
+# Homebrew Game Boy / Game Boy Color games for the game check and the speed scenes (milestone 17), downloaded with
+# the user's OK on 2026-11-12; free downloads from their authors' GitHub pages, for local testing only (never
+# committed). Each was downloaded twice and the copies matched before pinning. They go to tests/roms/homebrew/ too.
+HOMEBREW.update({
+    "ucity.gbc": (
+        "https://github.com/AntonioND/ucity/releases/download/v1.3/ucity.gbc",
+        131072, "9422ee2ca7b7ea1d46b58b2a429fff3f354dfd3e732dee1e7ae6220f148ce6e0"),
+    "geometrix.gbc": (
+        "https://raw.githubusercontent.com/AntonioND/geometrix/v1.0.0/geometrix.gbc",
+        32768, "f13575af6bf87003c3eef8c2cab67a49ca6b02aa23ff6a31a38beb96d6eb1795"),
+    "libbet.gb": (
+        "https://github.com/pinobatch/libbet/releases/download/v0.08/libbet.gb",
+        32768, "3607412031c8287cf878299ce96e581e85b852dde703806343b95576fa3ff1a9"),
+    "Shock.Lobster.zip": (
+        "https://github.com/tbsp/shock-lobster/releases/download/3/Shock.Lobster.zip",
+        25337, "44bebcf26ca17a5dc37d9d576cb28c1fd8d3fcb2e11b150c29f6be394d4eed4e"),
+    "gb240p.gb": (
+        "https://github.com/pinobatch/240p-test-mini/releases/download/v0.23/gb240p.gb",
+        32768, "733eb6e7ec0719752ddd5fcda4e715c2f2e20f4ac4bc971c4bd1d49272f9bb04"),
+})
+
+
 def fetch(url):
     # coranac.com drops requests carrying Python's default User-Agent.
     request = urllib.request.Request(url, headers={"User-Agent": "gba-emulator-fetch/1.0"})
@@ -193,7 +237,76 @@ def fetch_homebrew():
         sys.exit("homebrew downloads failed: " + ", ".join(failed))
 
 
+def check_pin(what, got, pinned):
+    if got != pinned:
+        sys.exit(f"{what}: SHA-256 {got} differs from the pinned {pinned or '(none yet)'}; not using it")
+
+
+def fetch_gb_blargg():
+    out_dir = ROOT / "gb" / "blargg"
+    if (out_dir / ".complete").exists():
+        return
+    data = fetch(f"https://github.com/retrio/gb-test-roms/archive/{BLARGG_COMMIT}.zip")
+    roms = {}
+    with zipfile.ZipFile(io.BytesIO(data)) as z:
+        for entry in z.namelist():
+            if entry.lower().endswith(".gb"):
+                roms[entry.split("/", 1)[1]] = z.read(entry)  # without the archive's top folder
+    lines = "".join(f"{path} {hashlib.sha256(roms[path]).hexdigest()}" + chr(10) for path in sorted(roms))
+    if len(roms) != BLARGG_ROMS:
+        sys.exit(f"blargg: expected {BLARGG_ROMS} ROMs, found {len(roms)}")
+    check_pin("blargg's test ROMs", hashlib.sha256(lines.encode()).hexdigest(), BLARGG_SHA256)
+    for path, rom in roms.items():
+        if ".." in path.split("/"):
+            sys.exit(f"blargg: unsafe path {path}")
+        out = out_dir / path
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_bytes(rom)
+    (out_dir / ".complete").write_text(BLARGG_COMMIT)
+    print(f"gb/blargg: {len(roms)} ROMs")
+
+
+def fetch_gb_mooneye():
+    out_dir = ROOT / "gb" / "mooneye"
+    if (out_dir / ".complete").exists():
+        return
+    data = fetch(f"https://gekkio.fi/files/mooneye-test-suite/{MOONEYE}/{MOONEYE}.zip")
+    check_pin(f"{MOONEYE}.zip", hashlib.sha256(data).hexdigest(), MOONEYE_SHA256)
+    count = 0
+    with zipfile.ZipFile(io.BytesIO(data)) as z:
+        for entry in z.namelist():
+            if not entry.lower().endswith(".gb"):
+                continue
+            path = entry.split("/", 1)[1]
+            if ".." in path.split("/"):
+                sys.exit(f"mooneye: unsafe path {path}")
+            out = out_dir / path
+            out.parent.mkdir(parents=True, exist_ok=True)
+            out.write_bytes(z.read(entry))
+            count += 1
+    (out_dir / ".complete").write_text(MOONEYE)
+    print(f"gb/mooneye: {count} ROMs")
+
+
+def fetch_gb_acid():
+    out_dir = ROOT / "gb" / "acid"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    for name, (url, size, sha256) in GB_ACID.items():
+        out = out_dir / name
+        if out.exists() and hashlib.sha256(out.read_bytes()).hexdigest() == sha256:
+            continue
+        data = fetch(url)
+        if size and len(data) != size:
+            sys.exit(f"{name}: expected {size} bytes, got {len(data)}")
+        check_pin(name, hashlib.sha256(data).hexdigest(), sha256)
+        out.write_bytes(data)
+        print(f"gb/acid/{name}: {len(data)} bytes")
+
+
 def main():
+    fetch_gb_acid()
+    fetch_gb_blargg()
+    fetch_gb_mooneye()
     fetch_jsmolka()
     fetch_mgba_suite()
     fetch_homebrew()

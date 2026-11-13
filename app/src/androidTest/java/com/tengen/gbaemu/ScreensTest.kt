@@ -170,7 +170,7 @@ class ScreensTest {
             AppTheme {
                 SettingsScreen(page.value, Settings(skin = 5, skinImport = 2), KeyBindings(MemoryStore()), 0, "Built-in",
                     onPage = {}, onBack = {}, onChange = { changed = it }, onPickKey = { _, _ -> }, onResetKeys = {},
-                    onChooseBios = {}, onBuiltInBios = {}, onEditLayout = { edited += it }, importedSkins = skins,
+                    onChooseBios = {}, onBuiltInBios = {}, onEditLayout = { side, _ -> edited += side }, importedSkins = skins,
                     onImportSkin = { imported = true }, onRemoveSkin = { removed = it })
             }
         }

@@ -12,7 +12,10 @@ set(CMAKE_C_FLAGS_DEBUG "-O2 -g")
 set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ON)
 
 set(REPO_ROOT ${CMAKE_CURRENT_LIST_DIR}/../..)
+add_subdirectory(${REPO_ROOT}/core_common ${CMAKE_BINARY_DIR}/core_common)
 add_subdirectory(${REPO_ROOT}/core ${CMAKE_BINARY_DIR}/core)
+add_subdirectory(${REPO_ROOT}/core_gb ${CMAKE_BINARY_DIR}/core_gb) # Game Boy and Game Boy Color (milestone 17)
+add_subdirectory(${REPO_ROOT}/machine ${CMAKE_BINARY_DIR}/machine) # one layer over both cores
 
 file(GLOB PLATFORM_SOURCES CONFIGURE_DEPENDS ${CMAKE_CURRENT_LIST_DIR}/*.c)
 add_library(gbaemu SHARED ${PLATFORM_SOURCES})
@@ -21,7 +24,7 @@ target_compile_options(gbaemu PRIVATE -Wall -Wextra -Wno-unused-parameter -Werro
 # Newer-API calls (e.g. AChoreographer_postFrameCallback64, Android 10+) link weakly and must sit
 # behind __builtin_available checks; minSdk is 26.
 target_compile_definitions(gbaemu PRIVATE __ANDROID_UNAVAILABLE_SYMBOLS_ARE_WEAK__)
-target_link_libraries(gbaemu PRIVATE gbacore android log EGL GLESv3 aaudio)
+target_link_libraries(gbaemu PRIVATE machine gbacore android log EGL GLESv3 aaudio)
 
 # RetroAchievements (milestone 14): rcheevos and the glue (platform/ra).
 include(${REPO_ROOT}/third_party/rcheevos.cmake)
