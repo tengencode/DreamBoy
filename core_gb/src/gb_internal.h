@@ -126,6 +126,15 @@ typedef struct {
     uint8_t bg_palette[64], obj_palette[64];
 } gb_cgb_t;
 
+/* The MBC3 clock. */
+typedef struct {
+    uint8_t reg[5];     /* seconds, minutes, hours, day (low 8 bits), day bit 8 + halt + carry: running */
+    uint8_t latched[5]; /* as last latched: what the game reads */
+    uint8_t latch_armed; /* 0 was written to the latch: a 1 now latches */
+    uint8_t has_time;    /* `last` is set */
+    int64_t last;        /* the Unix time the registers are up to date with */
+} gb_rtc_t;
+
 /* The banking chip's registers. */
 typedef struct {
     uint8_t ram_on;
@@ -136,6 +145,7 @@ typedef struct {
     uint8_t dirty;    /* cartridge RAM was written */
     uint32_t rom0, rom1; /* where the banks at 0x0000 and 0x4000 start in the ROM */
     uint32_t ram_at;     /* where the bank at 0xA000 starts in the RAM */
+    gb_rtc_t rtc;
 } gb_cart_t;
 
 struct gb {
@@ -200,6 +210,9 @@ bool gb_cgb_speed_switch(gb_t *g); /* STOP: true when it switched the speed */
 void gb_cart_reset(gb_t *g);
 uint8_t gb_cart_read(const gb_t *g, uint16_t addr); /* 0x0000-0x7FFF and 0xA000-0xBFFF */
 void gb_cart_write(gb_t *g, uint16_t addr, uint8_t value);
+uint8_t gb_rtc_read(const gb_t *g, uint8_t reg); /* reg 0x08-0x0C */
+void gb_rtc_write(gb_t *g, uint8_t reg, uint8_t value);
+void gb_rtc_latch(gb_t *g, uint8_t value);
 gb_err_t gb_cart_load(gb_t *g, const uint8_t *rom, size_t size);
 void gb_cart_free(gb_t *g);
 

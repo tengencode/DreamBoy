@@ -64,29 +64,6 @@ const uint16_t *gb_framebuffer(const gb_t *g) {
     return g->frame;
 }
 
-size_t gb_save_size(const gb_t *g) {
-    return g->info.battery ? g->info.ram_size : 0;
-}
-
-/* shortcut: the cartridge RAM only; the clock's footer comes with plan Task 9. */
-size_t gb_save_write(const gb_t *g, uint8_t *buf, size_t cap) {
-    size_t size = gb_save_size(g);
-    if (!size || size > cap) return 0;
-    memcpy(buf, g->cart_ram, size);
-    return size;
-}
-
-void gb_save_read(gb_t *g, const uint8_t *data, size_t size) {
-    size_t ram = gb_save_size(g);
-    if (!ram) return;
-    size_t n = size < ram ? size : ram;
-    memset(g->cart_ram, 0xFF, ram);
-    if (data && n) memcpy(g->cart_ram, data, n);
-}
-
-void gb_set_rtc(gb_t *g, int64_t unix_seconds) {
-}
-
 int gb_save_dirty(gb_t *g) {
     int dirty = g->cart.dirty;
     g->cart.dirty = 0;

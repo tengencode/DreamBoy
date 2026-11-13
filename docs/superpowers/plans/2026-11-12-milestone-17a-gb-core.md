@@ -409,7 +409,7 @@ game runs as a plain Game Boy.
 **Interfaces — produces:** `gb_save_size`, `gb_save_write`, `gb_save_read`, `gb_set_rtc`; MBC3 registers 0x08–0x0C
 and the latch (write 0 then 1 to 0x6000–0x7FFF).
 
-- [ ] **Step 1: Failing tests:** clock registers count from `gb_set_rtc` deltas (set t, set t + 61 → seconds 1,
+- [x] **Step 1: Failing tests:** clock registers count from `gb_set_rtc` deltas (set t, set t + 61 → seconds 1,
   minutes 1); 59 → 0 carries up to the 9-bit day counter and its carry bit (day 511 → 0 sets bit 7 of DH, sticky);
   halt bit (DH bit 6) stops it; latch freezes the read values; writes set the live registers; a `gb_set_rtc` earlier
   than the last (the phone's clock set back) adds nothing; a jump of 10 years is handled without looping per second.
@@ -418,10 +418,10 @@ and the latch (write 0 then 1 to 0x6000–0x7FFF).
   footer; time passed since the footer's timestamp is added at the next `gb_set_rtc`;
   `gb_save_read_any_length` (Review Focus 2): lengths 0, 1, RAM − 1, RAM + 1, RAM + 20, RAM + 47, 3 × RAM, under the
   sanitizer — no error, what fits is copied, the rest of RAM is 0xFF, a partial footer is ignored.
-- [ ] **Step 2–4:** fail; implement; pass.
-- [ ] **Step 5: ROM tests:** mooneye has no clock tests in the pinned package unless `emulator-only/mbc3` exists —
+- [x] **Step 2–4:** fail; implement; pass.
+- [x] **Step 5: ROM tests:** mooneye has no clock tests in the pinned package unless `emulator-only/mbc3` exists —
   check; add what is there. `testrunner --save` with a Game Boy ROM writes the file through `machine_save_write`.
-- [ ] **Step 6:** Commit `gb: the cartridge clock and the save file`.
+- [x] **Step 6:** Commit `gb: the cartridge clock and the save file`.
 
 ### Task 10: Save states and rewind
 

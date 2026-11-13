@@ -78,6 +78,7 @@ gb_err_t gb_cart_load(gb_t *g, const uint8_t *rom, size_t size) {
     gb_cart_free(g);
     g->info = c;
     g->cart_ram = ram;
+    memset(&g->cart.rtc, 0, sizeof g->cart.rtc); /* a new cartridge: its clock starts at day 0, 00:00:00 */
     return GB_OK;
 }
 
@@ -106,8 +107,11 @@ static void map(gb_t *g) {
     c->ram_at = g->info.ram_size ? (ram * 0x2000) & (g->info.ram_size - 1) : 0;
 }
 
+/* A reset is not a new cartridge: the clock keeps running through it. */
 void gb_cart_reset(gb_t *g) {
+    gb_rtc_t rtc = g->cart.rtc;
     memset(&g->cart, 0, sizeof g->cart);
+    g->cart.rtc = rtc;
     g->cart.bank_lo = 1;
     g->cart.ram_on = g->info.mbc == MBC_NONE; /* without a chip there is no switch */
     map(g);
@@ -123,7 +127,8 @@ uint8_t gb_cart_read(const gb_t *g, uint16_t addr) {
     if (addr < 0x4000) return g->info.rom[c->rom0 + addr];
     if (addr < 0x8000) return g->info.rom[c->rom1 + (addr & 0x3FFF)];
     if (!c->ram_on) return 0xFF;
-    if (g->info.mbc == MBC3 && c->ram_bank >= 8) return g->info.clock ? 0 : 0xFF;
+    if (g->info.mbc == MBC3 && c->ram_bank >= 8)
+        return g->info.clock && c->ram_bank <= 0x0C ? gb_rtc_read(g, c->ram_bank) : 0xFF;
     if (!g->info.ram_size) return 0xFF;
     uint8_t v = g->cart_ram[ram_index(g, addr)];
     return g->info.mbc == MBC2 ? v | 0xF0 : v;
@@ -132,7 +137,12 @@ uint8_t gb_cart_read(const gb_t *g, uint16_t addr) {
 void gb_cart_write(gb_t *g, uint16_t addr, uint8_t value) {
     gb_cart_t *c = &g->cart;
     if (addr >= 0x8000) {
-        if (!c->ram_on || !g->info.ram_size || (g->info.mbc == MBC3 && c->ram_bank >= 8)) return;
+        if (!c->ram_on) return;
+        if (g->info.mbc == MBC3 && c->ram_bank >= 8) {
+            if (g->info.clock && c->ram_bank <= 0x0C) gb_rtc_write(g, c->ram_bank, value);
+            return;
+        }
+        if (!g->info.ram_size) return;
         g->cart_ram[ram_index(g, addr)] = value;
         c->dirty = 1;
         return;
@@ -154,6 +164,7 @@ void gb_cart_write(gb_t *g, uint16_t addr, uint8_t value) {
         if (addr < 0x2000) c->ram_on = (value & 0x0F) == 0x0A;
         else if (addr < 0x4000) c->bank_lo = value & (g->info.rom_size > 0x200000 ? 0xFF : 0x7F);
         else if (addr < 0x6000) c->ram_bank = value & 0x0F;
+        else if (g->info.clock) gb_rtc_latch(g, value);
         break;
     case MBC5:
         if (addr < 0x2000) c->ram_on = value == 0x0A;
