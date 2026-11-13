@@ -1,7 +1,7 @@
 # Milestone 17c — the Game Boy extras — Design
 
 **Date:** 2026-11-13
-**Status:** Draft — waiting for the user's approval (and their OK for one small download, §11). Reviewed once by a builder-check agent (2026-11-13); its points are folded in.
+**Status:** Approved by the user 2026-11-13, with the download in §11 ("Approve both"). Plan for part 1: `docs/superpowers/plans/2026-11-13-milestone-17c1-gb-extras.md`. Reviewed once by a builder-check agent (2026-11-13); its points are folded in.
 **Parent specs:** `docs/superpowers/specs/2026-11-12-milestone-17-game-boy-design.md` (§2: what was left for 17c; §9.3),
 `docs/superpowers/specs/2026-09-24-gba-emulator-design.md` (§10 milestones).
 **Previous work:** 17a + 17b — DreamBoy 1.1.0 (2026-11-13) plays Game Boy and Game Boy Color games with our own core
