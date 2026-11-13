@@ -200,12 +200,12 @@ defaults without L and R, the picture 10:9.
 
 ### Task 10: The user's check and the release
 
-- [ ] **Step 1:** Build the signed release (`dev.sh apk-release`; the user's key), check it (`docs/RELEASE.md` §3
+- [x] **Step 1:** Build the signed release (`dev.sh apk-release`; the user's key), check it (`docs/RELEASE.md` §3
   steps 4-5). **Stop: the user installs it over 1.0.0 on their phone**, checks their GBA saves are still there,
   plays a Game Boy game and a Game Boy Color game of their own, closes and reopens (the save survives).
-- [ ] **Step 2:** On the user's OK: merge `milestone-17` into `main` (`--no-ff`), `public_scan --history` clean, tag
+- [x] **Step 2:** On the user's OK: merge `milestone-17` into `main` (`--no-ff`), `public_scan --history` clean, tag
   `v1.1.0`, push, `gh release create` with the APK and notes, update the repo description and topics.
-- [ ] **Step 3:** Documents: PROGRESS (17b done, Next = 17c's spec), `CLAUDE.md`, both specs. Commit
+- [x] **Step 3:** Documents: PROGRESS (17b done, Next = 17c's spec), `CLAUDE.md`, both specs. Commit
   `milestone 17b done: DreamBoy 1.1.0`.
 
 ## Self-review notes
