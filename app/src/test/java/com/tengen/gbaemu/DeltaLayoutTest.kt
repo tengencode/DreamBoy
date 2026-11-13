@@ -113,4 +113,12 @@ class DeltaLayoutTest {
         assertTrue(DeltaLayout.round(Rect(0f, 0f, 75f, 62f)))
         assertFalse(DeltaLayout.round(Rect(0f, 0f, 97f, 29f)))
     }
+
+    @Test
+    fun aGameBoySkinsScreenFrameIsTheGamesBox() {
+        val screen = Rect(27f, 60f, 360f, 324f) // 10:9, the Game Boy picture's shape
+        val l = DeltaLayout(DeltaSkin.Face("p.png", 414f, 896f, emptyList(), screen, false), 1080f, 2400f, sideways = false)
+        assertEquals(l.box(screen), l.game)
+        assertEquals(10f / 9f, (l.game.right - l.game.left) / (l.game.bottom - l.game.top), 0.0001f)
+    }
 }

@@ -96,27 +96,27 @@ start-up and `refreshSkins` clear a missing choice per family; a good import cal
 `NativeBridge.setBackground` while playing is black when `activeSkin() != null`, and out of a game keeps today's
 rule (the GBA choice).
 
-- [ ] **Step 1:** Failing tests in `SettingsTest`: `eachFamilyKeepsItsOwnImportedSkin` (round trip with
+- [x] **Step 1:** Failing tests in `SettingsTest`: `eachFamilyKeepsItsOwnImportedSkin` (round trip with
   `skinImport = 2`, `skinImportGb = 5`); `aSettingsFileFrom120ReadsAsBefore` (a store holding only
   `touch_skin_import = 3` → `skinImport == 3`, `skinImportGb == 0`); `pickingAnImportedSkinTouchesOnlyItsFamily`;
   `aBuiltInSkinClearsBothImportedChoices`; `removingASkinClearsItsOwnChoice` (`skinImport = 2, skinImportGb = 5`,
   `withoutImported(5)` → `2, 0`). In `DeltaLayoutTest`: `aGameBoySkinsScreenFrameIsTheGamesBox` (a face with
   screen `Rect(27, 60, 360, 324)` on a 1080 × 2400 screen: the layout's game box (whatever `DeltaLayout` calls it) equals `layout.box(screen)` — the box is
   the frame; fitting 160×144 inside it is the native fit's job, checked in Step 4).
-- [ ] **Step 2:** `bash tools/dev.sh jvmtest` — they fail.
-- [ ] **Step 3:** Implement `Settings`, then `MainActivity` as listed under Produces. Extract the "which imported
+- [x] **Step 2:** `bash tools/dev.sh jvmtest` — they fail.
+- [x] **Step 3:** Implement `Settings`, then `MainActivity` as listed under Produces. Extract the "which imported
   skin is in use" rule as a pure function so it is tested on the PC:
   `fun chosenSkin(settings: Settings, family: String, imported: List<SkinFiles.Imported>): SkinFiles.Imported?`
   (in `SkinFiles.kt`), with tests in `SkinFilesTest`: `aMissingSkinClearsOnlyItsOwnFamily` (GBA choice present,
   Game Boy choice's number not in the list → GBA found, Game Boy null) and `aSkinOfTheOtherFamilyIsNotUsed`.
-- [ ] **Step 4:** Download the test skin (allowed by the user 2026-11-13): Delta's standard Game Boy Color skin
+- [x] **Step 4:** Download the test skin (allowed by the user 2026-11-13): Delta's standard Game Boy Color skin
   from the Delta project's public GBC core repository on GitHub, into `tests/skins/gbc/Standard.deltaskin`
   (gitignored); note its URL and SHA-256 in `docs/PROGRESS.md` Notes. On-device test
   `aGameBoySkinPutsTheGameInItsScreen` (build a small Game Boy skin zip in the test, as `SkinFilesTest` builds
   zips: one PNG, a screen frame, an A button; import, open `gb_demo.gb`; the readback's picture rectangle lies
   inside the skin's scaled screen frame and has the 10:9 shape; a GBA game opened next uses no imported skin).
-- [ ] **Step 5:** `bash tools/dev.sh jvmtest`, `bash tools/dev.sh androidtest` pass.
-- [ ] **Step 6:** Commit `app: each console family keeps its own imported skin; Game Boy games use theirs`.
+- [x] **Step 5:** `bash tools/dev.sh jvmtest`, `bash tools/dev.sh androidtest` pass.
+- [x] **Step 6:** Commit `app: each console family keeps its own imported skin; Game Boy games use theirs`.
 
 ### Task 3: The Skin page and the Touch buttons page
 

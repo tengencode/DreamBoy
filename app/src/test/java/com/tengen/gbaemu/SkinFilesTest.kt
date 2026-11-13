@@ -119,4 +119,23 @@ class SkinFilesTest {
         assertNull(f.get(7))
         assertEquals(8, f.import(zip("info.json" to info(), "p.png" to "a")).number)
     }
+
+    @Test
+    fun aMissingSkinClearsOnlyItsOwnFamily() {
+        val f = files()
+        val gba = f.import(zip("info.json" to info(), "p.png" to "a"))
+        val s = Settings(skinImport = gba.number, skinImportGb = 9) // 9: its folder is gone
+        assertEquals(gba.number, chosenSkin(s, "gba", f.list())?.number)
+        assertNull(chosenSkin(s, "gb", f.list()))
+        assertNull(chosenSkin(Settings(), "gba", f.list())) // none chosen
+    }
+
+    @Test
+    fun aSkinOfTheOtherFamilyIsNotUsed() {
+        val f = files()
+        val gb = f.import(zip("info.json" to info(type = DeltaSkin.GBC), "p.png" to "a"))
+        assertEquals("gb", gb.skin.family)
+        assertNull(chosenSkin(Settings(skinImport = gb.number), "gba", f.list()))
+        assertEquals(gb.number, chosenSkin(Settings(skinImportGb = gb.number), "gb", f.list())?.number)
+    }
 }

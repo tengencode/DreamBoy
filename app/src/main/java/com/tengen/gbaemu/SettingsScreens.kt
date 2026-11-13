@@ -119,7 +119,8 @@ val SIZE_SHORT = listOf("Fit", "Whole steps", "Stretch")
 val LENGTH_SHORT = listOf("1 min", "2½ min", "5 min")
 
 /** An imported Delta skin as the Skin page shows it (9): its number, name, tile picture and which directions it covers. */
-data class ImportedSkin(val number: Int, val name: String, val thumb: Bitmap?, val upright: Boolean, val sideways: Boolean)
+data class ImportedSkin(val number: Int, val name: String, val thumb: Bitmap?, val upright: Boolean, val sideways: Boolean,
+                        val family: String = Console.GBA.family)
 
 /** What the Backup page shows (11): the last backup (0 = none), automatic backup and its folder, Undo, and whether a game is open. */
 data class BackupStatus(val lastBackup: Long = 0, val auto: Boolean = false, val folderName: String? = null,
@@ -242,8 +243,8 @@ fun SettingsScreen(page: SettingsPage, settings: Settings, keys: KeyBindings, ke
                     }
                     SettingsPage.SKIN -> {
                         SkinGrid(if (chosen != null) -1 else s.skin, importedSkins, chosen?.number,
-                            onPick = { onChange(s.copy(skin = it, skinImport = 0)) },
-                            onPickImported = { onChange(s.copy(skinImport = it)) }, onImport = onImportSkin, onRemove = onRemoveSkin)
+                            onPick = { onChange(s.withBuiltIn(it)) },
+                            onPickImported = { n -> onChange(s.withImported(importedSkins.first { it.number == n }.family, n)) }, onImport = onImportSkin, onRemove = onRemoveSkin)
                         Help("Import skins made for the Delta emulator (.deltaskin files). Press and hold an imported skin to remove it.")
                     }
                     SettingsPage.BACKUP -> {
