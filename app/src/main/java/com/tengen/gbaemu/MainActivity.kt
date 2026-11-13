@@ -69,6 +69,11 @@ class MainActivity : ComponentActivity() {
     private var editConsole = Console.GBA // whose layout the editor edits: GBA games', or Game Boy games'
     private var orientationBeforeEditor = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
     private var editGame by mutableStateOf<Triple<String, String, GameSettings.Game>?>(null) // name, id, its settings
+    private var editGrey = false // … of a grey Game Boy game: its colours, not a save type and a clock
+    /** Each look's four background colours, in [Looks.CHOICES]' order (none for Automatic), for the lists. */
+    private val lookStrips by lazy {
+        Looks.CHOICES.map { l -> if (l == Looks.AUTO) IntArray(0) else IntArray(4) { Looks.argb(NativeBridge.lookColours(l)[it].toInt()) } }
+    }
     private var askImport by mutableStateOf(false)
     private var importError by mutableStateOf<String?>(null)
     private var menu by mutableStateOf<MenuPage?>(null) // the in-game menu (the game paused) or null
@@ -275,7 +280,7 @@ class MainActivity : ComponentActivity() {
                         onExport = { holdGame = null; exportSave(g) },
                         onGameSettings = {
                             holdGame = null
-                            idOf(g)?.let { id -> editGame = Triple(g.name, id, gameSettings.of(id)) }
+                            idOf(g)?.let { id -> editGrey = g.console == Console.GB; editGame = Triple(g.name, id, gameSettings.of(id)) }
                         },
                         onRemove = if (g.outside) ({ holdGame = null; removeGame(g) }) else null,
                         onClose = { holdGame = null },
@@ -391,7 +396,7 @@ class MainActivity : ComponentActivity() {
                             changeSettings(settings.copy(biosFile = false))
                             toast("The built-in BIOS is used from the next game on.")
                         },
-                        onEditLayout = ::openLayoutEditor, importedSkins = skinTiles,
+                        onEditLayout = ::openLayoutEditor, lookStrips = lookStrips, importedSkins = skinTiles,
                         onImportSkin = { pickSkin.launch(arrayOf("*/*")) }, onRemoveSkin = ::removeSkin,
                         backup = backupStatus.copy(inGame = playing),
                         onBackUp = { backupTo.launch(BackupSchedule.fileName(System.currentTimeMillis())) },
@@ -423,7 +428,7 @@ class MainActivity : ComponentActivity() {
                 editGame?.let { (name, id, game) ->
                     GameSettingsDialog(name, game, gameSettings.detected(id),
                         onChange = { gameSettings.set(id, it); editGame = Triple(name, id, it) },
-                        onDone = { editGame = null })
+                        onDone = { editGame = null }, grey = editGrey, lookStrips = lookStrips)
                 }
                 BackHandler(enabled = playing && menu == null && settingsPage == null) { openMenu() }
                 BackHandler(enabled = playing && menu != null && settingsPage == null) {
@@ -727,13 +732,14 @@ class MainActivity : ComponentActivity() {
         NativeBridge.setBios(bios)
         val own = gameSettings.of(gameId)
         NativeBridge.setGameOverrides(own.saveType, own.clock)
+        NativeBridge.setLook(Looks.forGame(settings, own))
         val console = entry.console ?: Console.GBA
         val loadError = NativeBridge.loadGame(rom, File(saves, "$gameId.sav").path, console.native)
         if (loadError != 0) { // (the previous game's session is already stopped and saved)
             message = loadErrorText(loadError)
             return
         }
-        if (own == GameSettings.Game()) NativeBridge.cartSetup().let { gameSettings.remember(gameId, it[0], it[1]) }
+        if (own.detects) NativeBridge.cartSetup().let { gameSettings.remember(gameId, it[0], it[1]) }
         hardware = NativeBridge.cartHardware()
         manualLight = null
         if (console != Console.GBA && ra.signIn == Achievements.SignIn.IN) { // so a signed-in player isn't left wondering
@@ -1321,6 +1327,7 @@ class MainActivity : ComponentActivity() {
     /** Picture and sound at once; rewind for the next game (the touch buttons read [settings] themselves). */
     private fun applySettings(s: Settings) {
         NativeBridge.setPicture(s.size, s.smooth)
+        NativeBridge.setLook(Looks.forGame(s, current?.takeIf { playing }?.id?.let(gameSettings::of) ?: GameSettings.Game()))
         NativeBridge.setBackground(if (s.skinImport != 0) 0xFF000000.toInt() else Skins.at(s.skin).body)
         NativeBridge.setSound(s.sound, s.soundBursts)
         NativeBridge.setRewindBudget(s.rewindBudget)

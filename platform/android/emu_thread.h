@@ -36,6 +36,7 @@ typedef struct {
                  Dropped for a Game Boy game: no achievements for those yet (17b) */
     int console; /* EMU_AUTO: told from the ROM's own header (a Game Boy Advance when it has none), or
                     EMU_CONSOLE_* when the caller knows better (from the file's name) */
+    int look; /* a grey Game Boy game's colours (gb.h: GB_LOOK_AUTO, 0 = grey, …); other games ignore it */
 } emu_options_t;
 #define EMU_AUTO (-1)
 enum { EMU_CONSOLE_GBA = 0, EMU_CONSOLE_GB = 1, EMU_CONSOLE_GBC = 2 };
@@ -73,6 +74,8 @@ void emu_destroy(emu_t *e); /* stops the thread (if started), writes the save, f
 /* Cartridge sensors (any thread; applied at the next frame start): tilt and turn ±32767, light 0..255. */
 void emu_set_motion(emu_t *e, int tilt_x, int tilt_y, int turn);
 void emu_set_light(emu_t *e, int level);
+/* A grey Game Boy game's colours from the next frame on (17c); nothing for other games. */
+void emu_set_look(emu_t *e, int look);
 uint32_t emu_cart_hardware(const emu_t *e); /* GBA_HW_* extras of the loaded cartridge */
 gba_save_type_t emu_save_type(const emu_t *e); /* the save chip (detected or forced) */
 bool emu_rumble_active(emu_t *e);           /* the rumble motor after the last frame */

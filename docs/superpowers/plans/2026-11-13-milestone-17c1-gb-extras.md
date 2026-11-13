@@ -85,18 +85,18 @@ emulation thread before the next frame); JNI `setLook(look: Int)`, `lookCount():
 ShortArray` (12 colours); `Settings.greyLook: Int` (key `grey_look`, default `LOOK_AUTO = -1`);
 `GameSettings.Game.look: Int` (default `LOOK_SAME = -2`, stored as `<id>.look`); `fun lookFor(settings, game): Int`.
 
-- [ ] **Step 1:** Failing Kotlin tests: the setting's default and round trip; an unknown stored number reads as
+- [x] **Step 1:** Failing Kotlin tests: the setting's default and round trip; an unknown stored number reads as
   automatic; `lookFor` prefers the game's own; the per-game value survives `GameSettings` save / load and is absent
   from the file when "same".
-- [ ] **Step 2:** Native + JNI; on-device test `aLookChangesTheGreyPicture` (gb_demo: frame colours differ between
+- [x] **Step 2:** Native + JNI; on-device test `aLookChangesTheGreyPicture` (gb_demo: frame colours differ between
   grey and original green; GBC demo unchanged).
-- [ ] **Step 3:** UI (impeccable, existing parts only): Settings → Picture gets the row "Grey Game Boy games" →
+- [x] **Step 3:** UI (impeccable, existing parts only): Settings → Picture gets the row "Grey Game Boy games" →
   a choice list, each row with its four background colours as a strip; names: Automatic, Grey, Original green,
   Pocket, then the Game Boy Color's (Brown, Red, Dark brown, Pastel mix, Orange, Yellow, Blue, Dark blue, Green,
   Dark green, Inverted). Under Automatic: "The colours a Game Boy Color gives each game. Games it doesn't know stay
   grey." The game list's hold menu shows Game settings for a grey game: one choice, "Colours", first entry "Same as in
   Settings".
-- [ ] **Step 4:** `jvmtest`, `androidtest`. Commit `app: colours for grey Game Boy games`.
+- [x] **Step 4:** `jvmtest`, `androidtest`. Commit `app: colours for grey Game Boy games`.
 
 ### Task 3: Rumble
 

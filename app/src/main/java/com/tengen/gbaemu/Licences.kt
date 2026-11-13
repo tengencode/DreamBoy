@@ -16,6 +16,7 @@ object Licences {
         Licence("DreamBoy", "GPL 3.0 or later", "licences/gpl-3.0.txt", emptyList()),
         Licence("rcheevos 12.5.0 (RetroAchievements)", "MIT", "licences/rcheevos-mit.txt", emptyList()),
         Licence("MD5 code in rcheevos (L. Peter Deutsch, Aladdin Enterprises)", "zlib-style", "licences/md5-zlib.txt", emptyList()),
+        Licence("Game Boy Color colour tables from SameBoy (Lior Halphon)", "MIT", "licences/sameboy-mit.txt", emptyList()),
         Licence("Jetpack Compose, Material 3 and Material icons", "Apache 2.0", "licences/apache-2.0.txt", listOf("androidx.compose.")),
         Licence("AndroidX libraries (core, activity, lifecycle and others)", "Apache 2.0", "licences/apache-2.0.txt", listOf("androidx.")),
         Licence("Kotlin standard library, kotlinx coroutines and JetBrains annotations", "Apache 2.0", "licences/apache-2.0.txt",

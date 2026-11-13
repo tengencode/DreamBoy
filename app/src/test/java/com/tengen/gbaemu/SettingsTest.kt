@@ -68,4 +68,16 @@ class SettingsTest {
             listOf(Settings.LENGTH_SHORT, Settings.LENGTH_NORMAL, Settings.LENGTH_LONG).map { Settings(rewindLength = it).rewindBudget })
         assertEquals(0L, Settings(rewind = false).rewindBudget)
     }
+
+    @Test
+    fun greyGamesAreAutomaticUntilChosenAndAnUnknownLookIsAutomatic() { // 17c
+        val store = MemoryStore()
+        assertEquals(Looks.AUTO, Settings.load(store).greyLook)
+        Settings(greyLook = 0).save(store)
+        assertEquals(0, Settings.load(store).greyLook)
+        Settings(greyLook = 13).save(store)
+        assertEquals(13, Settings.load(store).greyLook)
+        store.put("grey_look", 99)
+        assertEquals(Looks.AUTO, Settings.load(store).greyLook)
+    }
 }

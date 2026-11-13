@@ -24,6 +24,7 @@ data class Settings(
     val hardcore: Boolean = false,
     // Leaderboards (15): the started / failed notes and the live counters over the game; scores always show.
     val leaderboardNotes: Boolean = true,
+    val greyLook: Int = Looks.AUTO, // grey Game Boy games' colours (17c): Looks.AUTO or a look's number
 ) {
     /** AAudio's own buffer, in bursts. */
     val soundBursts: Int get() = when (delay) {
@@ -56,6 +57,7 @@ data class Settings(
         store.put("box_art", flag(boxArt))
         store.put("ra_hardcore", flag(hardcore))
         store.put("ra_lb_notes", flag(leaderboardNotes))
+        store.put("grey_look", greyLook)
     }
 
     companion object {
@@ -102,6 +104,7 @@ data class Settings(
                 boxArt = bool(store, "box_art", d.boxArt),
                 hardcore = bool(store, "ra_hardcore", d.hardcore),
                 leaderboardNotes = bool(store, "ra_lb_notes", d.leaderboardNotes),
+                greyLook = store.get("grey_look")?.takeIf(Looks::valid) ?: d.greyLook,
             )
         }
 

@@ -73,6 +73,7 @@ android {
 val copyAboutAssets by tasks.registering(Copy::class) {
     from(rootProject.file("LICENSE")) { rename { "licences/gpl-3.0.txt" } }
     from(rootProject.file("third_party/rcheevos/LICENSE")) { rename { "licences/rcheevos-mit.txt" } }
+    from(rootProject.file("third_party/sameboy-boot-rom-LICENSE.txt")) { rename { "licences/sameboy-mit.txt" } }
     from(rootProject.file("PRIVACY.md")) { rename { "privacy.md" } }
     into(layout.buildDirectory.dir("generated/aboutAssets"))
 }

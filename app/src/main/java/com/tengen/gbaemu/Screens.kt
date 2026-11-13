@@ -465,8 +465,9 @@ fun GameHoldMenu(game: GameEntry, onStartFresh: () -> Unit, onImport: () -> Unit
         SheetItem(Icons.Filled.Replay, "Start fresh (from the title screen)", onClick = onStartFresh),
         SheetItem(Icons.Filled.FileDownload, "Import save", onClick = onImport),
         SheetItem(Icons.Filled.FileUpload, "Export save", onClick = onExport),
-        // (a Game Boy cartridge says itself what it saves with, and its clock is always on: nothing to set)
-        if (game.console == null || game.console == Console.GBA) SheetItem(Icons.Filled.Tune, "Game settings", onClick = onGameSettings) else null,
+        // (a Game Boy cartridge says itself what it saves with, and its clock is always on: a grey game has its
+        // colours to set, a Game Boy Color game nothing)
+        if (game.console != Console.GBC) SheetItem(Icons.Filled.Tune, "Game settings", onClick = onGameSettings) else null,
         SheetItem(Icons.Filled.Image, "Choose box art", onClick = onChooseBox),
         if (hasBox) SheetItem(Icons.Filled.HideImage, "Remove box art", onClick = onRemoveBox) else null,
         onRemove?.let { SheetItem(Icons.Filled.RemoveCircleOutline, "Remove from list", danger = true, onClick = it) },

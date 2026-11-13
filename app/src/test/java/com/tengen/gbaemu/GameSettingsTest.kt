@@ -41,4 +41,19 @@ class GameSettingsTest {
         store.put("e86b3224.clock", 7)
         assertEquals(GameSettings.Game(), GameSettings(store).of("e86b3224"))
     }
+
+    @Test
+    fun aGreyGamesLookIsKeptAndSameIsNotStored() { // 17c
+        val store = MemoryStore()
+        val gs = GameSettings(store)
+        assertEquals(Looks.SAME, gs.of("aaaa0001").look)
+        gs.set("aaaa0001", GameSettings.Game(look = 3))
+        gs.set("bbbb0002", GameSettings.Game(look = Looks.AUTO))
+        assertEquals(3, GameSettings(store).of("aaaa0001").look)
+        assertEquals(Looks.AUTO, GameSettings(store).of("bbbb0002").look)
+        gs.set("aaaa0001", GameSettings.Game())
+        assertEquals(null, store.get("aaaa0001.look"))
+        store.put("aaaa0001.look", 99) // from a newer version: not a look here
+        assertEquals(Looks.SAME, GameSettings(store).of("aaaa0001").look)
+    }
 }

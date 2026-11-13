@@ -35,7 +35,7 @@ class LicencesTest {
 
     @Test
     fun everyLicenceTextIsInTheApp() {
-        val made = setOf("licences/gpl-3.0.txt", "licences/rcheevos-mit.txt") // copied in at build time
+        val made = setOf("licences/gpl-3.0.txt", "licences/rcheevos-mit.txt", "licences/sameboy-mit.txt") // copied in at build time
         val missing = Licences.SHIPPED.map { it.asset }.filter { it !in made && !File("src/main/assets/${it}").isFile }
         assertEquals(emptyList<String>(), missing)
     }

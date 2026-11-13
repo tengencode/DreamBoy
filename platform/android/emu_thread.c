@@ -34,6 +34,8 @@ struct emu {
     gba_t *g; /* the machine's Game Boy Advance core, for what only that console has; NULL for a Game Boy game */
     size_t pixels;    /* in a frame */
     int clock_frames; /* a Game Boy cartridge clock is told the time about once a second */
+    atomic_int look;  /* a grey game's colours as last asked for */
+    int look_set;     /* … and as the machine has them (the emulation thread's) */
     triple_buffer_t tb;
     pthread_t thread;
     bool started;
@@ -260,6 +262,8 @@ static void play_frame(emu_t *e, int speed) {
     atomic_fetch_or(&e->keys_seen, keys);
     machine_set_keys(e->m, (uint16_t)keys);
     apply_sensors(e);
+    int look = atomic_load(&e->look);
+    if (look != e->look_set) machine_set_look(e->m, e->look_set = look);
     if (!e->g && ++e->clock_frames >= 60) {
         e->clock_frames = 0;
         machine_set_rtc(e->m, (int64_t)time(NULL), 0);
@@ -395,7 +399,7 @@ static void load_save(emu_t *e) {
 }
 
 emu_options_t emu_options_default(void) {
-    emu_options_t o = {NULL, 0, EMU_AUTO, EMU_AUTO, EMU_REWIND_DEFAULT, true, 2, NULL, EMU_AUTO};
+    emu_options_t o = {NULL, 0, EMU_AUTO, EMU_AUTO, EMU_REWIND_DEFAULT, true, 2, NULL, EMU_AUTO, 0};
     return o;
 }
 
@@ -479,6 +483,8 @@ emu_t *emu_create(const uint8_t *rom, size_t size, const char *save_path, const 
     atomic_init(&e->rw_bytes, 0);
     atomic_init(&e->rw_steps, 0);
     atomic_init(&e->ra_reset, false);
+    atomic_init(&e->look, o.look);
+    machine_set_look(e->m, e->look_set = o.look);
     e->ra = e->g ? o.ra : NULL; /* no achievements for Game Boy games yet: no session, so no hardcore limits */
     if (o.rewind_budget && machine_rewind_configure(e->m, o.rewind_budget, REWIND_EVERY) != MACHINE_OK) {
         LOGW("no memory for rewind: rewind off");
@@ -564,6 +570,10 @@ void emu_set_motion(emu_t *e, int tilt_x, int tilt_y, int turn) {
 
 void emu_set_light(emu_t *e, int level) {
     atomic_store(&e->light, clamp(level, 0, 255));
+}
+
+void emu_set_look(emu_t *e, int look) {
+    atomic_store(&e->look, look);
 }
 
 uint32_t emu_cart_hardware(const emu_t *e) {
