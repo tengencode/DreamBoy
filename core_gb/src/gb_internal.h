@@ -8,6 +8,8 @@
 
 /* Every name seen outside its file starts with gb_: both cores are linked into one program. */
 
+#define GB_AUDIO_FRAMES 2048 /* stereo samples kept for gb_audio_read: about 3.7 frames */
+
 typedef enum { MBC_NONE, MBC1, MBC2, MBC3, MBC5 } mbc_t;
 
 /* What the loaded ROM is: set by gb_load_rom, never part of a save state. */
@@ -82,6 +84,33 @@ typedef struct {
     uint8_t oam[0xA0];
 } gb_ppu_t;
 
+typedef struct {
+    uint8_t on;        /* playing (its bit in NR52) */
+    uint8_t dac;       /* its converter is on: it is heard at all */
+    uint8_t length_on; /* the length counter stops it at 0 */
+    uint8_t volume, env_timer;
+    uint8_t pos;       /* step in the duty pattern (0-7) or the wave (0-31) */
+    uint16_t length;
+    uint16_t freq;     /* 11 bits */
+    int32_t timer;     /* ticks until the next step */
+} gb_chan_t;
+
+typedef struct {
+    gb_chan_t ch[4];   /* square with sweep, square, wave, noise */
+    uint8_t reg[0x17]; /* 0xFF10-0xFF26 as written */
+    uint8_t wave[16];
+    uint8_t power;
+    uint8_t seq_step;  /* the sequencer step that comes next, 0-7 */
+    uint8_t sweep_timer, sweep_on, sweep_negged;
+    uint8_t wave_sample;    /* the 4-bit sample the wave channel is playing */
+    uint8_t wave_just_read; /* it read wave RAM in this cycle */
+    uint8_t sum_dots;       /* ticks gathered towards the next output sample */
+    uint16_t sweep_freq;
+    uint16_t lfsr;          /* the noise channel's shift register */
+    int32_t sum_left, sum_right;
+    int32_t cap_left, cap_right; /* the output filter */
+} gb_apu_t;
+
 /* The banking chip's registers. */
 typedef struct {
     uint8_t ram_on;
@@ -104,6 +133,9 @@ struct gb {
     gb_joypad_t joypad;
     gb_cart_t cart;
     gb_ppu_t ppu;
+    gb_apu_t apu;
+    int16_t audio[GB_AUDIO_FRAMES * 2]; /* samples not yet read: a ring */
+    uint32_t audio_read, audio_count;
     uint16_t back[GB_WIDTH * GB_HEIGHT]; /* the picture being drawn; shown (copied to frame) when VBlank starts */
     uint16_t frame[GB_WIDTH * GB_HEIGHT]; /* the picture, BGR555 */
     char serial_out[4096]; /* for tests: every byte sent on the serial port */
@@ -139,6 +171,11 @@ bool gb_ppu_vram_blocked(const gb_t *g); /* the CPU cannot reach video RAM while
 bool gb_ppu_oam_blocked(const gb_t *g);  /* nor OAM during the scan, the drawing, or OAM DMA */
 int gb_ppu_line_sprites(const gb_t *g, int ly, uint8_t out[10]);
 void gb_ppu_draw_line(gb_t *g, int ly);
+void gb_apu_reset(gb_t *g);
+void gb_apu_tick(gb_t *g, int dots);
+void gb_apu_sequencer(gb_t *g); /* a 512 Hz step: the divider's bit 12 fell */
+uint8_t gb_apu_read(const gb_t *g, uint16_t addr); /* 0xFF10-0xFF3F */
+void gb_apu_write(gb_t *g, uint16_t addr, uint8_t value);
 void gb_cart_reset(gb_t *g);
 uint8_t gb_cart_read(const gb_t *g, uint16_t addr); /* 0x0000-0x7FFF and 0xA000-0xBFFF */
 void gb_cart_write(gb_t *g, uint16_t addr, uint8_t value);

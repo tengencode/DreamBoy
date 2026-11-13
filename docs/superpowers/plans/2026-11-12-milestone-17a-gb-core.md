@@ -361,7 +361,7 @@ Greys (BGR555): shade 0 `0x7FFF`, 1 `0x56B5`, 2 `0x294A`, 3 `0x0000`.
 **Interfaces — produces:** `apu_tick(gb_t*)`; registers 0xFF10–0xFF26, wave RAM 0xFF30–0xFF3F; `gb_audio_read`
 (a buffer of at least 2 frames: 2048 stereo samples; older samples dropped).
 
-- [ ] **Step 1: Failing tests:** register read-back masks (the OR table: NR10 0x80, NR11 0x3F, NR12 0x00, NR13 0xFF,
+- [x] **Step 1: Failing tests:** register read-back masks (the OR table: NR10 0x80, NR11 0x3F, NR12 0x00, NR13 0xFF,
   NR14 0xBF, NR21 0x3F … NR52 0x70; unused 0xFF); power off (NR52 bit 7 = 0) clears and locks registers (length
   counters stay writable on the DMG); square duty patterns and frequency → period in ticks = (2048 − f) × 4;
   length counters (64 / 256) incl. the extra clock when enabling length in the sequencer's first half; envelope;
@@ -369,13 +369,13 @@ Greys (BGR555): shade 0 `0x7FFF`, 1 `0x56B5`, 2 `0x294A`, 3 `0x0000`.
   DMG wave-RAM read rules; noise LFSR 15 / 7 bit; sequencer steps clocked by the divider's bit 12 falling (bit 13 in
   double speed); DAC off silences and disables; NR50 / NR51 routing; `gb_audio_read` returns 32768 / 59.7275 ≈ 548–549
   samples a frame; silence = 0 after the DC filter settles.
-- [ ] **Step 2–4:** fail; implement; pass. Output: each output sample is the average of the mixed signal over its
+- [x] **Step 2–4:** fail; implement; pass. Output: each output sample is the average of the mixed signal over its
   128 ticks; a one-pole high-pass per side removes the DC offset.
-- [ ] **Step 5: ROM tests (time-boxed: stop after the eight easiest pass and two more debugging rounds bring
+- [x] **Step 5: ROM tests (time-boxed: stop after the eight easiest pass and two more debugging rounds bring
   nothing):** blargg `dmg_sound` single ROMs 01–12 (memtext) — aim ≥ 8 of 12; record each in PROGRESS.md; passing
   ones into `gb_tests.json`. Lock an audio fingerprint of a small own sound ROM (built by
   `tools/build_test_roms.py` from bytes: plays each channel) in `expected_frames.json`.
-- [ ] **Step 6:** Commit `gb: sound`.
+- [x] **Step 6:** Commit `gb: sound`.
 
 ### Task 8: Game Boy Color
 

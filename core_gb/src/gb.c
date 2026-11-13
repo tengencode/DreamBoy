@@ -26,11 +26,13 @@ void gb_reset(gb_t *g) {
     g->mem.wram_bank = 1;
     memset(&g->timer, 0, sizeof g->timer);
     memset(&g->serial, 0, sizeof g->serial);
-    g->joypad.select = 0x30; /* the held keys stay: they are the player's, not the machine's */
+    g->joypad.select = 0;  /* the held keys stay: they are the player's, not the machine's */
+    g->mem.iflag = 0x01;   /* the boot ROM leaves a VBlank request behind */
     g->timer.div = 0xABC8;   /* where the boot ROM leaves the divider */
     g->serial_len = 0;
     gb_cart_reset(g);
     gb_ppu_reset(g);
+    gb_apu_reset(g);
     g->ticks = 0;
     g->frame_left = 0;
     gb_cpu_reset(g);
@@ -59,11 +61,6 @@ uint32_t gb_rom_crc32(const gb_t *g) {
 
 const uint16_t *gb_framebuffer(const gb_t *g) {
     return g->frame;
-}
-
-/* shortcut: no sound yet; plan Task 7. */
-size_t gb_audio_read(gb_t *g, int16_t *out, size_t max_frames) {
-    return 0;
 }
 
 size_t gb_save_size(const gb_t *g) {
