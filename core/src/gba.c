@@ -5,6 +5,7 @@
 #include "cheats/cheats.h"
 #include "gba_internal.h"
 #include "rewind.h"
+#include "rewind_ring.h"
 #include "sys/keypad.h"
 
 _Static_assert(GBA_IWRAM_SIZE == IWRAM_SIZE && GBA_EWRAM_SIZE == EWRAM_SIZE, "gba.h's RAM sizes match the bus");
@@ -24,7 +25,7 @@ void gba_destroy(gba_t *g) {
     if (!g) return;
     cheats_drop(g);
     cart_unload(&g->cart);
-    rewind_free(g->rewind);
+    rewind_ring_free(g->rewind);
     free(g);
 }
 
@@ -46,7 +47,7 @@ gba_err_t gba_load_rom(gba_t *g, const uint8_t *rom, size_t size) {
 }
 
 void gba_reset(gba_t *g) {
-    rewind_clear(g->rewind);
+    rewind_ring_clear(g->rewind);
     hardware_reset(g); /* before the cycle count restarts: it re-bases the clock */
     g->now = 0;
     g->frame_done = false;

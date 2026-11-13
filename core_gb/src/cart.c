@@ -108,10 +108,15 @@ static void map(gb_t *g) {
 }
 
 /* A reset is not a new cartridge: the clock keeps running through it. */
+void gb_cart_remap(gb_t *g) {
+    map(g);
+}
+
 void gb_cart_reset(gb_t *g) {
-    gb_rtc_t rtc = g->cart.rtc;
+    gb_rtc_t rtc;
+    memcpy(&rtc, &g->cart.rtc, sizeof rtc); /* (memcpy: the padding too, so save states stay byte-exact) */
     memset(&g->cart, 0, sizeof g->cart);
-    g->cart.rtc = rtc;
+    memcpy(&g->cart.rtc, &rtc, sizeof rtc);
     g->cart.bank_lo = 1;
     g->cart.ram_on = g->info.mbc == MBC_NONE; /* without a chip there is no switch */
     map(g);

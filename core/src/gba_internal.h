@@ -34,7 +34,7 @@ struct gba {
     bool frame_done;   /* set when VBlank starts; ends gba_run_frame */
     bool hle_bios;     /* true: built-in BIOS stub + C SWIs; false: user BIOS */
     uint16_t keyinput; /* KEYINPUT register: bit clear = pressed */
-    struct rewind *rewind; /* rewind history (rewind.c), NULL while off; in no state chunk */
+    struct rewind_ring *rewind; /* rewind history (core_common), NULL while off; in no state chunk */
     struct cheat_list *cheats; /* the switched-on cheats (cheats/), NULL without; in no state chunk */
 #ifdef GBA_NOTES
     notes_t notes; /* the warning log (notes.h); in no state chunk */

@@ -1,7 +1,7 @@
 #include "gba_debug.h"
 
 #include "gba_internal.h"
-#include "rewind.h"
+#include "rewind_ring.h"
 
 uint32_t gba_debug_reg(const gba_t *g, unsigned n) {
     return n < 16 ? g->cpu.r[n] : 0;
@@ -24,7 +24,7 @@ uint64_t gba_debug_cycles(const gba_t *g) {
 }
 
 void gba_debug_rewind_stats(const gba_t *g, size_t *snapshots, size_t *bytes) {
-    rewind_stats(g->rewind, snapshots, bytes);
+    rewind_ring_stats(g->rewind, snapshots, bytes);
 }
 
 int gba_debug_notes_enabled(void) {

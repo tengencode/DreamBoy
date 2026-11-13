@@ -1,4 +1,4 @@
-/* Rewind (core/src/rewind.c): stepping back gives exactly the machine of an earlier snapshot. */
+/* Rewind (core/src/rewind.c, on core_common/rewind_ring.c): stepping back gives exactly the machine of an earlier snapshot. */
 #include <stdlib.h>
 #include <string.h>
 

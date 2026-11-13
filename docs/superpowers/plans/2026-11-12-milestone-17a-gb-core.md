@@ -447,9 +447,9 @@ void rewind_ring_stats(const rewind_ring_t *r, size_t *snapshots, size_t *bytes)
 State format: magic `"GBCS"`, format version, ROM CRC-32, chunk count, then tagged versioned chunks as
 `core/src/state.c` does (one chunk per component struct; the ROM is never in a state; cartridge RAM is).
 
-- [ ] **Step 1:** Move the ring first, GBA only: `bash tools/dev.sh test` → all GBA tests pass, including the 96
+- [x] **Step 1:** Move the ring first, GBA only: `bash tools/dev.sh test` → all GBA tests pass, including the 96
   `state_` / `rewind_` tests and `oldstate_snd_mix` (the GBA state format must not change by one byte).
-- [ ] **Step 2: Failing tests:** `gb_state_round_trip` (save → load into a new machine → save: identical bytes; run
+- [x] **Step 2: Failing tests:** `gb_state_round_trip` (save → load into a new machine → save: identical bytes; run
   both 30 frames: identical frame and audio hashes), for a DMG and a CGB program; `gb_state_refuses`
   (Review Focus 3): wrong magic, a GBA state, another ROM's CRC, truncated at every chunk boundary, one byte short,
   a chunk length changed → `GB_ERR_STATE` and the machine's next frame is identical to an untouched twin's;
@@ -457,9 +457,9 @@ State format: magic `"GBCS"`, format version, ROM CRC-32, chunk count, then tagg
   buffer positions set to 0xFFFF…: load is refused or the values are masked, and 10 frames run clean under the
   sanitizer; `gb_rewind_steps_back` (as `test_rewind.c` does for GBA); `machine_state_kind_mismatch` (a GBA state
   into a Game Boy machine and the reverse → `MACHINE_ERR_STATE`).
-- [ ] **Step 3–4:** fail; implement; pass. `bash tools/dev.sh test` → the new `state_gb_*` / `rewind_gb_*` CTest
+- [x] **Step 3–4:** fail; implement; pass. `bash tools/dev.sh test` → the new `state_gb_*` / `rewind_gb_*` CTest
   variants pass too.
-- [ ] **Step 5:** Commit `gb: save states and rewind; the rewind ring shared by both cores`.
+- [x] **Step 5:** Commit `gb: save states and rewind; the rewind ring shared by both cores`.
 
 ### Task 11: The viewer and the speed bench
 

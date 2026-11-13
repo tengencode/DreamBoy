@@ -90,7 +90,7 @@ static void event(gb_t *g) {
         p->next = (uint16_t)(80 + mode3_length(g));
         break;
     case PH_DRAW_END:
-        gb_ppu_draw_line(g, p->line);
+        if (p->line < GB_HEIGHT) gb_ppu_draw_line(g, p->line); /* (a loaded state may say anything) */
         p->irq_mode = 0;
         p->phase = PH_SHOW_0;
         p->next += 4;

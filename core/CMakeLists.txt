@@ -1,6 +1,7 @@
 file(GLOB_RECURSE GBACORE_SOURCES CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/src/*.c)
 add_library(gbacore STATIC ${GBACORE_SOURCES})
 target_include_directories(gbacore PUBLIC include PRIVATE src)
+target_link_libraries(gbacore PUBLIC corecommon) # the rewind ring both cores share
 target_compile_options(gbacore PRIVATE -Wall -Wextra -Wno-unused-parameter)
 
 # The warning log (milestone 13): a record of anything a game uses that the emulator skips. Only in the PC builds

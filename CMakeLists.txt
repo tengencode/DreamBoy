@@ -11,6 +11,7 @@ if(GBA_SANITIZE)
     add_link_options(-fsanitize=address,undefined)
 endif()
 
+add_subdirectory(core_common) # the rewind ring both cores share
 add_subdirectory(core)
 add_subdirectory(core_gb) # the Game Boy / Game Boy Color core (milestone 17)
 add_subdirectory(machine) # one layer over both cores
@@ -84,9 +85,6 @@ if(NOT ANDROID)
                      COMMAND testrunner ${PROJECT_SOURCE_DIR}/tests/roms/${f_rom} --frames ${f_frames}
                              --expect-hash ${f_hash} ${audio_args})
             set_tests_properties(frame_${f_name} PROPERTIES SKIP_RETURN_CODE 77)
-            if(f_rom MATCHES "^gb/") # no save states or rewind in the Game Boy core yet (17a plan, Task 10)
-                continue()
-            endif()
             # The same run through a save state: half-way it continues in a brand-new machine.
             math(EXPR f_half "${f_frames} / 2")
             if(f_half LESS 1)

@@ -162,8 +162,11 @@ struct gb {
     gb_cgb_t cgb;
     int16_t audio[GB_AUDIO_FRAMES * 2]; /* samples not yet read: a ring */
     uint32_t audio_read, audio_count;
+    uint16_t frame[GB_WIDTH * GB_HEIGHT]; /* the picture, BGR555 (frame and back: one save-state chunk) */
     uint16_t back[GB_WIDTH * GB_HEIGHT]; /* the picture being drawn; shown (copied to frame) when VBlank starts */
-    uint16_t frame[GB_WIDTH * GB_HEIGHT]; /* the picture, BGR555 */
+    struct rewind_ring *rewind; /* rewind history (core_common), NULL while off; in no state chunk */
+    size_t rewind_budget;       /* as last configured: a new ROM changes the state's size */
+    int rewind_interval;
     char serial_out[4096]; /* for tests: every byte sent on the serial port */
     uint32_t serial_len;
     uint64_t ticks;     /* clock ticks since reset */
@@ -207,6 +210,8 @@ uint8_t gb_cgb_read(const gb_t *g, uint16_t addr); /* 0xFF4D-0xFF75, the Game Bo
 void gb_cgb_write(gb_t *g, uint16_t addr, uint8_t value);
 void gb_cgb_hblank(gb_t *g);
 bool gb_cgb_speed_switch(gb_t *g); /* STOP: true when it switched the speed */
+void gb_rewind_after_frame(gb_t *g);
+void gb_cart_remap(gb_t *g); /* after the banking registers changed by other means than a write */
 void gb_cart_reset(gb_t *g);
 uint8_t gb_cart_read(const gb_t *g, uint16_t addr); /* 0x0000-0x7FFF and 0xA000-0xBFFF */
 void gb_cart_write(gb_t *g, uint16_t addr, uint8_t value);

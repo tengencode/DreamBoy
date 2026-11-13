@@ -149,26 +149,27 @@ void machine_set_rtc(machine_t *m, int64_t unix_seconds, int32_t utc_offset_s) {
     else gb_set_rtc(m->gb, unix_seconds);
 }
 
-/* shortcut: no save states or rewind for the Game Boy core yet; plan Task 10 adds them. */
 size_t machine_state_size(const machine_t *m) {
-    return m->gba ? gba_state_size(m->gba) : 0;
+    return m->gba ? gba_state_size(m->gba) : gb_state_size(m->gb);
 }
 
 size_t machine_state_save(const machine_t *m, void *buf, size_t cap) {
-    return m->gba ? gba_state_save(m->gba, buf, cap) : 0;
+    return m->gba ? gba_state_save(m->gba, buf, cap) : gb_state_save(m->gb, buf, cap);
 }
 
 int machine_state_load(machine_t *m, const void *buf, size_t len) {
-    return m->gba && gba_state_load(m->gba, buf, len) == GBA_OK ? MACHINE_OK : MACHINE_ERR_STATE;
+    bool ok = m->gba ? gba_state_load(m->gba, buf, len) == GBA_OK : gb_state_load(m->gb, buf, len) == GB_OK;
+    return ok ? MACHINE_OK : MACHINE_ERR_STATE;
 }
 
 int machine_rewind_configure(machine_t *m, size_t budget_bytes, int interval_frames) {
-    if (!m->gba) return MACHINE_ERR_NOMEM;
-    return gba_rewind_configure(m->gba, budget_bytes, interval_frames) == GBA_OK ? MACHINE_OK : MACHINE_ERR_NOMEM;
+    bool ok = m->gba ? gba_rewind_configure(m->gba, budget_bytes, interval_frames) == GBA_OK
+                     : gb_rewind_configure(m->gb, budget_bytes, interval_frames) == GB_OK;
+    return ok ? MACHINE_OK : MACHINE_ERR_NOMEM;
 }
 
 int machine_rewind_step_back(machine_t *m) {
-    return m->gba ? gba_rewind_step_back(m->gba) : 0;
+    return m->gba ? gba_rewind_step_back(m->gba) : gb_rewind_step_back(m->gb);
 }
 
 struct gba *machine_gba(machine_t *m) {
