@@ -71,7 +71,7 @@ class GameBoyDeviceTest {
     @Test
     fun anUnsupportedCartridgeIsRefusedWithItsOwnError() {
         val rom = TestRoms.rom("../own_roms/gb_demo.gb")
-        rom.put(0x147, 0x22) // a tilt-sensor cartridge
+        rom.put(0x147, 0x20) // a chip this app does not have (MBC6)
         var sum = 0
         for (i in 0x134..0x14C) sum = sum - rom.get(i) - 1
         rom.put(0x14D, sum.toByte())

@@ -90,6 +90,10 @@ uint32_t gb_ra_peek(const gb_t *g, uint32_t address, uint8_t *buffer, uint32_t c
 /* Rumble cartridges (MBC5 with a motor). */
 int gb_has_rumble(const gb_t *g);    /* 1: the loaded cartridge has a motor */
 int gb_rumble_active(const gb_t *g); /* 1 while the game holds the motor on */
+/* A tilt cartridge (the MBC7 chip): as gba_set_tilt, ±32767 = 1 g along that edge, 0 = level; x > 0: the right edge
+ * down, y > 0: the bottom edge down. An input like the keys: in no save state. Nothing for other cartridges. */
+int gb_has_tilt(const gb_t *g);
+void gb_set_tilt(gb_t *g, int16_t x, int16_t y);
 
 /* The save file: the cartridge RAM, then for a clock cartridge 48 bytes (the clock registers and a Unix time),
  * the format other emulators use. */

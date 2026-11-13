@@ -183,7 +183,7 @@ rule (the GBA choice).
   `00` write disable, `01` write-all (16 data bits), `10` erase-all. Chip select falling ends the command; data
   out reads `1` when idle (ready). A write or erase sets the dirty flag.
 
-- [ ] **Step 1:** Failing tests in `test_gb_mbc7.c` (a made-up ROM with type `0x22`; helpers that clock a command
+- [x] **Step 1:** Failing tests in `test_gb_mbc7.c` (a made-up ROM with type `0x22`; helpers that clock a command
   through register `0xA080`): `mbc7_loads_and_other_chips_are_still_refused` (0x22 loads, `gb_has_tilt` 1,
   `gb_has_rumble` 0, `gb_save_size` 256; type 0x20 → `GB_ERR_UNSUPPORTED_CART`);
   `mbc7_both_switches_guard_the_registers` (either off: reads `0xFF`, a latch write changes nothing;
@@ -203,10 +203,10 @@ rule (the GBA choice).
   `mbc7_gameshark_to_its_registers_is_skipped`. In `test_gb_state.c`: `other_cartridges_states_keep_their_layout`
   (an MBC1 state's size and chunk count equal constants written into the test from today's build, measured before
   any change).
-- [ ] **Step 2:** `bash tools/dev.sh unit gb_` — they fail (do not compile, then fail).
-- [ ] **Step 3:** Implement.
-- [ ] **Step 4:** `bash tools/dev.sh unit`, `bash tools/dev.sh test` pass; fingerprints unchanged.
-- [ ] **Step 5:** Commit `gb core: the tilt cartridge chip (MBC7) with its save chip`.
+- [x] **Step 2:** `bash tools/dev.sh unit gb_` — they fail (do not compile, then fail).
+- [x] **Step 3:** Implement.
+- [x] **Step 4:** `bash tools/dev.sh unit`, `bash tools/dev.sh test` pass; fingerprints unchanged.
+- [x] **Step 5:** Commit `gb core: the tilt cartridge chip (MBC7) with its save chip`.
 
 ### Task 5: Tilt through the machine layer and the PC tools; our own test ROM
 

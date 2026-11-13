@@ -276,3 +276,18 @@ TEST(machine_state_kind_mismatch) {
     machine_destroy(gb);
     machine_destroy(gba);
 }
+
+/* The tilt cartridge's chip added a chunk to its own states only (17c part 2): every other cartridge's state keeps
+ * the 13 chunks and the length it had in 1.1.0 and 1.2.0, so those states still load. */
+TEST(gb_state_other_cartridges_keep_their_layout) {
+    gb_t *g = busy(0);
+    size_t size = gb_state_size(g);
+    uint8_t *state = malloc(size);
+    gb_state_save(g, state, size);
+    uint32_t count;
+    memcpy(&count, state + 12, 4);
+    CHECK_EQ(count, 13);
+    CHECK_EQ(size, 158575); /* measured on 1.2.0's code, MBC3 with 8 KiB of RAM */
+    free(state);
+    gb_destroy(g);
+}
