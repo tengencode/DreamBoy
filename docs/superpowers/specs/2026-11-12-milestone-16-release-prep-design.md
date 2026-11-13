@@ -1,7 +1,7 @@
 # Milestone 16 — Release prep: DreamBoy 1.0 on GitHub — Design
 
 **Date:** 2026-11-12
-**Status:** Approved by the user 2026-11-12 ("Approve, write plan") — brainstormed 2026-10-26 to 2026-11-12, checked by a fresh reviewer (builder check), the user's answers added. Plan: `docs/superpowers/plans/2026-11-12-milestone-16-release-prep.md`. In progress: Tasks 1–8 done 2026-11-12 (Claude's work and checks; the code review's findings fixed, the impeccable finish review `ship`); Tasks 9–10 (the user's signing key and phone check, publishing) remain.
+**Status:** Implemented — milestone 16 complete 2026-11-12: **DreamBoy 1.0.0 is public** at https://github.com/tengencode/DreamBoy (release v1.0.0 with the signed APK). Approved 2026-11-12, plan `docs/superpowers/plans/2026-11-12-milestone-16-release-prep.md` (10 tasks). Changes during the work: the About page has no label band (the impeccable finish review); the outbox also keeps unlocks on the answers rcheevos retries (429, 502–504, 521–525) (the code review); published private first at the user's request, then — after the personal-details check found the user's phone models and another app's name in the history — the history was rewritten, the GitHub repo deleted and recreated, triple-checked and made public. Not done here (user steps): the posts; later, Google developer verification (before the 2027 rollout) and the RetroAchievements approval (from 2027-05-12, six months public).
 **Parent spec:** `docs/superpowers/specs/2026-09-24-gba-emulator-design.md` (§10 milestones)
 **Previous work:** milestone 15 (tag `milestone-15`, private archive); the whole-repo audit and its fixes (`docs/reviews/2026-10-23-ponytail-audit.md`, all done 2026-10-25).
 
