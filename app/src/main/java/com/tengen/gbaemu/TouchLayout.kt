@@ -25,10 +25,12 @@ data class Place(val x: Float, val y: Float, val scale: Float = 1f)
  * ⟲ rewind and ⏩ fast-forward (KeyMap.REWIND / FAST, not GBA buttons) upright between L and R, sideways just below L
  * and R. [edits] (the layout editor, 6c) move items anywhere and size them ½×–2×, always inside the screen.
  * [fitMode] (Settings.SIZE_*) places the game itself inside the picture's box ([game], 8b).
+ * [console] gives the picture's shape (3:2, or 10:9 for a Game Boy) and says whether there are L and R buttons.
  * Pure maths (no Android classes), so it is tested on the PC.
  */
 class TouchLayout(val width: Float, val height: Float, private val density: Float, val sideways: Boolean,
-                  val edits: Map<LayoutItem, Place> = emptyMap(), val fitMode: Int = Settings.SIZE_FIT) {
+                  val edits: Map<LayoutItem, Place> = emptyMap(), val fitMode: Int = Settings.SIZE_FIT,
+                  val console: Console = Console.GBA) {
     data class Box(val left: Float, val top: Float, val right: Float, val bottom: Float) {
         val cx get() = (left + right) / 2
         val cy get() = (top + bottom) / 2
@@ -53,6 +55,11 @@ class TouchLayout(val width: Float, val height: Float, private val density: Floa
     val dpadRadius: Float
     val buttons: List<Button>
     private val scales = HashMap<LayoutItem, Float>()
+    /** The buttons this console has, in drawing order (a Game Boy has no L and R). */
+    private val shown = BUTTONS.filter { console.hasShoulders || (it.first != LayoutItem.L && it.first != LayoutItem.R) }
+
+    /** What the layout editor can move here. */
+    val items: List<LayoutItem> get() = listOf(LayoutItem.PICTURE, LayoutItem.DPAD) + shown.map { it.first }
 
     init {
         val defaults = defaultBoxes()
@@ -61,7 +68,7 @@ class TouchLayout(val width: Float, val height: Float, private val density: Floa
         dpadX = dpad.cx
         dpadY = dpad.cy
         dpadRadius = (dpad.right - dpad.left) / 2
-        buttons = BUTTONS.map { (item, bit, label) ->
+        buttons = shown.map { (item, bit, label) ->
             val b = placed(item, defaults.getValue(item))
             Button(bit, label, bit == KeyMap.A || bit == KeyMap.B, b.left, b.top, b.right, b.bottom, scales.getValue(item))
         }
@@ -72,7 +79,7 @@ class TouchLayout(val width: Float, val height: Float, private val density: Floa
         val m = 16 * dp
         val boxes = HashMap<LayoutItem, Box>()
         if (!sideways) {
-            val top = width * 2 / 3 // the picture: full width, 3:2, at the top
+            val top = width * console.frameHeight / console.frameWidth // the picture: full width, in its shape, at the top
             boxes[LayoutItem.PICTURE] = Box(0f, 0f, width, top)
             val h = height - top // the controls area below it
             val shoulderH = 40 * dp
@@ -144,7 +151,7 @@ class TouchLayout(val width: Float, val height: Float, private val density: Floa
 
     /** The same layout with [item] at [place] (its size brought into ½–2). */
     fun with(item: LayoutItem, place: Place): TouchLayout =
-        TouchLayout(width, height, density, sideways, edits + (item to place.copy(scale = clampScale(place.scale))), fitMode)
+        TouchLayout(width, height, density, sideways, edits + (item to place.copy(scale = clampScale(place.scale))), fitMode, console)
 
     /** Where [item] is now, as a Place (for the editor). */
     fun place(item: LayoutItem): Place {
@@ -155,7 +162,7 @@ class TouchLayout(val width: Float, val height: Float, private val density: Floa
     fun box(item: LayoutItem): Box = when (item) {
         LayoutItem.PICTURE -> picture
         LayoutItem.DPAD -> Box(dpadX - dpadRadius, dpadY - dpadRadius, dpadX + dpadRadius, dpadY + dpadRadius)
-        else -> buttons[BUTTONS.indexOfFirst { it.first == item }].box
+        else -> buttons[shown.indexOfFirst { it.first == item }].box
     }
 
     /** Over the game picture's box (sideways: the whole screen). Plain draws these see-through, as before 8b. */
@@ -163,7 +170,7 @@ class TouchLayout(val width: Float, val height: Float, private val density: Floa
     val dpadOverPicture get() = box(LayoutItem.DPAD).overlaps(picture)
 
     /** Where the game itself is drawn inside the picture's box (the rest is the skin's body). */
-    val game: Box get() = gameIn(picture, fitMode)
+    val game: Box get() = gameIn(picture, fitMode, console)
 
     /** Over the game itself: the skins (8b) draw these see-through, the others solid on the body. */
     fun overGame(b: Button) = b.box.overlaps(game)
@@ -171,7 +178,7 @@ class TouchLayout(val width: Float, val height: Float, private val density: Floa
 
     /** The editor: the item under a finger at (x, y) — a button, else the D-pad, else the picture — or null. */
     fun itemAt(x: Float, y: Float): LayoutItem? {
-        buttons.forEachIndexed { i, b -> if (inside(b, x, y, 0f)) return BUTTONS[i].first }
+        buttons.forEachIndexed { i, b -> if (inside(b, x, y, 0f)) return shown[i].first }
         if (hypot(x - dpadX, y - dpadY) <= dpadRadius) return LayoutItem.DPAD
         if (x >= picture.left && x <= picture.right && y >= picture.top && y <= picture.bottom) return LayoutItem.PICTURE
         return null
@@ -216,7 +223,9 @@ class TouchLayout(val width: Float, val height: Float, private val density: Floa
         fun clampScale(s: Float) = s.coerceIn(MIN_SCALE, MAX_SCALE)
 
         /** The game inside [box], as OpenGL draws it on a surface of the box's size (fit_rect_mode, platform/android/fit_rect.c). */
-        fun gameIn(box: Box, fitMode: Int): Box {
+        fun gameIn(box: Box, fitMode: Int, console: Console = Console.GBA): Box {
+            val fw = console.frameWidth
+            val fh = console.frameHeight
             val w = (box.right - box.left).roundToInt()
             val h = (box.bottom - box.top).roundToInt()
             if (w <= 0 || h <= 0 || fitMode == Settings.SIZE_STRETCH) return box
@@ -226,10 +235,10 @@ class TouchLayout(val width: Float, val height: Float, private val density: Floa
                 return Box(x, y, x + gw, y + gh)
             }
             if (fitMode == Settings.SIZE_INTEGER) {
-                val n = min(w / 240, h / 160)
-                if (n >= 1) return centred(240 * n, 160 * n)
+                val n = min(w / fw, h / fh)
+                if (n >= 1) return centred(fw * n, fh * n)
             }
-            return if (w * 2 <= h * 3) centred(w, w * 2 / 3) else centred(h * 3 / 2, h)
+            return if (w * fh <= h * fw) centred(w, w * fh / fw) else centred(h * fw / fh, h)
         }
 
         /** 8 sectors of 45°, from the D-pad's centre (screen y grows downwards): diagonals press two directions. */

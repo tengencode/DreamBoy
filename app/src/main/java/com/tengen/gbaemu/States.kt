@@ -52,7 +52,12 @@ class States(filesDir: File, gameId: String) {
             (0xFF shl 24) or (eight(c and 31) shl 16) or (eight((c shr 5) and 31) shl 8) or eight((c shr 10) and 31)
         }
 
-        fun bitmapOf(bgr555: ShortArray): Bitmap =
-            Bitmap.createBitmap(argbOf(bgr555), 240, 160, Bitmap.Config.ARGB_8888)
+        /** A frame's width and height from its pixel count: a Game Boy's 160 x 144, else a GBA's 240 x 160. */
+        fun sizeOf(pixels: Int): Pair<Int, Int> = if (pixels == 160 * 144) 160 to 144 else 240 to 160
+
+        fun bitmapOf(bgr555: ShortArray): Bitmap {
+            val (w, h) = sizeOf(bgr555.size)
+            return Bitmap.createBitmap(argbOf(bgr555), w, h, Bitmap.Config.ARGB_8888)
+        }
     }
 }

@@ -7,6 +7,12 @@ import org.junit.Test
 
 class StatesTest {
     @Test
+    fun aFramesSizeComesFromItsPixelCount() {
+        assertEquals(240 to 160, States.sizeOf(240 * 160))
+        assertEquals(160 to 144, States.sizeOf(160 * 144))
+    }
+
+    @Test
     fun filesPerGameAndSlot() {
         val s = States(File("files"), "1a2b3c4d")
         assertEquals(File("files/states/1a2b3c4d/slot3.state"), s.state(3))

@@ -229,6 +229,7 @@ class MainActivity : ComponentActivity() {
                         skin = Skins.at(settings.skin),
                         fitMode = settings.size,
                         delta = activeSkin(),
+                        console = gameConsole,
                         onAction = ::skinAction,
                         onSkinFailed = { toast("This skin's picture could not be drawn") },
                         overlay = { RaPopupLayer(raView, badges, belowSpeedLabel = settings.showSpeed) },
@@ -402,14 +403,14 @@ class MainActivity : ComponentActivity() {
                         version = appVersion(), onOpenGithub = ::openGithub)
                 }
                 editLayout?.let { side ->
-                    LayoutEditor(side, layouts.of(side), editPicture, settings.touchLook,
+                    LayoutEditor(side, layouts.of(side, gameConsole.family), editPicture, settings.touchLook,
                         onSave = { edits ->
-                            layouts = layouts.with(side, edits)
+                            layouts = layouts.with(side, edits, gameConsole.family)
                             if (!layoutStore.save(layouts)) toast("Couldn't save the layout.")
                             closeLayoutEditor()
                         },
                         onCancel = ::closeLayoutEditor, skin = if (activeSkin() != null) Skins.PLAIN else Skins.at(settings.skin),
-                        fitMode = settings.size)
+                        fitMode = settings.size, console = gameConsole)
                 }
                 waitingKey?.let { (bit, device) ->
                     KeyWaitLayer(KeyMap.bindings.first { it.bit == bit }.button, device, onCancel = { waitingKey = null })
@@ -942,8 +943,13 @@ class MainActivity : ComponentActivity() {
     }
 
     /** The chosen imported Delta skin, or null (a built-in skin). */
+    /** The console of the game being played (GBA with none): its picture's shape, its buttons, its layouts. */
+    private val gameConsole: Console get() = if (playing) current?.console ?: Console.GBA else Console.GBA
+
+    /** The imported (Delta) skin in use — never in a Game Boy game: those skins are made for the GBA (17b). */
     private fun activeSkin(): SkinFiles.Imported? =
-        if (settings.skinImport == 0) null else importedSkins.firstOrNull { it.number == settings.skinImport }
+        if (settings.skinImport == 0 || gameConsole != Console.GBA) null
+        else importedSkins.firstOrNull { it.number == settings.skinImport }
 
     private fun refreshSkins() {
         importedSkins = skinFiles.list()

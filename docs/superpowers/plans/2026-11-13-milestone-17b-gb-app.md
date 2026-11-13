@@ -130,14 +130,14 @@ bytes are read (open, id computing).
 
 ### Task 4: The picture's shape everywhere
 
-- [ ] **Step 1: Failing tests** (`TouchLayoutTest`, `StatesTest` or their equivalents): `TouchLayout.game(...)` for a
+- [x] **Step 1: Failing tests** (`TouchLayoutTest`, `StatesTest` or their equivalents): `TouchLayout.game(...)` for a
   10:9 frame upright (full width, height `width * 9 / 10`) and sideways, whole-number scaling by 160×144; the GBA
   results unchanged; a state thumbnail of a Game Boy frame is a 160×144 bitmap.
-- [ ] **Step 2:** Implement: `TouchLayout` and `TouchControlsView` take the frame size (from `Console`); `States`
+- [x] **Step 2:** Implement: `TouchLayout` and `TouchControlsView` take the frame size (from `Console`); `States`
   makes thumbnails at the frame's size; pictures in the list, the Continue card and the slot sheets keep **their
   bitmap's own shape** inside the existing frames (no stretching, no cropping; how the leftover space looks is
   impeccable's call); the Settings preview keeps GBA's shape.
-- [ ] **Step 3:** `jvmtest`, `androidtest`. Commit `app: the picture's shape follows the console`.
+- [x] **Step 3:** `jvmtest`, `androidtest`. Commit `app: the picture's shape follows the console`.
 
 ### Task 5: Buttons without L and R; a layout per console family
 
@@ -145,13 +145,13 @@ bytes are read (open, id computing).
 untouched) and `"gb"` (Game Boy + Game Boy Color; new keys in the same file); default Game Boy layouts = the GBA
 defaults without L and R, the picture 10:9.
 
-- [ ] **Step 1: Failing tests:** `LayoutStoreTest`: a 1.0.0 `layout.json` still loads as the GBA layouts; a saved
+- [x] **Step 1: Failing tests:** `LayoutStoreTest`: a 1.0.0 `layout.json` still loads as the GBA layouts; a saved
   Game Boy layout does not change the GBA one and the reverse; defaults for `gb` hold no L / R item;
   `TouchLayoutTest`: no L / R drawn or hit for a Game Boy game; `KeyMap`: L / R bindings send nothing to a Game Boy
   game (the native mask drops them too).
-- [ ] **Step 2:** Implement, with the layout editor opened for the family of the game it is opened from (from
+- [x] **Step 2:** Implement, with the layout editor opened for the family of the game it is opened from (from
   Settings without a game: a choice of the two — impeccable). The key table hides L / R for Game Boy games.
-- [ ] **Step 3:** A Delta skin (GBA only) is not used in a Game Boy game: the built-in skin shows instead (test in
+- [x] **Step 3:** A Delta skin (GBA only) is not used in a Game Boy game: the built-in skin shows instead (test in
   the skin-choosing function). Commit `app: Game Boy buttons and their own layout`.
 
 ### Task 6: The console mark, and what is not there yet (impeccable)

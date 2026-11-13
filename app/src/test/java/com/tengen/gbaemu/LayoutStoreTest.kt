@@ -9,6 +9,23 @@ import org.junit.Test
 
 class LayoutStoreTest {
     @Test
+    fun gameBoyLayoutsAreTheirOwnAndAnOldFileStillReads() {
+        // what 1.0.0 wrote: only the GBA layouts
+        val old = "{\n  \"upright\": [\n    {\"id\": \"a\", \"x\": 2500, \"y\": 9000, \"scale\": 15000}\n  ],\n  \"sideways\": []\n}\n"
+        val read = LayoutStore.fromJson(old)
+        assertEquals(mapOf(LayoutItem.A to Place(0.25f, 0.9f, 1.5f)), read.of(false))
+        assertTrue(read.of(false, "gb").isEmpty() && read.of(true, "gb").isEmpty())
+        assertEquals(old, LayoutStore.toJson(read)) // untouched until a Game Boy layout is edited
+        val edited = read.with(true, mapOf(LayoutItem.B to Place(0.5f, 0.5f, 1f)), "gb")
+        assertEquals(read.of(false), edited.of(false)) // the GBA layouts did not move
+        assertTrue(edited.of(true).isEmpty())
+        assertEquals(mapOf(LayoutItem.B to Place(0.5f, 0.5f, 1f)), edited.of(true, "gb"))
+        assertEquals(edited, LayoutStore.fromJson(LayoutStore.toJson(edited)))
+        val gba = edited.with(false, emptyMap())
+        assertEquals(edited.of(true, "gb"), gba.of(true, "gb")) // and the other way round
+    }
+
+    @Test
     fun noFileMeansTheDefaults() {
         val dir = Files.createTempDirectory("layout").toFile()
         assertEquals(LayoutStore.Layouts(), LayoutStore(dir).load())

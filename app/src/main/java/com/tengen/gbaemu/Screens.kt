@@ -429,13 +429,14 @@ private fun GameCartridge(game: GameEntry, refresh: Int, picture: (GameEntry) ->
     }
 }
 
-/** The picture of where the game was left (3:2, sharp pixels), or a placeholder. */
+/** The picture of where the game was left (sharp pixels, in its own shape inside the 3:2 frame — a Game Boy's
+ *  picture is narrower: the label's paper shows beside it), or a placeholder. */
 @Composable
 private fun LeftPicture(bitmap: Bitmap?, big: Boolean, modifier: Modifier, corners: Dp = 8.dp) {
     val frame = modifier.aspectRatio(1.5f).clip(RoundedCornerShape(corners))
     if (bitmap != null) {
-        Image(bitmap.asImageBitmap(), contentDescription = null, modifier = frame,
-            contentScale = ContentScale.FillBounds, filterQuality = FilterQuality.None)
+        Image(bitmap.asImageBitmap(), contentDescription = null, modifier = frame.background(Color(Palette.LABEL_STOCK)),
+            contentScale = ContentScale.Fit, filterQuality = FilterQuality.None)
     } else {
         Box(frame.background(Color(Palette.LABEL_STOCK)), contentAlignment = Alignment.Center) { BlankLabel(big) }
     }
@@ -691,7 +692,7 @@ private fun SaveSticker(slot: Int, picture: Bitmap?, date: Pair<String, String>?
         if (picture != null) {
             Image(picture.asImageBitmap(), contentDescription = name.lowercase(),
                 modifier = Modifier.fillMaxWidth().aspectRatio(1.5f).clip(RoundedCornerShape(3.dp)),
-                contentScale = ContentScale.FillBounds, filterQuality = FilterQuality.None)
+                contentScale = ContentScale.Fit, filterQuality = FilterQuality.None)
             Text(date?.let { "${it.first} · ${it.second}" } ?: "", style = MaterialTheme.typography.bodySmall.merge(Tabular),
                 color = soft, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(start = 1.dp, top = 6.dp))
         } else {
@@ -966,12 +967,13 @@ fun GameScreen(controlsHidden: Boolean, fastOn: Boolean, onTouchMask: (Int) -> U
                onManualLight: (Int?) -> Unit = {}, touchLook: Int = Settings.LOOK_NORMAL, buzz: Boolean = true,
                layouts: LayoutStore.Layouts = LayoutStore.Layouts(), showSpeed: Boolean = false, skin: Skin = Skins.PLAIN,
                fitMode: Int = Settings.SIZE_FIT, delta: SkinFiles.Imported? = null, onAction: (DeltaSkin.Action) -> Unit = {},
-               onSkinFailed: () -> Unit = {}, overlay: @Composable BoxScope.() -> Unit = {}) {
+               onSkinFailed: () -> Unit = {}, console: Console = Console.GBA,
+               overlay: @Composable BoxScope.() -> Unit = {}) {
     // The skin's body round the picture: here, and inside the game's surface by OpenGL (NativeBridge.setBackground);
     // black with a Delta skin (9).
     BoxWithConstraints(Modifier.fillMaxSize().background(if (delta != null) Color.Black else Color(skin.body))) {
         val sideways = maxWidth > maxHeight
-        val edits = layouts.of(sideways)
+        val edits = layouts.of(sideways, console.family)
         val density = LocalDensity.current
         val w = constraints.maxWidth.toFloat()
         val h = constraints.maxHeight.toFloat()
@@ -981,7 +983,7 @@ fun GameScreen(controlsHidden: Boolean, fastOn: Boolean, onTouchMask: (Int) -> U
         // The game's surface in the Delta skin's game box, or the layout's picture box (upright by default: full width
         // at the top; sideways: the whole screen, the game fitted inside); the buttons over the whole screen.
         val pic = if (face != null) DeltaLayout(face, w, h, sideways).game
-            else TouchLayout(w, h, density.density, sideways, edits).picture
+            else TouchLayout(w, h, density.density, sideways, edits, console = console).picture
         AndroidView(
             modifier = Modifier.offset { IntOffset(pic.left.roundToInt(), pic.top.roundToInt()) }
                 .requiredSize(with(density) { (pic.right - pic.left).toDp() }, with(density) { (pic.bottom - pic.top).toDp() }),
@@ -1009,6 +1011,7 @@ fun GameScreen(controlsHidden: Boolean, fastOn: Boolean, onTouchMask: (Int) -> U
             factory = { TouchControlsView(it).also { onTouchMask(0) } }, // a new view (e.g. after turning): nothing held
             update = { v ->
                 v.sideways = sideways
+                v.console = console
                 v.edits = edits
                 v.hidden = controlsHidden
                 v.fastOn = fastOn
