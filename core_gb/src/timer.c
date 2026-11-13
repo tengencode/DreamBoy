@@ -22,6 +22,10 @@ static void divider_changed(gb_t *g, uint16_t old, bool timer_was_high) {
 
 void gb_timer_tick(gb_t *g) {
     gb_timer_t *t = &g->timer;
+    if (!(t->tac & 4) && !t->overflow && !t->reloading && (t->div & 0xFC) != 0xF8 && (t->div & 0xFC) != 0xFC) {
+        t->div += 4; /* the timer is off and no divider bit from 8 up changes: nothing else can happen */
+        return;
+    }
     t->reloading = 0;
     if (t->overflow) {
         t->overflow = 0;

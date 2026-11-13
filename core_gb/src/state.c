@@ -82,7 +82,7 @@ static bool values_ok(const uint8_t *const data[]) {
     const uint8_t *ppu = data[C_PPU], *apu = data[C_APU];
     uint64_t bank = FIELD(data[C_MEM], gb_mem_t, wram_bank);
     if (bank < 1 || bank > 7 || FIELD(data[C_CGB], gb_cgb_t, vbk) > 1) return false;
-    if (FIELD(ppu, gb_ppu_t, line) > 153 || FIELD(ppu, gb_ppu_t, phase) > 7 || FIELD(ppu, gb_ppu_t, dma_index) >= 0xA0 ||
+    if (FIELD(ppu, gb_ppu_t, line) > 153 || FIELD(ppu, gb_ppu_t, phase) > 7 || FIELD(ppu, gb_ppu_t, dma_index) > 0xA0 ||
         FIELD(ppu, gb_ppu_t, dot) > 456 + 4 || FIELD(ppu, gb_ppu_t, next) > 456) {
         return false;
     }
@@ -95,7 +95,7 @@ static bool values_ok(const uint8_t *const data[]) {
             return false; /* (a timer far below 0 would take for ever to catch up; far above, overflow) */
         }
     }
-    if (FIELD(apu, gb_apu_t, sum_dots) >= 128) return false;
+    if (FIELD(apu, gb_apu_t, sum_dots) >= 128 || FIELD(apu, gb_apu_t, pending) > 1024) return false;
     static const size_t sums[] = {offsetof(gb_apu_t, sum_left), offsetof(gb_apu_t, sum_right),
                                   offsetof(gb_apu_t, cap_left), offsetof(gb_apu_t, cap_right)};
     for (size_t i = 0; i < 4; i++) { /* the mixer's sums and filter: within what real sound can make them */

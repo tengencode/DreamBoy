@@ -77,6 +77,29 @@ TEST(gb_state_round_trip) {
     }
 }
 
+/* A finished OAM DMA leaves its counter at the end: such a state is as valid as any (every game does this). */
+TEST(gb_state_after_oam_dma) {
+    gb_t *g = busy(0);
+    run(g, 3);
+    gb_bus_write(g, 0xFF46, 0xC0);
+    run(g, 2);
+    CHECK_EQ(g->ppu.dma_index, 0xA0);
+    size_t size = gb_state_size(g);
+    uint8_t *state = malloc(size);
+    gb_state_save(g, state, size);
+    CHECK_EQ(gb_state_load(g, state, size), GB_OK);
+    g->ppu.dma_active = 1; /* and a state that claims a copy is still running past the end must not write there */
+    gb_state_save(g, state, size);
+    CHECK_EQ(gb_state_load(g, state, size), GB_OK);
+    run(g, 2);
+    gb_bus_write(g, 0xFF46, 0xC0); /* mid-copy states load too */
+    for (int i = 0; i < 50; i++) gb_tick(g);
+    while (g->frame_left > 0) gb_tick(g);
+    gb_state_save(g, state, size);
+    free(state);
+    gb_destroy(g);
+}
+
 /* Review focus: anything that is not this build's state of this ROM is refused and changes nothing. */
 TEST(gb_state_refuses) {
     gb_t *a = busy(0), *twin = busy(0);

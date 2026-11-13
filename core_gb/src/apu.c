@@ -86,6 +86,7 @@ static void clock_envelopes(gb_apu_t *a) {
 /* One step of the 512 Hz sequencer: lengths on 0 2 4 6, the sweep on 2 6, envelopes on 7. */
 void gb_apu_sequencer(gb_t *g) {
     gb_apu_t *a = &g->apu;
+    gb_apu_sync(g);
     if (!a->power) return;
     int step = a->seq_step;
     a->seq_step = (uint8_t)((step + 1) & 7);
@@ -129,49 +130,75 @@ static int16_t filter(int32_t sum, int32_t *cap) {
     return (int16_t)(out > 32767 ? 32767 : out < -32768 ? -32768 : out);
 }
 
+/* A channel's timer ran out: its next duty step, wave sample or noise bit. */
+static void channel_step(gb_apu_t *a, int i) {
+    gb_chan_t *c = &a->ch[i];
+    if (i < 2) {
+        c->pos = (c->pos + 1) & 7;
+    } else if (i == 2) {
+        c->pos = (c->pos + 1) & 31;
+        uint8_t byte = a->wave[c->pos / 2];
+        a->wave_sample = (c->pos & 1) ? byte & 0x0F : byte >> 4;
+        a->wave_age = 0;
+    } else if ((REG(a, NR43) >> 4) < 14) {
+        int bit = (a->lfsr ^ a->lfsr >> 1) & 1;
+        a->lfsr = (uint16_t)(a->lfsr >> 1 | bit << 14);
+        if (REG(a, NR43) & 8) a->lfsr = (uint16_t)((a->lfsr & ~0x40) | bit << 6);
+    }
+}
+
+/* Time only piles up here (it is called every machine cycle); the work is done by gb_apu_sync. */
 void gb_apu_tick(gb_t *g, int dots) {
+    g->apu.pending = (uint16_t)(g->apu.pending + dots);
+    if (g->apu.pending >= 128) gb_apu_sync(g);
+}
+
+/* Brings the channels and the output up to now. Nothing can see the difference between doing this every cycle
+ * and doing it late, as long as it is done before anything looks: a register access, a sequencer step, a read of
+ * the samples, the end of a frame. Between two things happening (a channel's timer running out, an output sample
+ * being complete) the mix is constant, so it is added up in one go. */
+void gb_apu_sync(gb_t *g) {
     gb_apu_t *a = &g->apu;
-    a->wave_just_read = 0;
-    if (a->power) {
-        for (int i = 0; i < 4; i++) {
-            gb_chan_t *c = &a->ch[i];
-            if (!c->on) continue;
-            c->timer -= dots;
-            while (c->timer <= 0) {
-                c->timer += period(a, i);
-                if (i < 2) {
-                    c->pos = (c->pos + 1) & 7;
-                } else if (i == 2) {
-                    c->pos = (c->pos + 1) & 31;
-                    uint8_t byte = a->wave[c->pos / 2];
-                    a->wave_sample = (c->pos & 1) ? byte & 0x0F : byte >> 4;
-                    a->wave_just_read = 1;
-                } else if ((REG(a, NR43) >> 4) < 14) {
-                    int bit = (a->lfsr ^ a->lfsr >> 1) & 1;
-                    a->lfsr = (uint16_t)(a->lfsr >> 1 | bit << 14);
-                    if (REG(a, NR43) & 8) a->lfsr = (uint16_t)((a->lfsr & ~0x40) | bit << 6);
+    int n = a->pending;
+    a->pending = 0;
+    while (n > 0) {
+        int step = 128 - a->sum_dots;
+        if (step > n) step = n;
+        if (a->power) {
+            int left = 0, right = 0;
+            for (int i = 0; i < 4; i++) {
+                gb_chan_t *c = &a->ch[i];
+                if (c->on) {
+                    if (c->timer < 1) c->timer = 1; /* (a loaded state may say anything) */
+                    if (c->timer < step) step = c->timer;
                 }
+                if (!c->dac) continue; /* a channel whose converter is off adds nothing */
+                int v = 2 * level(a, i) - 15;
+                if (REG(a, NR51) & (0x10 << i)) left += v;
+                if (REG(a, NR51) & (0x01 << i)) right += v;
+            }
+            a->sum_left += left * (((REG(a, NR50) >> 4) & 7) + 1) * step;
+            a->sum_right += right * ((REG(a, NR50) & 7) + 1) * step;
+            if (a->wave_age < 200) a->wave_age = (uint8_t)(a->wave_age + (step < 50 ? step : 50));
+            for (int i = 0; i < 4; i++) {
+                gb_chan_t *c = &a->ch[i];
+                if (!c->on || (c->timer -= step) > 0) continue;
+                c->timer = period(a, i);
+                channel_step(a, i);
             }
         }
-        int left = 0, right = 0;
-        for (int i = 0; i < 4; i++) {
-            if (!a->ch[i].dac) continue; /* a channel whose converter is off adds nothing */
-            int v = 2 * level(a, i) - 15;
-            if (REG(a, NR51) & (0x10 << i)) left += v;
-            if (REG(a, NR51) & (0x01 << i)) right += v;
+        n -= step;
+        a->sum_dots = (uint8_t)(a->sum_dots + step);
+        if (a->sum_dots >= 128) {
+            a->sum_dots = 0;
+            put_sample(g, filter(a->sum_left, &a->cap_left), filter(a->sum_right, &a->cap_right));
+            a->sum_left = a->sum_right = 0;
         }
-        a->sum_left += left * (((REG(a, NR50) >> 4) & 7) + 1) * dots;
-        a->sum_right += right * ((REG(a, NR50) & 7) + 1) * dots;
-    }
-    a->sum_dots = (uint8_t)(a->sum_dots + dots);
-    if (a->sum_dots >= 128) {
-        a->sum_dots -= 128;
-        put_sample(g, filter(a->sum_left, &a->cap_left), filter(a->sum_right, &a->cap_right));
-        a->sum_left = a->sum_right = 0;
     }
 }
 
 size_t gb_audio_read(gb_t *g, int16_t *out, size_t max_frames) {
+    gb_apu_sync(g);
     size_t n = g->audio_count < max_frames ? g->audio_count : max_frames;
     for (size_t i = 0; i < n; i++) {
         uint32_t at = (g->audio_read + i) % GB_AUDIO_FRAMES;
@@ -188,7 +215,7 @@ size_t gb_audio_read(gb_t *g, int16_t *out, size_t max_frames) {
 static int wave_index(const gb_t *g, uint16_t addr) {
     const gb_apu_t *a = &g->apu;
     if (!a->ch[2].on) return addr & 0x0F;
-    if (!g->info.color && !a->wave_just_read) return -1;
+    if (!g->info.color && a->wave_age >= 4) return -1;
     return a->ch[2].pos / 2;
 }
 
@@ -263,6 +290,7 @@ static void power_off(gb_apu_t *a, bool color) {
 
 void gb_apu_write(gb_t *g, uint16_t addr, uint8_t value) {
     gb_apu_t *a = &g->apu;
+    gb_apu_sync(g);
     if (addr >= 0xFF30) {
         int i = wave_index(g, addr);
         if (i >= 0) a->wave[i] = value;

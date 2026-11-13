@@ -147,6 +147,7 @@ void gb_dma_tick(gb_t *g) {
         p->dma_index = 0;
     }
     p->dma_blocking = 0;
+    if (p->dma_index >= 0xA0) p->dma_active = 0; /* (0xA0 = finished; a loaded state may claim otherwise) */
     if (!p->dma_active) return;
     uint16_t src = (uint16_t)(p->dma << 8 | p->dma_index);
     if (src >= 0xE000) src -= 0x2000; /* the top of memory is not reachable: work RAM shows there */

@@ -103,7 +103,8 @@ typedef struct {
     uint8_t seq_step;  /* the sequencer step that comes next, 0-7 */
     uint8_t sweep_timer, sweep_on, sweep_negged;
     uint8_t wave_sample;    /* the 4-bit sample the wave channel is playing */
-    uint8_t wave_just_read; /* it read wave RAM in this cycle */
+    uint8_t wave_age;       /* ticks since it last read wave RAM (stops counting at 200) */
+    uint16_t pending;       /* ticks gb_apu_sync has yet to work through */
     uint8_t sum_dots;       /* ticks gathered towards the next output sample */
     uint16_t sweep_freq;
     uint16_t lfsr;          /* the noise channel's shift register */
@@ -202,6 +203,7 @@ int gb_ppu_line_sprites(const gb_t *g, int ly, uint8_t out[10]);
 void gb_ppu_draw_line(gb_t *g, int ly);
 void gb_apu_reset(gb_t *g);
 void gb_apu_tick(gb_t *g, int dots);
+void gb_apu_sync(gb_t *g); /* brings the sound up to now (apu.c); before anything looks at it */
 void gb_apu_sequencer(gb_t *g); /* a 512 Hz step: the divider's bit 12 fell */
 uint8_t gb_apu_read(const gb_t *g, uint16_t addr); /* 0xFF10-0xFF3F */
 void gb_apu_write(gb_t *g, uint16_t addr, uint8_t value);

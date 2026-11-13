@@ -32,7 +32,10 @@ static uint8_t read(const gb_t *g, uint16_t addr, bool cpu) {
     if (addr <= 0xFF02) return gb_serial_read(g, addr);
     if (addr >= 0xFF04 && addr <= 0xFF07) return gb_timer_read(g, addr);
     if (addr == 0xFF0F) return g->mem.iflag | 0xE0;
-    if (addr >= 0xFF10 && addr <= 0xFF3F) return gb_apu_read(g, addr);
+    if (addr >= 0xFF10 && addr <= 0xFF3F) {
+        gb_apu_sync((gb_t *)g); /* catching up changes nothing that can be seen */
+        return gb_apu_read(g, addr);
+    }
     if (addr >= 0xFF40 && addr <= 0xFF4B) return gb_ppu_read(g, addr);
     if (addr >= 0xFF4D && addr <= 0xFF75) return gb_cgb_read(g, addr);
     if (addr == 0xFFFF) return g->mem.ie;

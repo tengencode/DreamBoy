@@ -47,6 +47,7 @@ void gb_reset(gb_t *g) {
 void gb_run_frame(gb_t *g) {
     g->frame_left += GB_FRAME_TICKS;
     while (g->frame_left > 0) gb_cpu_step(g);
+    gb_apu_sync(g); /* every sample of the frame is there to be read, and a state taken now has nothing pending */
     gb_rewind_after_frame(g);
 }
 

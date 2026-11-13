@@ -465,17 +465,17 @@ State format: magic `"GBCS"`, format version, ROM CRC-32, chunk count, then tagg
 
 **Files:** modify `tools/viewer/main.c`, `tools/bench/main.c`, `tests/bench/scenes.txt`, `tools/dev.sh` (help text).
 
-- [ ] **Step 1:** `gbaview` opens a Game Boy ROM through `machine_*` (window sized to the machine's picture; GBA-only
+- [x] **Step 1:** `gbaview` opens a Game Boy ROM through `machine_*` (window sized to the machine's picture; GBA-only
   keys do nothing). Check: `bash tools/dev.sh view tests/roms/gb/acid/dmg-acid2.gb` shows the picture; a homebrew
   game from Task 12's list plays with sound (Claude's own check: picture + a `--wav` of the same game through the
   test runner sounds right — inspected with `tools/wav_probe.py`).
-- [ ] **Step 2:** `gbabench` runs scenes of both consoles through `machine_*` (GBA scenes' hashes unchanged). Add two
+- [x] **Step 2:** `gbabench` runs scenes of both consoles through `machine_*` (GBA scenes' hashes unchanged). Add two
   Game Boy scenes to `tests/bench/scenes.txt` (the acid tests are too static: use two homebrew games from Task 12, or
   our own test ROM with scrolling and sound if none is fetched yet).
-- [ ] **Step 3: The speed gate** (spec §5.7): `bash tools/dev.sh bench --runs 3` → every Game Boy scene ≥ 5× the
+- [x] **Step 3: The speed gate** (spec §5.7): `bash tools/dev.sh bench --runs 3` → every Game Boy scene ≥ 5× the
   slowest GBA scene's fps in the same run; GBA scenes within the 97 % floors (PROGRESS.md Notes; measure again
   before a miss counts). Record the numbers in PROGRESS.md. If the gate is missed, profile and fix before going on.
-- [ ] **Step 4:** Commit `tools: the viewer and the speed bench run both consoles`.
+- [x] **Step 4:** Commit `tools: the viewer and the speed bench run both consoles`.
 
 ### Task 12: The game check with homebrew games; 17a exit
 

@@ -5,7 +5,7 @@
 #   tools/dev.sh unit [filter]    build, then run unit tests whose name contains filter
 #   tools/dev.sh test             build, then run every CTest test
 #   tools/dev.sh run <args>       build, then run tools/testrunner with args
-#   tools/dev.sh view <args>      build the optimised build/release, then run its gbaview (Windows)
+#   tools/dev.sh view <args>      build the optimised build/release, then run its gbaview (Windows): a .gba, .gb or .gbc game
 #   tools/dev.sh release          configure (if needed) and build build/release (Release, no sanitizers)
 #   tools/dev.sh bench <args>     build/release, then gbabench (speed scenes, tests/bench/scenes.txt + scenes.local.txt) with the
 #                                 games from $GBA_GAMES (default ~/Downloads); e.g. bench --check, bench --only m7_demo

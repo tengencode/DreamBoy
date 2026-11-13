@@ -282,6 +282,7 @@ TEST(gb_apu_noise) {
         for (int i = 0; i < 40000; i++) {
             gb_tick(g);
             gb_tick(g); /* 8 ticks: one step */
+            gb_apu_sync(g);
             if (i == 200) start = g->apu.lfsr & (width7 ? 0x7F : 0x7FFF);
             else if (i > 200 && !period && (g->apu.lfsr & (width7 ? 0x7F : 0x7FFF)) == start) period = i - 200;
         }

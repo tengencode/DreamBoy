@@ -26,20 +26,25 @@ int gb_ppu_line_sprites(const gb_t *g, int ly, uint8_t out[10]) {
 }
 
 /* One row of a tile map into dst[from..to) (colour numbers 0-3) and attr[] (each pixel's tile attributes; 0 on
- * a plain Game Boy): the pixel at `from` is the map's pixel (map_x, map_y); the map wraps at 256. */
+ * a plain Game Boy): the pixel at `from` is the map's pixel (map_x, map_y); the map wraps at 256. A tile's row is
+ * fetched once and its (up to) 8 pixels written from it. */
 static void tile_row(const gb_t *g, uint8_t *dst, uint8_t *attr, int from, int to, unsigned map, unsigned map_x,
                      unsigned map_y) {
     const gb_ppu_t *p = &g->ppu;
     unsigned row = map + (map_y / 8 & 31) * 32;
-    for (int x = from; x < to; x++, map_x++) {
+    bool color = g->info.color;
+    for (int x = from; x < to;) {
         unsigned cell = row + (map_x / 8 & 31);
-        uint8_t tile = p->vram[cell], a = g->info.color ? p->vram[0x2000 + cell] : 0;
+        uint8_t tile = p->vram[cell], a = color ? p->vram[0x2000 + cell] : 0;
         unsigned line = (a & 0x40) ? 7 - (map_y & 7) : map_y & 7;
         unsigned addr = ((p->lcdc & 0x10) ? tile * 16u : 0x1000u + (unsigned)((int8_t)tile * 16)) + line * 2 +
                         ((a & 0x08) ? 0x2000u : 0);
-        int bit = (a & 0x20) ? (int)(map_x & 7) : 7 - (int)(map_x & 7);
-        dst[x] = (uint8_t)((p->vram[addr] >> bit & 1) | (p->vram[addr + 1] >> bit & 1) << 1);
-        attr[x] = a;
+        uint8_t lo = p->vram[addr], hi = p->vram[addr + 1];
+        for (unsigned col = map_x & 7; col < 8 && x < to; col++, x++, map_x++) {
+            int bit = (a & 0x20) ? (int)col : 7 - (int)col;
+            dst[x] = (uint8_t)((lo >> bit & 1) | (hi >> bit & 1) << 1);
+            attr[x] = a;
+        }
     }
 }
 

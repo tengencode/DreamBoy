@@ -400,9 +400,14 @@ void gb_cpu_step(gb_t *g) {
         interrupt(g);
         return;
     }
-    if (c->halted) {
-        gb_tick(g);
-        if (g->mem.ie & g->mem.iflag & 0x1F) c->halted = 0;
+    if (c->halted) { /* idle cycles, as many as the frame still has: games spend most of their time here */
+        do {
+            gb_tick(g);
+            if (g->mem.ie & g->mem.iflag & 0x1F) {
+                c->halted = 0;
+                break;
+            }
+        } while (g->frame_left > 0);
         return;
     }
     uint8_t op = gb_bus_read(g, c->pc);

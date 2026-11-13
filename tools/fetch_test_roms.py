@@ -128,6 +128,28 @@ GB_ACID = {  # local name in tests/roms/gb/acid/: (URL, size in bytes, SHA-256)
 }
 
 
+# Homebrew Game Boy / Game Boy Color games for the game check and the speed scenes (milestone 17), downloaded with
+# the user's OK on 2026-11-12; free downloads from their authors' GitHub pages, for local testing only (never
+# committed). Each was downloaded twice and the copies matched before pinning. They go to tests/roms/homebrew/ too.
+HOMEBREW.update({
+    "ucity.gbc": (
+        "https://github.com/AntonioND/ucity/releases/download/v1.3/ucity.gbc",
+        131072, "9422ee2ca7b7ea1d46b58b2a429fff3f354dfd3e732dee1e7ae6220f148ce6e0"),
+    "geometrix.gbc": (
+        "https://raw.githubusercontent.com/AntonioND/geometrix/v1.0.0/geometrix.gbc",
+        32768, "f13575af6bf87003c3eef8c2cab67a49ca6b02aa23ff6a31a38beb96d6eb1795"),
+    "libbet.gb": (
+        "https://github.com/pinobatch/libbet/releases/download/v0.08/libbet.gb",
+        32768, "3607412031c8287cf878299ce96e581e85b852dde703806343b95576fa3ff1a9"),
+    "Shock.Lobster.zip": (
+        "https://github.com/tbsp/shock-lobster/releases/download/3/Shock.Lobster.zip",
+        25337, "44bebcf26ca17a5dc37d9d576cb28c1fd8d3fcb2e11b150c29f6be394d4eed4e"),
+    "gb240p.gb": (
+        "https://github.com/pinobatch/240p-test-mini/releases/download/v0.23/gb240p.gb",
+        32768, "733eb6e7ec0719752ddd5fcda4e715c2f2e20f4ac4bc971c4bd1d49272f9bb04"),
+})
+
+
 def fetch(url):
     # coranac.com drops requests carrying Python's default User-Agent.
     request = urllib.request.Request(url, headers={"User-Agent": "gba-emulator-fetch/1.0"})
