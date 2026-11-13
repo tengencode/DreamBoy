@@ -482,22 +482,22 @@ State format: magic `"GBCS"`, format version, ROM CRC-32, chunk count, then tagg
 **Files:** modify `tools/game_check.py`, `tools/test_game_check.py`, `tests/games/games.txt`,
 `tools/fetch_test_roms.py`, docs.
 
-- [ ] **Step 1:** `game_check.py` accepts `.gb` / `.gbc` (and a zip holding one); button names R / L / CW / CCW are
+- [x] **Step 1:** `game_check.py` accepts `.gb` / `.gbc` (and a zip holding one); button names R / L / CW / CCW are
   an error for a Game Boy game; contact sheets use the machine's picture size. Tool tests first
   (`python tools/test_game_check.py`).
-- [ ] **Step 2:** Pick 6–8 free homebrew games (at least 3 Game Boy, 3 Game Boy Color; open-source licences, release
+- [x] **Step 2:** Pick 6–8 free homebrew games (at least 3 Game Boy, 3 Game Boy Color; open-source licences, release
   files on GitHub or similar with stable URLs), pin them in `fetch_test_roms.py` (URL, size, SHA-256) and list them
   in `tests/games/games.txt` with the standard button script. No commercial titles.
-- [ ] **Step 3:** `bash tools/dev.sh games` → look at every contact sheet and listen to (probe) every sound file;
+- [x] **Step 3:** `bash tools/dev.sh games` → look at every contact sheet and listen to (probe) every sound file;
   anything wrong is a core bug: fix it test-first. Then `games --lock` each new game; `games --check` → all pass
   (31 GBA + the new ones).
-- [ ] **Step 4: Exit checks:** `bash tools/dev.sh test` (all), `games --check`, `bench` (the gate and the GBA
+- [x] **Step 4: Exit checks:** `bash tools/dev.sh test` (all), `games --check`, `bench` (the gate and the GBA
   floors), `python tools/public_scan.py` clean, `ponytail-review` of the whole branch diff, fix what it finds.
-- [ ] **Step 5: Documents:** PROGRESS.md (17a done, results table of every test-ROM group, Next = write the 17b
+- [x] **Step 5: Documents:** PROGRESS.md (17a done, results table of every test-ROM group, Next = write the 17b
   plan), this plan's boxes, the spec's status line, `CLAUDE.md` key files, the parent spec §10, `docs/BUILDING.md`
   layout (`core_gb/`, `core_common/`, `machine/`), `third_party/README.md` untouched. README is **not** changed yet
   (the app cannot play these games until 17b).
-- [ ] **Step 6:** Commit `milestone 17a done: the Game Boy core on the PC`. Stay on branch `milestone-17` (17b
+- [x] **Step 6:** Commit `milestone 17a done: the Game Boy core on the PC`. Stay on branch `milestone-17` (17b
   continues there; it merges into `main` when 1.1.0 is ready — nothing half-done lands on the public branch).
 
 ## Self-review notes

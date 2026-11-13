@@ -1,4 +1,5 @@
 /* The screen's timing: lines, modes, the STAT interrupt line, memory the CPU cannot reach, OAM DMA, LCD off. */
+#include <stdlib.h>
 #include <string.h>
 
 #include "gbtestutil.h"
@@ -322,6 +323,30 @@ TEST(gb_stat_lyc_flag_frozen_while_off) {
     gb_bus_write(g, LCDC, 0x91); /* on: LY 0 against LYC 9 */
     CHECK_EQ(gb_bus_peek(g, STAT) & 4, 0);
     gb_destroy(g);
+}
+
+/* On the original Game Boy a write to STAT acts for a moment as if every source were enabled: in HBlank, VBlank
+ * or with LY = LYC it asks for the interrupt by itself (some games need it). Not on a Game Boy Color. */
+TEST(gb_stat_write_quirk) {
+    for (int color = 0; color < 2; color++) {
+        uint8_t *rom = gbtu_rom(0x8000, 0, 0, color ? 0x80 : 0);
+        rom[0x150] = 0x18, rom[0x151] = 0xFE;
+        gb_t *g = gb_create();
+        gb_load_rom(g, rom, 0x8000);
+        free(rom);
+        while (!(g->ppu.line == 0 && g->ppu.dot < 4)) gb_tick(g);
+        while (!(g->ppu.line == 20 && g->ppu.dot < 4)) gb_tick(g);
+        gb_bus_write(g, LYC, 99);
+        to_dot(g, 120); /* drawing: nothing happens */
+        g->mem.iflag = 0;
+        gb_bus_write(g, STAT, 0x00);
+        CHECK_EQ(g->mem.iflag & 2, 0);
+        to_dot(g, 300); /* HBlank */
+        gb_bus_write(g, STAT, 0x00);
+        CHECK_EQ(g->mem.iflag & 2, color ? 0 : 2);
+        CHECK_EQ(gb_bus_peek(g, STAT) & 0x78, 0);
+        gb_destroy(g);
+    }
 }
 
 /* With the screen off the interrupt line keeps its level, so a flag that is true before and after asks for nothing. */

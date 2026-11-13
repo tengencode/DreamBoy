@@ -55,6 +55,9 @@ static const chunk_t chunks[CHUNK_COUNT] = {
     [C_MISC] = {{'M', 'I', 'S', 'C'}, 1, 0, sizeof(misc_t)},
 };
 
+_Static_assert(offsetof(struct gb, back) == offsetof(struct gb, frame) + sizeof(((struct gb *)0)->frame),
+               "the PICT chunk saves frame and back as one block: they must stay next to each other");
+
 static size_t chunk_size(const gb_t *g, int i) {
     return i == C_RAM ? g->info.ram_size : chunks[i].size;
 }

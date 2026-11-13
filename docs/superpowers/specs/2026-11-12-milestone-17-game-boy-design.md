@@ -1,7 +1,7 @@
 # Milestone 17 — Game Boy and Game Boy Color — Design
 
 **Date:** 2026-11-12
-**Status:** Approved by the user 2026-11-12 (reviewed once by a builder-check agent; its points are folded in); the test-ROM downloads are allowed (the user, 2026-11-12). Plan for 17a: `docs/superpowers/plans/2026-11-12-milestone-17a-gb-core.md`.
+**Status:** Approved by the user 2026-11-12 (reviewed once by a builder-check agent; its points are folded in); the test-ROM downloads are allowed (the user, 2026-11-12). Plan for 17a: `docs/superpowers/plans/2026-11-12-milestone-17a-gb-core.md` — **17a done 2026-11-12** (the engine on the PC; results and deviations in `docs/PROGRESS.md`: 135 public test ROMs pass, both acid2 pictures exact; the PC stand-in for the speed gate in §5.7 was missed at 3.4-4.9× instead of 5× — the phone measurement at the start of 17b decides). Next: the 17b plan.
 **Parent spec:** `docs/superpowers/specs/2026-09-24-gba-emulator-design.md` (§10 milestones)
 **Previous work:** milestone 16 (DreamBoy 1.0.0, GBA only, public at `https://github.com/tengencode/DreamBoy`).
 
