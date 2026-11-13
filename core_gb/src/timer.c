@@ -64,6 +64,12 @@ void gb_timer_write(gb_t *g, uint16_t addr, uint8_t value) {
     default:
         t->tac = value & 7;
         divider_changed(g, old, high);
+        if (t->overflow) { /* a wrap caused by this write loads TMA and asks for the interrupt in this same
+                              cycle, not the next (what the mooneye suite's rapid_toggle test measures) */
+            t->overflow = 0;
+            t->tima = t->tma;
+            g->mem.iflag |= 0x04;
+        }
         break;
     }
 }

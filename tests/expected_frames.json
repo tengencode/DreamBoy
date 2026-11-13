@@ -1,6 +1,12 @@
 {
   "frames": [
     {
+      "name": "gb_dmg_acid2",
+      "rom": "gb/acid/dmg-acid2.gb",
+      "frames": 60,
+      "hash": "39f940576d2d1473"
+    },
+    {
       "name": "jsmolka_arm",
       "rom": "jsmolka/arm.gba",
       "frames": 10,

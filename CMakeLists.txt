@@ -84,6 +84,9 @@ if(NOT ANDROID)
                      COMMAND testrunner ${PROJECT_SOURCE_DIR}/tests/roms/${f_rom} --frames ${f_frames}
                              --expect-hash ${f_hash} ${audio_args})
             set_tests_properties(frame_${f_name} PROPERTIES SKIP_RETURN_CODE 77)
+            if(f_rom MATCHES "^gb/") # no save states or rewind in the Game Boy core yet (17a plan, Task 10)
+                continue()
+            endif()
             # The same run through a save state: half-way it continues in a brand-new machine.
             math(EXPR f_half "${f_frames} / 2")
             if(f_half LESS 1)

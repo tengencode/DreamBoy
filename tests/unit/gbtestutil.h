@@ -14,5 +14,13 @@ void gbtu_fix_checksum(uint8_t *rom); /* after changing header bytes */
 /* A machine running a 32 KiB ROM without a banking chip whose code (n bytes) starts at 0x150; the CPU is at
  * 0x100 ("NOP; JP 0x150"). */
 gb_t *gbtu_boot(const uint8_t *code, size_t n);
+/* A machine idling in "JR -2", for tests that set the hardware up by hand. */
+gb_t *gbtu_idle(void);
+/* Tile `index` of the first tile block (0x8000 addressing) from 8 strings of 8 digits '0'-'3'. */
+void gbtu_tile(gb_t *g, int index, const char *const rows[8]);
+/* A tile filled with one colour number. */
+void gbtu_tile_fill(gb_t *g, int index, int colour);
+uint16_t gbtu_px(const gb_t *g, int x, int y); /* the shown picture */
+void gbtu_frames(gb_t *g, int n);
 
 #endif

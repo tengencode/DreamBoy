@@ -331,20 +331,20 @@ Boy only:
 LYC 45, DMA 46, BGP 47, OBP0 48, OBP1 49, WY 4A, WX 4B; VRAM 0x8000–0x9FFF, OAM 0xFE00–0xFE9F; `gb_framebuffer`.
 Greys (BGR555): shade 0 `0x7FFF`, 1 `0x56B5`, 2 `0x294A`, 3 `0x0000`.
 
-- [ ] **Step 1: Failing timing tests:** a line is 456 ticks, 154 lines; modes 2 (80 ticks) → 3 (172 + extra) → 0;
+- [x] **Step 1: Failing timing tests:** a line is 456 ticks, 154 lines; modes 2 (80 ticks) → 3 (172 + extra) → 0;
   lines 144–153 mode 1; IF bit 0 at line 144's start; STAT bits 0–2 and the four interrupt sources with the "one
   line" rule (a source going high while another is high raises nothing); LY = LYC compare incl. line 153's early
   wrap to 0; VRAM unreadable (0xFF) in mode 3, OAM in modes 2–3; OAM DMA copies 160 bytes over 640 ticks while only
   HRAM is reachable; LCD off: LY 0, mode 0, no interrupts, and turning it on restarts the frame;
   `gb_lcd_off_frames_still_end` (Review Focus 4: LCDC = 0 for 5 frames then 0x91 — every `gb_run_frame` advances
   exactly 70,224 ticks and the picture after re-enabling is drawn).
-- [ ] **Step 2: Failing drawing tests** (pixel-exact scenes): background with scroll and wrap, both tile-data
+- [x] **Step 2: Failing drawing tests** (pixel-exact scenes): background with scroll and wrap, both tile-data
   areas (signed addressing 0x8800), both maps; window (WX − 7, WY, its own line counter that only advances on lines
   where it showed; WX < 7 and > 166 edge cases); sprites 8×8 and 8×16, X/Y flip, palettes, behind-background
   priority, 10 per line (the first 10 in OAM order), priority by X then OAM order; BG off (LCDC bit 0) → white
   background with sprites still drawn; palettes BGP/OBP mapping.
-- [ ] **Step 3–4:** fail; implement; pass.
-- [ ] **Step 5: ROM tests.** Fetch dmg-acid2 and its reference PNG; `tools/dev.sh run …dmg-acid2.gb --frames 60
+- [x] **Step 3–4:** fail; implement; pass.
+- [x] **Step 5: ROM tests.** Fetch dmg-acid2 and its reference PNG; `tools/dev.sh run …dmg-acid2.gb --frames 60
   --screenshot` → compare with the reference pixel for pixel (a small Python compare in `tools/png_probe.py` or the
   existing probe; the reference uses the greys `0xFF, 0xAA, 0x55, 0x00` — map ours to those four levels before
   comparing); then lock its frame hash in `tests/expected_frames.json`. Add to `gb_tests.json` and make pass:
@@ -352,7 +352,7 @@ Greys (BGR555): shade 0 `0x7FFF`, 1 `0x56B5`, 2 `0x294A`, 3 `0x0000`.
   `oam_dma_restart`, `oam_dma_start`, `oam_dma_timing`, `acceptance/interrupts/ie_push`, `acceptance/serial/*`
   (if it needs DMG timing only), and anything deferred from Task 5. Run the whole `acceptance/ppu` group and record
   each result in PROGRESS.md; those that pass go into `gb_tests.json`.
-- [ ] **Step 6:** Commit `gb: the screen — timing and the line renderer`.
+- [x] **Step 6:** Commit `gb: the screen — timing and the line renderer`.
 
 ### Task 7: Sound
 

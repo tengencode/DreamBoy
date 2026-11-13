@@ -5,7 +5,7 @@
 
 gb_t *gb_create(void) {
     gb_t *g = calloc(1, sizeof(gb_t));
-    if (g) memset(g->frame, 0xFF, sizeof g->frame); /* white until something is drawn */
+    if (g) gb_ppu_reset(g); /* a white picture until a game draws */
     return g;
 }
 
@@ -27,9 +27,10 @@ void gb_reset(gb_t *g) {
     memset(&g->timer, 0, sizeof g->timer);
     memset(&g->serial, 0, sizeof g->serial);
     g->joypad.select = 0x30; /* the held keys stay: they are the player's, not the machine's */
-    g->timer.div = 0xABCC;   /* where the boot ROM leaves the divider */
+    g->timer.div = 0xABC8;   /* where the boot ROM leaves the divider */
     g->serial_len = 0;
     gb_cart_reset(g);
+    gb_ppu_reset(g);
     g->ticks = 0;
     g->frame_left = 0;
     gb_cpu_reset(g);

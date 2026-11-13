@@ -63,6 +63,25 @@ typedef struct {
     uint8_t keys;   /* GB_KEY_* held */
 } gb_joypad_t;
 
+typedef struct {
+    uint8_t lcdc, stat; /* stat: the four interrupt-enable bits as written */
+    uint8_t scy, scx, ly, lyc, dma, bgp, obp0, obp1, wy, wx;
+    uint8_t mode;        /* 0 HBlank, 1 VBlank, 2 OAM scan, 3 drawing: as STAT shows it */
+    uint8_t irq_mode;    /* the same as the interrupt sources see it: a little ahead of what STAT shows */
+    uint8_t oam_busy, vram_busy; /* the CPU cannot reach them */
+    uint8_t coincidence; /* the LY = LYC flag */
+    uint8_t stat_line;   /* the STAT interrupt line's level */
+    uint8_t phase;       /* what the line is waiting for (ppu.c) */
+    uint8_t line;        /* 0-153; LY reads this, except in line 153 */
+    uint8_t window_line; /* the window's own line counter */
+    uint8_t window_hit;  /* LY reached WY in this frame */
+    uint8_t dma_active, dma_delay, dma_index, dma_blocking; /* OAM DMA */
+    uint16_t dot;        /* 0-455 in the line */
+    uint16_t next;       /* the dot at which the phase ends */
+    uint8_t vram[0x4000]; /* two banks (a plain Game Boy uses the first) */
+    uint8_t oam[0xA0];
+} gb_ppu_t;
+
 /* The banking chip's registers. */
 typedef struct {
     uint8_t ram_on;
@@ -84,6 +103,8 @@ struct gb {
     gb_serial_t serial;
     gb_joypad_t joypad;
     gb_cart_t cart;
+    gb_ppu_t ppu;
+    uint16_t back[GB_WIDTH * GB_HEIGHT]; /* the picture being drawn; shown (copied to frame) when VBlank starts */
     uint16_t frame[GB_WIDTH * GB_HEIGHT]; /* the picture, BGR555 */
     char serial_out[4096]; /* for tests: every byte sent on the serial port */
     uint32_t serial_len;
@@ -109,6 +130,15 @@ void gb_serial_write(gb_t *g, uint16_t addr, uint8_t value);
 uint8_t gb_joypad_read(const gb_t *g);
 void gb_joypad_write(gb_t *g, uint8_t value);
 
+void gb_ppu_reset(gb_t *g);
+void gb_ppu_tick(gb_t *g, int dots);
+void gb_dma_tick(gb_t *g); /* once a machine cycle */
+uint8_t gb_ppu_read(const gb_t *g, uint16_t addr); /* 0xFF40-0xFF4B */
+void gb_ppu_write(gb_t *g, uint16_t addr, uint8_t value);
+bool gb_ppu_vram_blocked(const gb_t *g); /* the CPU cannot reach video RAM while a line is drawn */
+bool gb_ppu_oam_blocked(const gb_t *g);  /* nor OAM during the scan, the drawing, or OAM DMA */
+int gb_ppu_line_sprites(const gb_t *g, int ly, uint8_t out[10]);
+void gb_ppu_draw_line(gb_t *g, int ly);
 void gb_cart_reset(gb_t *g);
 uint8_t gb_cart_read(const gb_t *g, uint16_t addr); /* 0x0000-0x7FFF and 0xA000-0xBFFF */
 void gb_cart_write(gb_t *g, uint16_t addr, uint8_t value);

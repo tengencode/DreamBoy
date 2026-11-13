@@ -120,4 +120,14 @@ TEST(gb_tima_div_write_edge) {
     gb_bus_write(g, TAC, 0x01);
     CHECK_EQ(gb_bus_peek(g, TIMA), 1);
     gb_destroy(g);
+
+    g = machine(); /* and when that count wraps TIMA, TMA is loaded and the interrupt asked for at once */
+    g->timer.tac = 5;
+    g->timer.tima = 0xFF;
+    g->timer.tma = 0x42;
+    ticks(g, 8);
+    gb_bus_write(g, TAC, 0x01);
+    CHECK_EQ(gb_bus_peek(g, TIMA), 0x42);
+    CHECK_EQ(g->mem.iflag & 4, 4);
+    gb_destroy(g);
 }
