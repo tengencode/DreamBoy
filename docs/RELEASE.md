@@ -68,25 +68,25 @@ command for this).
 
 ## 5. Spreading the word (you post; drafts below)
 
-Read each place's rules on self-promotion before posting, and post from your own account. Every draft says plainly that
-the app plays GBA games only for now and was built with help from an AI assistant — say it up front, it goes down
+Read each place's rules on self-promotion before posting, and post from your own account. Every draft says plainly
+what is still missing and that the app was built with help from an AI assistant — say it up front, it goes down
 better than being found out.
 
 ### r/EmulationOnAndroid
 
-> **Title:** DreamBoy: a new free, open-source GBA emulator for Android (GPL)
+> **Title:** DreamBoy: a new free, open-source Game Boy / Color / Advance emulator for Android (GPL)
 >
-> I've released DreamBoy, a Game Boy Advance emulator for Android. It's free, open source (GPL-3.0) and has no ads or
-> tracking.
+> I've released DreamBoy, a Game Boy, Game Boy Color and Game Boy Advance emulator for Android. It's free, open
+> source (GPL-3.0) and has no ads or tracking.
 >
-> - Its own emulator core in C with hand-written ARM64 assembly, so it runs well on cheap and older phones
-> - Save states, rewind, fast-forward, cheats (Action Replay, GameShark, CodeBreaker, libretro .cht files)
-> - Touch layout editor, console skins, Delta skins, controllers and keyboards
-> - Tilt, gyro, solar sensor and rumble cartridges, real-time clock
+> - Its own emulator cores in C (the GBA one with hand-written ARM64 assembly), so it runs well on cheap and older phones
+> - Save states, rewind, fast-forward, cheats (Game Genie, GameShark, Action Replay, CodeBreaker, libretro .cht files)
+> - Touch layout editor, console skins, controllers and keyboards; grey Game Boy games in colour
+> - Rumble cartridges and the real-time clock; for GBA games also tilt, gyro and solar sensors and Delta skins
 > - RetroAchievements (sign in with your own account); leaderboard scores and Hardcore once RetroAchievements approves the app
 > - Box art, backup and restore of everything as one zip
 >
-> GBA only for now; Game Boy and Game Boy Color are planned. No games or BIOS included.
+> Still missing for Game Boy and Game Boy Color games: Delta skins, tilt cartridges, link cable. No games or BIOS included.
 >
 > Full disclosure: I built it with a lot of help from an AI assistant (Claude). It's checked by nearly a thousand
 > automated tests, test ROMs and a 30-game check, but I'd love bug reports.
@@ -95,26 +95,27 @@ better than being found out.
 
 ### Hacker News ("Show HN")
 
-> **Title:** Show HN: DreamBoy – a GBA emulator for Android with a hand-written ARM64 core
+> **Title:** Show HN: DreamBoy – a Game Boy / GBA emulator for Android with a hand-written ARM64 core
 >
 > **URL:** https://github.com/tengencode/DreamBoy
 >
-> **Text:** DreamBoy is a free, open-source (GPL-3.0) Game Boy Advance emulator for Android. The core is C with
-> hand-written ARM64 assembly and NEON for the CPU loop, drawing and sound — each fast path has a plain-C twin it is
+> **Text:** DreamBoy is a free, open-source (GPL-3.0) Game Boy, Game Boy Color and Game Boy Advance emulator for
+> Android, with its own cores. The GBA core is C with hand-written ARM64 assembly and NEON for the CPU loop, drawing and sound — each fast path has a plain-C twin it is
 > tested against — so it runs at full speed on old phones' small cores. The app is Kotlin and Jetpack Compose. It was
 > built with heavy help from an AI assistant (Claude); every commit says so. Happy to answer questions about the
 > emulator, the testing, or working that way.
 
 ### Emulation General wiki
 
-On the wiki's Game Boy Advance emulators page, in the Android table: DreamBoy, latest version, active, GPL-3.0, link to
-`https://github.com/tengencode/DreamBoy`, and a short note ("own core with ARM64 assembly; RetroAchievements; GBA only").
+On the wiki's Game Boy Advance emulators page (and the Game Boy / Game Boy Color one), in the Android table: DreamBoy,
+latest version, active, GPL-3.0, link to `https://github.com/tengencode/DreamBoy`, and a short note ("own cores, the GBA
+one with ARM64 assembly; RetroAchievements").
 Follow the page's existing format.
 
 ### Awesome lists
 
 A pull request to a list that has an Android-emulator or GBA-emulator section, one line in the list's own format:
-`[DreamBoy](https://github.com/tengencode/DreamBoy) - Free, open-source GBA emulator for Android with RetroAchievements.`
+`[DreamBoy](https://github.com/tengencode/DreamBoy) - Free, open-source Game Boy, Game Boy Color and GBA emulator for Android with RetroAchievements.`
 
 ### Release notes and a short post for 1.1.0 (Game Boy and Game Boy Color)
 
@@ -129,6 +130,26 @@ A pull request to a list that has an Android-emulator or GBA-emulator section, o
 >
 > Nothing changes for your GBA games, saves and states. Update by installing the new APK over the old one (or let
 > Obtainium do it): https://github.com/tengencode/DreamBoy/releases/latest
+
+### Release notes and a short post for 1.2.0 (the Game Boy extras)
+
+> **DreamBoy 1.2.0: cheats, RetroAchievements and colours for Game Boy games**
+>
+> Game Boy and Game Boy Color games now have what GBA games had:
+>
+> - **Cheats:** Game Genie and GameShark codes, libretro `.cht` files, and "find cheats online".
+> - **RetroAchievements:** achievements and leaderboards, with your own account. (Hardcore still waits for
+>   RetroAchievements to approve DreamBoy.)
+> - **Rumble cartridges** shake the phone.
+>
+> And grey Game Boy games come **in colour**: by default the colours a Game Boy Color gives each game, or a look you
+> pick under Settings → Picture → Grey Game Boy games (grey, the original green, and twelve more), for all games or
+> for one (hold a game → Game settings). To keep everything grey as before, choose Grey there.
+>
+> Still to come for these consoles: imported Delta skins and tilt cartridges.
+>
+> Nothing changes for your saves and states. Update by installing the new APK over the old one (or let Obtainium do
+> it): https://github.com/tengencode/DreamBoy/releases/latest
 
 ## 6. Later
 

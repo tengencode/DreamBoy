@@ -171,12 +171,12 @@ on-device RA tests.
 
 ### Task 7: The words and the version
 
-- [ ] **Step 1:** `app/build.gradle.kts`: `versionCode` 3, `versionName` "1.2.0". README (features: cheats,
+- [x] **Step 1:** `app/build.gradle.kts`: `versionCode` 3, `versionName` "1.2.0". README (features: cheats,
   RetroAchievements, rumble for every console; Delta skins and tilt stay "GBA today"; colours for grey games), the
   RetroAchievements paragraph, About's line if it names what is missing, `PRODUCT.md`, `PRIVACY.md` (RetroAchievements
   also sees Game Boy games' hashes; date), `docs/RELEASE.md` §5 (release notes and a short post for 1.2.0),
   `docs/BUILDING.md` if it lists core APIs.
-- [ ] **Step 2:** `jvmtest` (the About / version tests). Commit `DreamBoy 1.2.0: the words`.
+- [x] **Step 2:** `jvmtest` (the About / version tests). Commit `DreamBoy 1.2.0: the words`.
 
 ### Task 8: Claude's check on the phone emulator; all tests; review
 
