@@ -214,7 +214,7 @@ TAC 07 (upper 5 bits read 1), SB 01, SC 02, P1 00; `gb_set_keys`; `gb_debug_seri
 **Interfaces — produces:** `cart_read(gb_t*, uint16_t)`, `cart_write(gb_t*, uint16_t, uint8_t)` for 0x0000–0x7FFF
 and 0xA000–0xBFFF; cartridge RAM buffer + dirty flag (`gb_save_dirty`).
 
-- [ ] **Step 1: Failing tests** — ROMs built with `gbtu_rom`, each bank's first byte = its bank number:
+- [x] **Step 1: Failing tests** — ROMs built with `gbtu_rom`, each bank's first byte = its bank number:
   - `gb_mbc1_banking`: bank 0 register value → bank 1; 5-bit low + 2-bit high; mode 1 moves the high bits to the
     0x0000 area and to RAM banking; RAM off reads 0xFF and ignores writes until 0x0A is written to 0x0000–0x1FFF;
     bank numbers wrap to the ROM's size.
@@ -228,8 +228,8 @@ and 0xA000–0xBFFF; cartridge RAM buffer + dirty flag (`gb_save_dirty`).
   - `gb_cart_lying_header_safe` (Review Focus 1): a 32 KiB MBC5 file claiming 8 MiB and 128 KiB RAM with RAM code
     0x04: select bank 0x1FF and RAM bank 0xF, read and write everywhere in 0x0000–0x7FFF and 0xA000–0xBFFF — under
     the sanitizer build, no error.
-- [ ] **Step 2–4:** fail, implement, pass.
-- [ ] **Step 5:** Commit `gb: cartridge chips MBC1, MBC2, MBC3, MBC5`.
+- [x] **Step 2–4:** fail, implement, pass.
+- [x] **Step 5:** Commit `gb: cartridge chips MBC1, MBC2, MBC3, MBC5`.
 
 ### Task 5: The machine layer, the test runner on it, the first test ROMs
 

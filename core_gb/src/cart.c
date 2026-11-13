@@ -80,3 +80,87 @@ gb_err_t gb_cart_load(gb_t *g, const uint8_t *rom, size_t size) {
     g->cart_ram = ram;
     return GB_OK;
 }
+
+/* Works out where the visible banks start, wrapped to the real sizes. */
+static void map(gb_t *g) {
+    gb_cart_t *c = &g->cart;
+    uint32_t bank0 = 0, bank1 = 1, ram = 0;
+    switch (g->info.mbc) {
+    case MBC_NONE: break;
+    case MBC1:
+        bank1 = (uint32_t)(c->bank_hi << 5 | (c->bank_lo ? c->bank_lo : 1));
+        if (c->mode) bank0 = (uint32_t)c->bank_hi << 5, ram = c->bank_hi;
+        break;
+    case MBC2:
+    case MBC3:
+        bank1 = c->bank_lo ? c->bank_lo : 1;
+        ram = c->ram_bank & 7;
+        break;
+    case MBC5:
+        bank1 = (uint32_t)(c->bank_hi << 8 | c->bank_lo);
+        ram = c->ram_bank & (g->info.rumble ? 0x07 : 0x0F);
+        break;
+    }
+    c->rom0 = (bank0 * 0x4000) & (g->info.rom_size - 1);
+    c->rom1 = (bank1 * 0x4000) & (g->info.rom_size - 1);
+    c->ram_at = g->info.ram_size ? (ram * 0x2000) & (g->info.ram_size - 1) : 0;
+}
+
+void gb_cart_reset(gb_t *g) {
+    memset(&g->cart, 0, sizeof g->cart);
+    g->cart.bank_lo = 1;
+    g->cart.ram_on = g->info.mbc == MBC_NONE; /* without a chip there is no switch */
+    map(g);
+}
+
+/* Where addr (0xA000-0xBFFF) lands in the cartridge RAM. */
+static uint32_t ram_index(const gb_t *g, uint16_t addr) {
+    return (g->cart.ram_at + (addr & 0x1FFF)) & (g->info.ram_size - 1);
+}
+
+uint8_t gb_cart_read(const gb_t *g, uint16_t addr) {
+    const gb_cart_t *c = &g->cart;
+    if (addr < 0x4000) return g->info.rom[c->rom0 + addr];
+    if (addr < 0x8000) return g->info.rom[c->rom1 + (addr & 0x3FFF)];
+    if (!c->ram_on) return 0xFF;
+    if (g->info.mbc == MBC3 && c->ram_bank >= 8) return g->info.clock ? 0 : 0xFF;
+    if (!g->info.ram_size) return 0xFF;
+    uint8_t v = g->cart_ram[ram_index(g, addr)];
+    return g->info.mbc == MBC2 ? v | 0xF0 : v;
+}
+
+void gb_cart_write(gb_t *g, uint16_t addr, uint8_t value) {
+    gb_cart_t *c = &g->cart;
+    if (addr >= 0x8000) {
+        if (!c->ram_on || !g->info.ram_size || (g->info.mbc == MBC3 && c->ram_bank >= 8)) return;
+        g->cart_ram[ram_index(g, addr)] = value;
+        c->dirty = 1;
+        return;
+    }
+    switch (g->info.mbc) {
+    case MBC_NONE: return;
+    case MBC1:
+        if (addr < 0x2000) c->ram_on = (value & 0x0F) == 0x0A;
+        else if (addr < 0x4000) c->bank_lo = value & 0x1F;
+        else if (addr < 0x6000) c->bank_hi = value & 0x03;
+        else c->mode = value & 1;
+        break;
+    case MBC2:
+        if (addr >= 0x4000) return;
+        if (addr & 0x100) c->bank_lo = value & 0x0F;
+        else c->ram_on = (value & 0x0F) == 0x0A;
+        break;
+    case MBC3:
+        if (addr < 0x2000) c->ram_on = (value & 0x0F) == 0x0A;
+        else if (addr < 0x4000) c->bank_lo = value & (g->info.rom_size > 0x200000 ? 0xFF : 0x7F);
+        else if (addr < 0x6000) c->ram_bank = value & 0x0F;
+        break;
+    case MBC5:
+        if (addr < 0x2000) c->ram_on = value == 0x0A;
+        else if (addr < 0x3000) c->bank_lo = value;
+        else if (addr < 0x4000) c->bank_hi = value & 1;
+        else if (addr < 0x6000) c->ram_bank = value & 0x0F;
+        break;
+    }
+    map(g);
+}

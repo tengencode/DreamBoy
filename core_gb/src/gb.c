@@ -27,6 +27,7 @@ void gb_reset(gb_t *g) {
     g->joypad.select = 0x30; /* the held keys stay: they are the player's, not the machine's */
     g->timer.div = 0xABCC;   /* where the boot ROM leaves the divider */
     g->serial_len = 0;
+    gb_cart_reset(g);
     g->ticks = 0;
     g->frame_left = 0;
     gb_cpu_reset(g);
@@ -55,4 +56,10 @@ uint32_t gb_rom_crc32(const gb_t *g) {
 
 size_t gb_save_size(const gb_t *g) {
     return g->info.battery ? g->info.ram_size : 0;
+}
+
+int gb_save_dirty(gb_t *g) {
+    int dirty = g->cart.dirty;
+    g->cart.dirty = 0;
+    return dirty;
 }

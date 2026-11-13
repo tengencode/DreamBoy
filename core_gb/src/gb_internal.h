@@ -63,6 +63,18 @@ typedef struct {
     uint8_t keys;   /* GB_KEY_* held */
 } gb_joypad_t;
 
+/* The banking chip's registers. */
+typedef struct {
+    uint8_t ram_on;
+    uint8_t mode;     /* MBC1: 1 = the high bits also move the 0x0000 area and pick the RAM bank */
+    uint8_t bank_lo;  /* the ROM bank register (MBC5: its low 8 bits) */
+    uint8_t bank_hi;  /* MBC1: the 2 high bits; MBC5: bit 8 */
+    uint8_t ram_bank; /* as written (MBC3: 8-12 pick a clock register) */
+    uint8_t dirty;    /* cartridge RAM was written */
+    uint32_t rom0, rom1; /* where the banks at 0x0000 and 0x4000 start in the ROM */
+    uint32_t ram_at;     /* where the bank at 0xA000 starts in the RAM */
+} gb_cart_t;
+
 struct gb {
     cart_info_t info;
     uint8_t *cart_ram; /* info.ram_size bytes */
@@ -71,6 +83,7 @@ struct gb {
     gb_timer_t timer;
     gb_serial_t serial;
     gb_joypad_t joypad;
+    gb_cart_t cart;
     char serial_out[4096]; /* for tests: every byte sent on the serial port */
     uint32_t serial_len;
     uint64_t ticks;     /* clock ticks since reset */
@@ -95,6 +108,9 @@ void gb_serial_write(gb_t *g, uint16_t addr, uint8_t value);
 uint8_t gb_joypad_read(const gb_t *g);
 void gb_joypad_write(gb_t *g, uint8_t value);
 
+void gb_cart_reset(gb_t *g);
+uint8_t gb_cart_read(const gb_t *g, uint16_t addr); /* 0x0000-0x7FFF and 0xA000-0xBFFF */
+void gb_cart_write(gb_t *g, uint16_t addr, uint8_t value);
 gb_err_t gb_cart_load(gb_t *g, const uint8_t *rom, size_t size);
 void gb_cart_free(gb_t *g);
 
