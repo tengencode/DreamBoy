@@ -742,9 +742,6 @@ class MainActivity : ComponentActivity() {
         if (own.detects) NativeBridge.cartSetup().let { gameSettings.remember(gameId, it[0], it[1]) }
         hardware = NativeBridge.cartHardware()
         manualLight = null
-        if (console != Console.GBA && ra.signIn == Achievements.SignIn.IN) { // so a signed-in player isn't left wondering
-            raPopups.note(NO_ACHIEVEMENTS_YET, SystemClock.uptimeMillis())
-        }
         val played = entry.copy(id = gameId, lastPlayed = System.currentTimeMillis(),
             console = Console.ofNative(NativeBridge.console()) ?: console)
         library.played(played)
@@ -766,8 +763,8 @@ class MainActivity : ComponentActivity() {
         raBoards = emptyList()
         openBoard = null
         hardcoreOn = false
-        // RetroAchievements: GBA games only for now (17b) — a Game Boy game is not even identified.
-        if (console == Console.GBA && ra.loadGame(rom)) waitForAchievements { game -> useAchievements(game); continueOpen(st, resumeAuto) }
+        FakeRaServer.console = console.raId // (only the pretend server, in tests and a debug build, reads this)
+        if (ra.loadGame(rom)) waitForAchievements { game -> useAchievements(game); continueOpen(st, resumeAuto) }
         else continueOpen(st, resumeAuto)
     }
 

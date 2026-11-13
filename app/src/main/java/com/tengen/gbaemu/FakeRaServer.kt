@@ -18,6 +18,7 @@ object FakeRaServer {
     const val SURVIVAL_ID = 12
     private const val USER_RANK = 17
     @Volatile var unknownHashes: Set<String> = emptySet()
+    @Volatile var console = 5 // the console every game is said to be for (RetroAchievements' number; the app sets the loaded game's)
 
     private fun ach(id: Int, title: String, desc: String, points: Int, mem: String) =
         "{\"ID\":$id,\"Title\":\"$title\",\"Description\":\"$desc\",\"Flags\":3,\"Points\":$points,\"MemAddr\":\"$mem\"," +
@@ -68,7 +69,7 @@ object FakeRaServer {
                 else -> say(401, LOGIN_BAD)
             }
             "achievementsets" -> if (p["m"] in unknownHashes) say(404, NOT_FOUND) else say(200,
-                "{\"Success\":true,\"GameId\":1234,\"Title\":\"Demo Set\",\"ConsoleId\":5," +
+                "{\"Success\":true,\"GameId\":1234,\"Title\":\"Demo Set\",\"ConsoleId\":$console," +
                     "\"ImageIconUrl\":\"https://media.retroachievements.org/Images/000001.png\",\"RichPresenceGameId\":1234," +
                     "\"RichPresencePatch\":\"\",\"Sets\":[{\"AchievementSetId\":1111,\"GameId\":1234,\"Title\":null," +
                     "\"Type\":\"core\",\"ImageIconUrl\":\"https://media.retroachievements.org/Images/000001.png\"," +

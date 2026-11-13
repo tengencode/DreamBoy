@@ -81,6 +81,12 @@ gb_cheat_type_t gb_cheat_check(const char *text, gb_cheat_type_t type, int *bad_
  * another ROM drops them. GB_ERR_CHEAT (a text that does not read, more than 256 codes) leaves none on. */
 gb_err_t gb_cheats_set(gb_t *g, const char *const *texts, const gb_cheat_type_t *types, size_t count);
 
+/* The memory as RetroAchievements addresses it (rcheevos' layout for both consoles: 0x0000-0xFFFF as the game sees
+ * it, but always cartridge RAM bank 0 at 0xA000 and work RAM bank 1 at 0xD000; work RAM banks 2-7 at 0x10000 on a
+ * Game Boy Color; cartridge RAM banks 1-15 at 0x16000). Copies count bytes from address on and returns how many
+ * exist there (it stops at the first missing one). Changes nothing in the machine. */
+uint32_t gb_ra_peek(const gb_t *g, uint32_t address, uint8_t *buffer, uint32_t count);
+
 /* Rumble cartridges (MBC5 with a motor). */
 int gb_has_rumble(const gb_t *g);    /* 1: the loaded cartridge has a motor */
 int gb_rumble_active(const gb_t *g); /* 1 while the game holds the motor on */

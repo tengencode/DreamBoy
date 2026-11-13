@@ -159,15 +159,15 @@ Kotlin, `MainActivity.kt` (`ra.loadGame` for every console; the notice goes), `C
 `NO_ACHIEVEMENTS_YET`), `FakeRaServer.kt` if it also names the console; tests `tests/unit/test_gb_ra.c`, `test_ra.c`,
 on-device RA tests.
 
-- [ ] **Step 1:** Failing tests in `test_gb_ra.c`: every row of the spec's table on both consoles with known bytes
+- [x] **Step 1:** Failing tests in `test_gb_ra.c`: every row of the spec's table on both consoles with known bytes
   (`ra_rom_follows_the_mapped_bank`, `ra_cart_ram_is_bank0_fixed`, `ra_work_ram_d000_is_bank1_fixed`, `ra_echo`,
   `ra_sprite_memory_and_the_gap`, `ra_registers_peek_changes_nothing` (state before == after), `ra_high_ram_and_ie`,
   `ra_color_banks_2_to_7`, `ra_plain_game_boy_has_no_10000`, `ra_cart_ram_banks_1_to_15`, `ra_no_cart_ram_reads_nothing`,
   `ra_reads_across_region_edges`); in `test_ra.c`: a made-up Game Boy set on the pretend server (console 4) unlocks
   from a byte in work RAM.
-- [ ] **Step 2:** Implement. `unit`. On-device: a Game Boy game with the pretend server loads a set and unlocks
+- [x] **Step 2:** Implement. `unit`. On-device: a Game Boy game with the pretend server loads a set and unlocks
   (the existing RA device test's pattern). `androidtest`.
-- [ ] **Step 3:** Commit `RetroAchievements for Game Boy and Game Boy Color games`.
+- [x] **Step 3:** Commit `RetroAchievements for Game Boy and Game Boy Color games`.
 
 ### Task 7: The words and the version
 

@@ -66,8 +66,9 @@ void ra_unload_game(ra_t *ra);
 ra_status_t ra_game_status(ra_t *ra, int *code);
 bool ra_has_set(ra_t *ra); /* a game is loaded and it has achievements */
 
-/* The game's memory in RetroAchievements' GBA map: 0x00000-0x07FFF IWRAM, 0x08000-0x47FFF EWRAM,
- * 0x48000-0x57FFF save RAM (its first 64 KiB). NULL / 0 for what is not there. */
+/* The game's memory. A Game Boy Advance game: the three pointers, in RetroAchievements' GBA map — 0x00000-0x07FFF
+ * IWRAM, 0x08000-0x47FFF EWRAM, 0x48000-0x57FFF save RAM (its first 64 KiB); NULL / 0 for what is not there. Any
+ * other console (17c: Game Boy, Game Boy Color): `peek`, which answers in that console's own map (gb_ra_peek). */
 #define RA_EWRAM_AT 0x8000u
 #define RA_SRAM_AT 0x48000u
 #define RA_SRAM_END 0x58000u
@@ -76,6 +77,9 @@ typedef struct {
     const uint8_t *ewram; /* GBA_EWRAM_SIZE bytes */
     const uint8_t *sram;  /* the save chip's bytes */
     size_t sram_size;
+    /* When set, used instead of the pointers: copies count bytes from address on, returns how many exist there. */
+    uint32_t (*peek)(void *ctx, uint32_t address, uint8_t *buffer, uint32_t count);
+    void *ctx;
 } ra_memory_t;
 /* Copies count bytes from address on; returns how many exist there (it stops at the first missing one). */
 uint32_t ra_peek(const ra_memory_t *mem, uint32_t address, uint8_t *buffer, uint32_t count);

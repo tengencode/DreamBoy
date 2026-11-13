@@ -161,7 +161,7 @@ static const char BOARDS[] = "[" LB(501, "Speedrun", "Fastest finish", "FRAMES",
 
 static uint8_t iw[0x8000], ew[0x40000], sr[0x8000];
 static ra_memory_t mem(void) {
-    ra_memory_t m = {iw, ew, sr, sizeof sr};
+    ra_memory_t m = {iw, ew, sr, sizeof sr, NULL, NULL};
     return m;
 }
 
@@ -237,7 +237,7 @@ TEST(ra_peek_maps_iwram_ewram_and_save_ram) {
     ew[0] = 3;
     ew[0x3FFFF] = 4;
     sr[0] = 5;
-    ra_memory_t m = {iw, ew, sr, 16};
+    ra_memory_t m = {iw, ew, sr, 16, NULL, NULL};
     uint8_t b[4] = {0};
     CHECK_EQ(ra_peek(&m, 0x0, b, 1), 1);
     CHECK_EQ(b[0], 1);
@@ -249,7 +249,7 @@ TEST(ra_peek_maps_iwram_ewram_and_save_ram) {
     CHECK_EQ(b[1], 5);
     CHECK_EQ(ra_peek(&m, 0x48000 + 15, b, 2), 1); /* the save chip has 16 bytes here */
     CHECK_EQ(ra_peek(&m, RA_SRAM_END, b, 1), 0);
-    ra_memory_t none = {NULL, NULL, NULL, 0};
+    ra_memory_t none = {NULL, NULL, NULL, 0, NULL, NULL};
     CHECK_EQ(ra_peek(&none, 0, b, 1), 0);
     CHECK_EQ(ra_peek(NULL, 0, b, 1), 0);
 }
@@ -838,4 +838,52 @@ TEST(ra_only_the_newest_fetch_counts) {
     CHECK_EQ(ra_entries_status(ra, NULL, NULL, 0, NULL, NULL), RA_NOTHING);
     CHECK_EQ(ra_entries(ra, r, RA_ENTRIES_MAX), 0);
     ra_destroy(ra);
+}
+
+/* ---- a Game Boy game (17c): the pretend server says console 4, the memory is the core's own view ---- */
+
+#include <stdlib.h>
+
+#include "gbtestutil.h"
+
+static uint32_t gb_view(void *ctx, uint32_t address, uint8_t *buffer, uint32_t count) {
+    return gb_ra_peek(ctx, address, buffer, count);
+}
+
+TEST(ra_a_game_boy_game_unlocks_from_its_own_memory) {
+    static const char GB_SET[] = "[" ACH(2001, "Work", "Byte 0xC123 is 7", 5, "0xH00c123=7") ","
+                                 ACH(2002, "Banked", "Work RAM bank 3, byte 9 is 1", 5, "0xH011009=1") ","
+                                 ACH(2003, "Saved", "Cartridge RAM byte 5 is 2", 5, "0xH00a005=2") "]";
+    for (int console = 4; console <= 6; console += 2) { /* a Game Boy game, then a Game Boy Color one */
+        ra_fake_t f = {0};
+        f.hash = HASH;
+        f.achievements = GB_SET;
+        f.console = console;
+        uint8_t *rom = gbtu_rom(0x10000, 0x1B, 3, console == 6 ? 0x80 : 0x00);
+        gb_t *g = gb_create();
+        CHECK_EQ(gb_load_rom(g, rom, 0x10000), GB_OK);
+        free(rom);
+        ra_memory_t m = {.peek = gb_view, .ctx = g};
+        ra_t *ra = new_ra();
+        ra_login_password(ra, "Tester", "secret");
+        ra_fake_serve(&f, ra);
+        ra_load_game(ra, HASH);
+        ra_fake_serve(&f, ra);
+        ra_idle(ra, &m);
+        CHECK_EQ(ra_game_status(ra, NULL), RA_OK);
+        ra_do_frame(ra, &m);
+        ra_do_frame(ra, &m);
+        drain(ra);
+        g->mem.wram[0x123] = 7;
+        g->mem.wram[3 * 0x1000 + 9] = 1; /* (a plain Game Boy has no such address: that achievement never fires) */
+        g->cart_ram[5] = 2;
+        ra_do_frame(ra, &m);
+        ra_event_t list[8];
+        int n = take_all(ra, list, 8);
+        CHECK(find(list, n, RA_EVENT_UNLOCKED, 2001) != NULL);
+        CHECK(find(list, n, RA_EVENT_UNLOCKED, 2003) != NULL);
+        CHECK_EQ(find(list, n, RA_EVENT_UNLOCKED, 2002) != NULL, console == 6);
+        ra_destroy(ra);
+        gb_destroy(g);
+    }
 }

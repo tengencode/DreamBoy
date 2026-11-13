@@ -135,4 +135,37 @@ class AchievementsDeviceTest {
         assertTrue(waitFor(5000) { NativeBridge.raEntriesStatus()[0] == NativeBridge.RA_OK })
         assertEquals(0, NativeBridge.raEntriesStatus()[2])
     }
+
+    /** 17c: a Game Boy game has a session like any other — its set loads, an achievement unlocks, hardcore limits it. */
+    @Test
+    fun aGameBoyGamesSetLoadsUnlocksAndHardcoreLimitsIt() {
+        try {
+            for ((file, console) in listOf("../own_roms/gb_demo.gb" to Console.GB, "../own_roms/gbc_demo.gbc" to Console.GBC)) {
+                FakeRaServer.console = console.raId
+                signIn()
+                val rom = TestRoms.rom(file)
+                assertEquals(0, NativeBridge.loadRom(rom))
+                NativeBridge.raLoadGame(rom)
+                assertTrue(waitFor(5000) { NativeBridge.raPoll(); NativeBridge.raGameStatus()[0] == NativeBridge.RA_OK })
+                assertEquals(listOf(0, 5), NativeBridge.raSummary()!!.take(2))
+                assertTrue(NativeBridge.raHardcoreActive()) // (hardcore is on from the start here: switching it on later waits for a restart)
+                assertEquals(NativeBridge.ERR_CHEAT, NativeBridge.setCheats(arrayOf("01AA23C1"), intArrayOf(NativeBridge.CHEAT_AUTO)))
+                NativeBridge.start()
+                var unlocked: RaEvent? = null
+                assertTrue(waitFor(20000) {
+                    generateSequence { RaEvent.of(NativeBridge.raTakeEvent()) }.firstOrNull { it.kind == RaEvent.UNLOCKED }?.let { unlocked = it }
+                    unlocked != null
+                })
+                assertEquals("Welcome", unlocked!!.title)
+                NativeBridge.pause()
+                NativeBridge.raSetHardcore(false)
+                assertEquals(0, NativeBridge.setCheats(arrayOf("01AA23C1"), intArrayOf(NativeBridge.CHEAT_AUTO)))
+                NativeBridge.stop()
+                NativeBridge.raLogout()
+                NativeBridge.raSetHardcore(true)
+            }
+        } finally {
+            FakeRaServer.console = Console.GBA.raId
+        }
+    }
 }

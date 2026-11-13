@@ -13,6 +13,7 @@
 #include "audio_out.h"
 #include "audio_ring.h"
 #include "frame_pacer.h"
+#include "gb.h"
 #include "gba_debug.h"
 #include "key_latch.h"
 #include "rate_control.h"
@@ -235,12 +236,20 @@ static void keep_rewind_stats(emu_t *e) {
     atomic_store(&e->rw_bytes, (long long)bytes);
 }
 
+static uint32_t gb_memory(void *ctx, uint32_t address, uint8_t *buffer, uint32_t count) {
+    return gb_ra_peek(ctx, address, buffer, count);
+}
+
 static ra_memory_t memory_of(emu_t *e) {
+    if (!e->g) { /* a Game Boy game: its own layout (17c) */
+        ra_memory_t gb = {.peek = gb_memory, .ctx = machine_gb(e->m)};
+        return gb;
+    }
     size_t sram = gba_saveram_size(e->g);
     /* a chip whose size isn't known yet (no save so far) still has its bytes: else rcheevos would switch off, for
      * the whole session, every achievement that watches save memory */
     if (!sram && gba_save_type(e->g) != GBA_SAVE_NONE) sram = RA_SRAM_END - RA_SRAM_AT;
-    ra_memory_t m = {gba_iwram(e->g), gba_ewram(e->g), gba_saveram(e->g), sram};
+    ra_memory_t m = {gba_iwram(e->g), gba_ewram(e->g), gba_saveram(e->g), sram, NULL, NULL};
     return m;
 }
 
@@ -485,7 +494,7 @@ emu_t *emu_create(const uint8_t *rom, size_t size, const char *save_path, const 
     atomic_init(&e->ra_reset, false);
     atomic_init(&e->look, o.look);
     machine_set_look(e->m, e->look_set = o.look);
-    e->ra = e->g ? o.ra : NULL; /* no achievements for Game Boy games yet: no session, so no hardcore limits */
+    e->ra = o.ra;
     if (o.rewind_budget && machine_rewind_configure(e->m, o.rewind_budget, REWIND_EVERY) != MACHINE_OK) {
         LOGW("no memory for rewind: rewind off");
     }

@@ -80,4 +80,9 @@ class ConsoleTest {
         assertEquals(Console.GB.cheatTypes, Console.GBC.cheatTypes)
         for (c in Console.entries) assertEquals("Auto", c.cheatTypes[NativeBridge.CHEAT_AUTO])
     }
+
+    @Test
+    fun eachConsoleHasItsRetroAchievementsNumber() { // 17c
+        assertEquals(listOf(5, 4, 6), Console.entries.map { it.raId })
+    }
 }

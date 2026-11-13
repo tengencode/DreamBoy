@@ -32,8 +32,8 @@ typedef struct {
     size_t rewind_budget; /* bytes for rewind snapshots; 0 = rewind off */
     bool sound;           /* false: no stream, the clock paces the game */
     int sound_bursts;     /* AAudio's buffer in bursts: 2, 4 or 8 */
-    ra_t *ra; /* RetroAchievements (14): checked after every frame and its hardcore limits obeyed; NULL = none.
-                 Dropped for a Game Boy game: no achievements for those yet (17b) */
+    ra_t *ra; /* RetroAchievements (14; every console since 17c): checked after every frame and its hardcore limits
+                 obeyed; NULL = none */
     int console; /* EMU_AUTO: told from the ROM's own header (a Game Boy Advance when it has none), or
                     EMU_CONSOLE_* when the caller knows better (from the file's name) */
     int look; /* a grey Game Boy game's colours (gb.h: GB_LOOK_AUTO, 0 = grey, …); other games ignore it */
