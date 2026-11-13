@@ -159,7 +159,7 @@ this task it only counts ticks), `uint8_t bus_read(gb_t*, uint16_t)`, `void bus_
 (with the tick), `bus_peek` (without). Memory in this task: ROM bank 0/1 flat, WRAM 0xC000–0xDFFF + echo, HRAM, IF
 (0xFF0F, upper 3 bits read 1), IE (0xFFFF); everything else reads 0xFF.
 
-- [x] **Step 1: Failing tests** — each runs a few opcodes with `gbtu_boot` + `gb_debug_step` and checks registers
+- [ ] **Step 1: Failing tests** — each runs a few opcodes with `gbtu_boot` + `gb_debug_step` and checks registers
   with `gb_debug_reg` and ticks with `gb_debug_ticks`:
   - `gb_cpu_ld_*`: 8-bit and 16-bit loads, `LD (nn),SP`, `LDH`, `PUSH/POP` (`POP AF` clears F's low nibble).
   - `gb_cpu_alu_flags`: table-driven — `ADD/ADC/SUB/SBC/AND/XOR/OR/CP`, `INC/DEC`, `ADD HL,rr`, `ADD SP,e`,
@@ -179,11 +179,11 @@ this task it only counts ticks), `uint8_t bus_read(gb_t*, uint16_t)`, `void bus_
     returns with `gb_debug_ticks` advanced by 70,224.
   - `gb_run_frame_always_returns` (Review Focus 5): `DI; HALT` and `DI; STOP` programs — three `gb_run_frame` calls
     return, ticks advance 3 × 70,224.
-- [x] **Step 2:** run → fail.
-- [x] **Step 3: Implement** a `switch` interpreter over the opcode (ponytail: no table generator). `gb_run_frame`
+- [ ] **Step 2:** run → fail.
+- [ ] **Step 3: Implement** a `switch` interpreter over the opcode (ponytail: no table generator). `gb_run_frame`
   runs instructions until the frame's tick budget (70,224, carried over by the overshoot) is used.
-- [x] **Step 4:** `bash tools/dev.sh unit gb_` → pass.
-- [x] **Step 5:** Commit `gb: the SM83 CPU`.
+- [ ] **Step 4:** `bash tools/dev.sh unit gb_` → pass.
+- [ ] **Step 5:** Commit `gb: the SM83 CPU`.
 
 ### Task 3: Timer, serial port, joypad
 
@@ -193,7 +193,7 @@ modify `bus.c`, `gb_debug.c`.
 **Interfaces — produces:** `timer_tick(gb_t*)` etc. called from `gb_tick`; registers DIV 0xFF04, TIMA 05, TMA 06,
 TAC 07 (upper 5 bits read 1), SB 01, SC 02, P1 00; `gb_set_keys`; `gb_debug_serial`.
 
-- [x] **Step 1: Failing tests**
+- [ ] **Step 1: Failing tests**
   - `gb_div_counts`: DIV = high byte of a 16-bit counter that advances with every tick; writing any value resets it.
   - `gb_tima_rates`: TAC 0b100/101/110/111 → TIMA +1 every 1024 / 16 / 64 / 256 ticks.
   - `gb_tima_overflow_delay`: on overflow TIMA reads 0 for 4 ticks, then TMA is loaded and IF bit 2 set; a write to
@@ -204,8 +204,8 @@ TAC 07 (upper 5 bits read 1), SB 01, SC 02, P1 00; `gb_set_keys`; `gb_debug_seri
     the byte written to SB appears in `gb_debug_serial`; SC = 0x80 (external clock) never finishes.
   - `gb_joypad_matrix`: P1 select lines (bit 4 = directions, bit 5 = buttons), pressed reads 0, bits 6–7 read 1;
     pressing a selected key sets IF bit 4.
-- [x] **Step 2–4:** fail, implement (the timer as a falling-edge detector on `counter bit & enable`), pass.
-- [x] **Step 5:** Commit `gb: timer, serial port, joypad`.
+- [ ] **Step 2–4:** fail, implement (the timer as a falling-edge detector on `counter bit & enable`), pass.
+- [ ] **Step 5:** Commit `gb: timer, serial port, joypad`.
 
 ### Task 4: Cartridge chips
 
@@ -214,7 +214,7 @@ TAC 07 (upper 5 bits read 1), SB 01, SC 02, P1 00; `gb_set_keys`; `gb_debug_seri
 **Interfaces — produces:** `cart_read(gb_t*, uint16_t)`, `cart_write(gb_t*, uint16_t, uint8_t)` for 0x0000–0x7FFF
 and 0xA000–0xBFFF; cartridge RAM buffer + dirty flag (`gb_save_dirty`).
 
-- [x] **Step 1: Failing tests** — ROMs built with `gbtu_rom`, each bank's first byte = its bank number:
+- [ ] **Step 1: Failing tests** — ROMs built with `gbtu_rom`, each bank's first byte = its bank number:
   - `gb_mbc1_banking`: bank 0 register value → bank 1; 5-bit low + 2-bit high; mode 1 moves the high bits to the
     0x0000 area and to RAM banking; RAM off reads 0xFF and ignores writes until 0x0A is written to 0x0000–0x1FFF;
     bank numbers wrap to the ROM's size.
@@ -228,8 +228,8 @@ and 0xA000–0xBFFF; cartridge RAM buffer + dirty flag (`gb_save_dirty`).
   - `gb_cart_lying_header_safe` (Review Focus 1): a 32 KiB MBC5 file claiming 8 MiB and 128 KiB RAM with RAM code
     0x04: select bank 0x1FF and RAM bank 0xF, read and write everywhere in 0x0000–0x7FFF and 0xA000–0xBFFF — under
     the sanitizer build, no error.
-- [x] **Step 2–4:** fail, implement, pass.
-- [x] **Step 5:** Commit `gb: cartridge chips MBC1, MBC2, MBC3, MBC5`.
+- [ ] **Step 2–4:** fail, implement, pass.
+- [ ] **Step 5:** Commit `gb: cartridge chips MBC1, MBC2, MBC3, MBC5`.
 
 ### Task 5: The machine layer, the test runner on it, the first test ROMs
 
@@ -295,18 +295,18 @@ Boy only:
 `tests/gb_tests.json`: `{"tests":[{"name":"blargg_cpu_instrs","rom":"gb/blargg/cpu_instrs/cpu_instrs.gb",
 "mode":"serial","expect":"Passed","frames":4000}, …]}` → CTest `gb_<name>`, skip code 77 when the ROM is missing.
 
-- [x] **Step 1: Failing unit tests** (`test_machine.c`): `machine_detect_by_content` (a GBA header, a GB header, a
+- [ ] **Step 1: Failing unit tests** (`test_machine.c`): `machine_detect_by_content` (a GBA header, a GB header, a
   GBC header, each under a wrong extension → content wins); `machine_detect_by_name` (no valid header: `x.GB`,
   `x.gbc`, `x.gba`, `x.bin`/NULL → NONE); `machine_gb_runs` (a `gbtu_rom`: size 160×144, a frame runs, title);
   `machine_gba_runs` (a tiny GBA ROM from `testutil`: 240×160); `machine_keys_drop_lr`.
-- [x] **Step 2–3:** fail; implement the layer (a `switch` on kind — two cores do not need function pointers).
-- [x] **Step 4: Port the tools.** `bash tools/dev.sh test` → every existing CTest test passes unchanged (hashes
+- [ ] **Step 2–3:** fail; implement the layer (a `switch` on kind — two cores do not need function pointers).
+- [ ] **Step 4: Port the tools.** `bash tools/dev.sh test` → every existing CTest test passes unchanged (hashes
   identical: the generic path must not change a GBA frame or sample).
-- [x] **Step 5: Fetch.** Add to `tools/fetch_test_roms.py`: blargg's ROMs (`cpu_instrs`, `instr_timing`,
+- [ ] **Step 5: Fetch.** Add to `tools/fetch_test_roms.py`: blargg's ROMs (`cpu_instrs`, `instr_timing`,
   `mem_timing`, `mem_timing-2`, `halt_bug`, `dmg_sound`, `cgb_sound`) and the mooneye test suite's prebuilt package
   into `tests/roms/gb/blargg/` and `tests/roms/gb/mooneye/`, each pinned by SHA-256 (download once, record the sum,
   download again and compare, as for Tonc). Run it.
-- [x] **Step 6: First ROM tests in `gb_tests.json`:** blargg `cpu_instrs` (serial "Passed"), `instr_timing`
+- [ ] **Step 6: First ROM tests in `gb_tests.json`:** blargg `cpu_instrs` (serial "Passed"), `instr_timing`
   (serial), `mem_timing` (serial), `mem_timing-2` (memtext), `halt_bug` (memtext); mooneye `acceptance/bits/*`,
   `acceptance/instr/daa`, `acceptance/timer/*`, `acceptance/` root instruction-timing tests (`add_sp_e_timing`,
   `call_timing`, `call_timing2`, `call_cc_timing`, `call_cc_timing2`, `jp_timing`, `jp_cc_timing`, `ld_hl_sp_e_timing`,
@@ -318,7 +318,7 @@ Boy only:
   superpowers:systematic-debugging; add a unit test for each bug found). Tests that need the screen's timing
   (`intr_timing` and the `halt_*` ones wait on VBlank) may move to Task 6's list if they cannot pass yet — say so in
   PROGRESS.md.
-- [x] **Step 7:** Commit `machine: one layer over both cores; the test runner runs Game Boy test ROMs`.
+- [ ] **Step 7:** Commit `machine: one layer over both cores; the test runner runs Game Boy test ROMs`.
 
 ### Task 6: The screen (Game Boy)
 
@@ -331,20 +331,20 @@ Boy only:
 LYC 45, DMA 46, BGP 47, OBP0 48, OBP1 49, WY 4A, WX 4B; VRAM 0x8000–0x9FFF, OAM 0xFE00–0xFE9F; `gb_framebuffer`.
 Greys (BGR555): shade 0 `0x7FFF`, 1 `0x56B5`, 2 `0x294A`, 3 `0x0000`.
 
-- [x] **Step 1: Failing timing tests:** a line is 456 ticks, 154 lines; modes 2 (80 ticks) → 3 (172 + extra) → 0;
+- [ ] **Step 1: Failing timing tests:** a line is 456 ticks, 154 lines; modes 2 (80 ticks) → 3 (172 + extra) → 0;
   lines 144–153 mode 1; IF bit 0 at line 144's start; STAT bits 0–2 and the four interrupt sources with the "one
   line" rule (a source going high while another is high raises nothing); LY = LYC compare incl. line 153's early
   wrap to 0; VRAM unreadable (0xFF) in mode 3, OAM in modes 2–3; OAM DMA copies 160 bytes over 640 ticks while only
   HRAM is reachable; LCD off: LY 0, mode 0, no interrupts, and turning it on restarts the frame;
   `gb_lcd_off_frames_still_end` (Review Focus 4: LCDC = 0 for 5 frames then 0x91 — every `gb_run_frame` advances
   exactly 70,224 ticks and the picture after re-enabling is drawn).
-- [x] **Step 2: Failing drawing tests** (pixel-exact scenes): background with scroll and wrap, both tile-data
+- [ ] **Step 2: Failing drawing tests** (pixel-exact scenes): background with scroll and wrap, both tile-data
   areas (signed addressing 0x8800), both maps; window (WX − 7, WY, its own line counter that only advances on lines
   where it showed; WX < 7 and > 166 edge cases); sprites 8×8 and 8×16, X/Y flip, palettes, behind-background
   priority, 10 per line (the first 10 in OAM order), priority by X then OAM order; BG off (LCDC bit 0) → white
   background with sprites still drawn; palettes BGP/OBP mapping.
-- [x] **Step 3–4:** fail; implement; pass.
-- [x] **Step 5: ROM tests.** Fetch dmg-acid2 and its reference PNG; `tools/dev.sh run …dmg-acid2.gb --frames 60
+- [ ] **Step 3–4:** fail; implement; pass.
+- [ ] **Step 5: ROM tests.** Fetch dmg-acid2 and its reference PNG; `tools/dev.sh run …dmg-acid2.gb --frames 60
   --screenshot` → compare with the reference pixel for pixel (a small Python compare in `tools/png_probe.py` or the
   existing probe; the reference uses the greys `0xFF, 0xAA, 0x55, 0x00` — map ours to those four levels before
   comparing); then lock its frame hash in `tests/expected_frames.json`. Add to `gb_tests.json` and make pass:
@@ -352,7 +352,7 @@ Greys (BGR555): shade 0 `0x7FFF`, 1 `0x56B5`, 2 `0x294A`, 3 `0x0000`.
   `oam_dma_restart`, `oam_dma_start`, `oam_dma_timing`, `acceptance/interrupts/ie_push`, `acceptance/serial/*`
   (if it needs DMG timing only), and anything deferred from Task 5. Run the whole `acceptance/ppu` group and record
   each result in PROGRESS.md; those that pass go into `gb_tests.json`.
-- [x] **Step 6:** Commit `gb: the screen — timing and the line renderer`.
+- [ ] **Step 6:** Commit `gb: the screen — timing and the line renderer`.
 
 ### Task 7: Sound
 
@@ -361,7 +361,7 @@ Greys (BGR555): shade 0 `0x7FFF`, 1 `0x56B5`, 2 `0x294A`, 3 `0x0000`.
 **Interfaces — produces:** `apu_tick(gb_t*)`; registers 0xFF10–0xFF26, wave RAM 0xFF30–0xFF3F; `gb_audio_read`
 (a buffer of at least 2 frames: 2048 stereo samples; older samples dropped).
 
-- [x] **Step 1: Failing tests:** register read-back masks (the OR table: NR10 0x80, NR11 0x3F, NR12 0x00, NR13 0xFF,
+- [ ] **Step 1: Failing tests:** register read-back masks (the OR table: NR10 0x80, NR11 0x3F, NR12 0x00, NR13 0xFF,
   NR14 0xBF, NR21 0x3F … NR52 0x70; unused 0xFF); power off (NR52 bit 7 = 0) clears and locks registers (length
   counters stay writable on the DMG); square duty patterns and frequency → period in ticks = (2048 − f) × 4;
   length counters (64 / 256) incl. the extra clock when enabling length in the sequencer's first half; envelope;
@@ -369,13 +369,13 @@ Greys (BGR555): shade 0 `0x7FFF`, 1 `0x56B5`, 2 `0x294A`, 3 `0x0000`.
   DMG wave-RAM read rules; noise LFSR 15 / 7 bit; sequencer steps clocked by the divider's bit 12 falling (bit 13 in
   double speed); DAC off silences and disables; NR50 / NR51 routing; `gb_audio_read` returns 32768 / 59.7275 ≈ 548–549
   samples a frame; silence = 0 after the DC filter settles.
-- [x] **Step 2–4:** fail; implement; pass. Output: each output sample is the average of the mixed signal over its
+- [ ] **Step 2–4:** fail; implement; pass. Output: each output sample is the average of the mixed signal over its
   128 ticks; a one-pole high-pass per side removes the DC offset.
-- [x] **Step 5: ROM tests (time-boxed: stop after the eight easiest pass and two more debugging rounds bring
+- [ ] **Step 5: ROM tests (time-boxed: stop after the eight easiest pass and two more debugging rounds bring
   nothing):** blargg `dmg_sound` single ROMs 01–12 (memtext) — aim ≥ 8 of 12; record each in PROGRESS.md; passing
   ones into `gb_tests.json`. Lock an audio fingerprint of a small own sound ROM (built by
   `tools/build_test_roms.py` from bytes: plays each channel) in `expected_frames.json`.
-- [x] **Step 6:** Commit `gb: sound`.
+- [ ] **Step 6:** Commit `gb: sound`.
 
 ### Task 8: Game Boy Color
 
@@ -387,19 +387,19 @@ Greys (BGR555): shade 0 `0x7FFF`, 1 `0x56B5`, 2 `0x294A`, 3 `0x0000`.
 68/69, OCPS/OCPD 6A/6B, OPRI 6C, SVBK 70, the undocumented 72–75; all of them read 0xFF and ignore writes when the
 game runs as a plain Game Boy.
 
-- [x] **Step 1: Failing tests:** speed switch (KEY1 bit 0 then STOP → bit 7 set, CPU cycles take 2 ticks of screen
+- [ ] **Step 1: Failing tests:** speed switch (KEY1 bit 0 then STOP → bit 7 set, CPU cycles take 2 ticks of screen
   and sound time, the divider and timer run with the CPU; a frame is still 70,224 ticks); WRAM banks 1–7 (0 → 1) at
   0xD000 and in `gb_wram`; VRAM bank; palette RAM with auto-increment, locked in mode 3; general HDMA (the CPU stalls
   for the copy) and per-line HDMA (16 bytes each HBlank of lines 0–143, HDMA5 read-back, cancel by writing bit 7 = 0);
   drawing: tile attributes (palette, bank, X/Y flip, priority), sprites by OAM order (not X), LCDC bit 0 as "master
   priority", 8 BG + 8 OBJ palettes straight to BGR555; a plain Game Boy game still draws in the four greys;
   CGB wave-RAM rules.
-- [x] **Step 2–4:** fail; implement; pass.
-- [x] **Step 5: ROM tests.** cgb-acid2 against its reference picture, exact (CGB 5-bit colour → the reference's
+- [ ] **Step 2–4:** fail; implement; pass.
+- [ ] **Step 5: ROM tests.** cgb-acid2 against its reference picture, exact (CGB 5-bit colour → the reference's
   8-bit as `(c << 3) | (c >> 2)`); lock its hash. mooneye CGB boot tests the suite has (`misc/boot_regs-cgb`,
   `boot_div-cgbABCDE`, `boot_hwio-C` — those that fit a late Game Boy Color; record any that cannot). blargg
   `cgb_sound` 01–12 time-boxed as Task 7 (aim ≥ 8). `interrupt_time` (blargg, CGB) if it is in the package.
-- [x] **Step 6:** Commit `gb: Game Boy Color`.
+- [ ] **Step 6:** Commit `gb: Game Boy Color`.
 
 ### Task 9: The clock and the save file
 
@@ -409,7 +409,7 @@ game runs as a plain Game Boy.
 **Interfaces — produces:** `gb_save_size`, `gb_save_write`, `gb_save_read`, `gb_set_rtc`; MBC3 registers 0x08–0x0C
 and the latch (write 0 then 1 to 0x6000–0x7FFF).
 
-- [x] **Step 1: Failing tests:** clock registers count from `gb_set_rtc` deltas (set t, set t + 61 → seconds 1,
+- [ ] **Step 1: Failing tests:** clock registers count from `gb_set_rtc` deltas (set t, set t + 61 → seconds 1,
   minutes 1); 59 → 0 carries up to the 9-bit day counter and its carry bit (day 511 → 0 sets bit 7 of DH, sticky);
   halt bit (DH bit 6) stops it; latch freezes the read values; writes set the live registers; a `gb_set_rtc` earlier
   than the last (the phone's clock set back) adds nothing; a jump of 10 years is handled without looping per second.
@@ -418,10 +418,10 @@ and the latch (write 0 then 1 to 0x6000–0x7FFF).
   footer; time passed since the footer's timestamp is added at the next `gb_set_rtc`;
   `gb_save_read_any_length` (Review Focus 2): lengths 0, 1, RAM − 1, RAM + 1, RAM + 20, RAM + 47, 3 × RAM, under the
   sanitizer — no error, what fits is copied, the rest of RAM is 0xFF, a partial footer is ignored.
-- [x] **Step 2–4:** fail; implement; pass.
-- [x] **Step 5: ROM tests:** mooneye has no clock tests in the pinned package unless `emulator-only/mbc3` exists —
+- [ ] **Step 2–4:** fail; implement; pass.
+- [ ] **Step 5: ROM tests:** mooneye has no clock tests in the pinned package unless `emulator-only/mbc3` exists —
   check; add what is there. `testrunner --save` with a Game Boy ROM writes the file through `machine_save_write`.
-- [x] **Step 6:** Commit `gb: the cartridge clock and the save file`.
+- [ ] **Step 6:** Commit `gb: the cartridge clock and the save file`.
 
 ### Task 10: Save states and rewind
 
@@ -447,9 +447,9 @@ void rewind_ring_stats(const rewind_ring_t *r, size_t *snapshots, size_t *bytes)
 State format: magic `"GBCS"`, format version, ROM CRC-32, chunk count, then tagged versioned chunks as
 `core/src/state.c` does (one chunk per component struct; the ROM is never in a state; cartridge RAM is).
 
-- [x] **Step 1:** Move the ring first, GBA only: `bash tools/dev.sh test` → all GBA tests pass, including the 96
+- [ ] **Step 1:** Move the ring first, GBA only: `bash tools/dev.sh test` → all GBA tests pass, including the 96
   `state_` / `rewind_` tests and `oldstate_snd_mix` (the GBA state format must not change by one byte).
-- [x] **Step 2: Failing tests:** `gb_state_round_trip` (save → load into a new machine → save: identical bytes; run
+- [ ] **Step 2: Failing tests:** `gb_state_round_trip` (save → load into a new machine → save: identical bytes; run
   both 30 frames: identical frame and audio hashes), for a DMG and a CGB program; `gb_state_refuses`
   (Review Focus 3): wrong magic, a GBA state, another ROM's CRC, truncated at every chunk boundary, one byte short,
   a chunk length changed → `GB_ERR_STATE` and the machine's next frame is identical to an untouched twin's;
@@ -457,25 +457,25 @@ State format: magic `"GBCS"`, format version, ROM CRC-32, chunk count, then tagg
   buffer positions set to 0xFFFF…: load is refused or the values are masked, and 10 frames run clean under the
   sanitizer; `gb_rewind_steps_back` (as `test_rewind.c` does for GBA); `machine_state_kind_mismatch` (a GBA state
   into a Game Boy machine and the reverse → `MACHINE_ERR_STATE`).
-- [x] **Step 3–4:** fail; implement; pass. `bash tools/dev.sh test` → the new `state_gb_*` / `rewind_gb_*` CTest
+- [ ] **Step 3–4:** fail; implement; pass. `bash tools/dev.sh test` → the new `state_gb_*` / `rewind_gb_*` CTest
   variants pass too.
-- [x] **Step 5:** Commit `gb: save states and rewind; the rewind ring shared by both cores`.
+- [ ] **Step 5:** Commit `gb: save states and rewind; the rewind ring shared by both cores`.
 
 ### Task 11: The viewer and the speed bench
 
 **Files:** modify `tools/viewer/main.c`, `tools/bench/main.c`, `tests/bench/scenes.txt`, `tools/dev.sh` (help text).
 
-- [x] **Step 1:** `gbaview` opens a Game Boy ROM through `machine_*` (window sized to the machine's picture; GBA-only
+- [ ] **Step 1:** `gbaview` opens a Game Boy ROM through `machine_*` (window sized to the machine's picture; GBA-only
   keys do nothing). Check: `bash tools/dev.sh view tests/roms/gb/acid/dmg-acid2.gb` shows the picture; a homebrew
   game from Task 12's list plays with sound (Claude's own check: picture + a `--wav` of the same game through the
   test runner sounds right — inspected with `tools/wav_probe.py`).
-- [x] **Step 2:** `gbabench` runs scenes of both consoles through `machine_*` (GBA scenes' hashes unchanged). Add two
+- [ ] **Step 2:** `gbabench` runs scenes of both consoles through `machine_*` (GBA scenes' hashes unchanged). Add two
   Game Boy scenes to `tests/bench/scenes.txt` (the acid tests are too static: use two homebrew games from Task 12, or
   our own test ROM with scrolling and sound if none is fetched yet).
-- [x] **Step 3: The speed gate** (spec §5.7): `bash tools/dev.sh bench --runs 3` → every Game Boy scene ≥ 5× the
+- [ ] **Step 3: The speed gate** (spec §5.7): `bash tools/dev.sh bench --runs 3` → every Game Boy scene ≥ 5× the
   slowest GBA scene's fps in the same run; GBA scenes within the 97 % floors (PROGRESS.md Notes; measure again
   before a miss counts). Record the numbers in PROGRESS.md. If the gate is missed, profile and fix before going on.
-- [x] **Step 4:** Commit `tools: the viewer and the speed bench run both consoles`.
+- [ ] **Step 4:** Commit `tools: the viewer and the speed bench run both consoles`.
 
 ### Task 12: The game check with homebrew games; 17a exit
 

@@ -12,6 +12,7 @@ if(GBA_SANITIZE)
 endif()
 
 add_subdirectory(core)
+add_subdirectory(core_gb) # the Game Boy / Game Boy Color core (milestone 17)
 
 # The speed benchmark: on the PC with the other tools, for Android on its own (tools/dev.sh phone-bench).
 option(GBA_BENCH_ONLY "Build only the core, gbabench and the unit tests (Android executables for the phone)" OFF)
