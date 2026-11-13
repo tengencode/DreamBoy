@@ -226,17 +226,17 @@ script's unit test; create `tests/own_roms/gb_tilt.gb` (built by the script, com
   the reading's distance from level on each axis, so the picture shows where the "ball" went; START writes the
   ball's position to the EEPROM and it is read back at start.
 
-- [ ] **Step 1:** Failing tests: `machine_tilt_reaches_each_core` (`hw_tilt.gba` and a made-up 0x22 ROM:
+- [x] **Step 1:** Failing tests: `machine_tilt_reaches_each_core` (`hw_tilt.gba` and a made-up 0x22 ROM:
   `machine_has_tilt` 1, a set tilt changes what the game reads; `gb_demo.gb`: 0 and no effect);
   key-script test `tilt_names_are_read` (a script line with `TILT_LEFT+A` → bits 10 and the A bit).
-- [ ] **Step 2:** Implement the machine calls, the key names, `set_input` in the test runner (tilt for both
+- [x] **Step 2:** Implement the machine calls, the key names, `set_input` in the test runner (tilt for both
   consoles through `machine_set_tilt`), and the viewer's `apply_extras` through `machine_` for tilt.
-- [ ] **Step 3:** Build `gb_tilt.gb`; run it with a key script (level, `TILT_RIGHT`, `TILT_DOWN`) and look at the
+- [x] **Step 3:** Build `gb_tilt.gb`; run it with a key script (level, `TILT_RIGHT`, `TILT_DOWN`) and look at the
   three pictures (the ball right of centre, then below); approve them as fingerprints (`tools/approve_frame.py`)
   — plain, through a state, through a rewind, as the other `gb_` entries.
-- [ ] **Step 4:** `bash tools/dev.sh unit`, `test`, `games --check`, `bench --check` — all pass, nothing old
+- [x] **Step 4:** `bash tools/dev.sh unit`, `test`, `games --check`, `bench --check` — all pass, nothing old
   changed.
-- [ ] **Step 5:** Commit `machine + tools: tilt for both consoles, key scripts can tilt, our own tilt test ROM`.
+- [x] **Step 5:** Commit `machine + tools: tilt for both consoles, key scripts can tilt, our own tilt test ROM`.
 
 ### Task 6: Tilt in the app
 

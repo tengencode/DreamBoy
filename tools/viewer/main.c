@@ -193,9 +193,8 @@ static void apply_extras(void) {
     int x = ((extra_held & 8) ? 24000 : 0) - ((extra_held & 2) ? 24000 : 0);
     int y = ((extra_held & 4) ? 24000 : 0) - ((extra_held & 1) ? 24000 : 0);
     int turn = ((extra_held & 32) ? 16000 : 0) - ((extra_held & 16) ? 16000 : 0);
-    if (!gba) return;
-    gba_set_tilt(gba, (int16_t)x, (int16_t)y);
-    gba_set_gyro(gba, (int16_t)turn);
+    machine_set_tilt(machine, (int16_t)x, (int16_t)y); /* a tilt cartridge of either console */
+    if (gba) gba_set_gyro(gba, (int16_t)turn);
 }
 
 static void update_title(HWND hwnd) {
