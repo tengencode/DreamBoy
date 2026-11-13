@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <string.h>
 
 #include "gb_internal.h"
 
@@ -13,7 +14,26 @@ void gb_destroy(gb_t *g) {
 }
 
 gb_err_t gb_load_rom(gb_t *g, const uint8_t *rom, size_t size) {
-    return gb_cart_load(g, rom, size);
+    gb_err_t err = gb_cart_load(g, rom, size);
+    if (err == GB_OK) gb_reset(g);
+    return err;
+}
+
+void gb_reset(gb_t *g) {
+    memset(&g->mem, 0, sizeof g->mem);
+    g->mem.wram_bank = 1;
+    g->ticks = 0;
+    g->frame_left = 0;
+    gb_cpu_reset(g);
+}
+
+void gb_run_frame(gb_t *g) {
+    g->frame_left += GB_FRAME_TICKS;
+    while (g->frame_left > 0) gb_cpu_step(g);
+}
+
+const uint8_t *gb_wram(const gb_t *g) {
+    return g->mem.wram;
 }
 
 int gb_is_color(const gb_t *g) {

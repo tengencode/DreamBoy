@@ -159,7 +159,7 @@ this task it only counts ticks), `uint8_t bus_read(gb_t*, uint16_t)`, `void bus_
 (with the tick), `bus_peek` (without). Memory in this task: ROM bank 0/1 flat, WRAM 0xC000–0xDFFF + echo, HRAM, IF
 (0xFF0F, upper 3 bits read 1), IE (0xFFFF); everything else reads 0xFF.
 
-- [ ] **Step 1: Failing tests** — each runs a few opcodes with `gbtu_boot` + `gb_debug_step` and checks registers
+- [x] **Step 1: Failing tests** — each runs a few opcodes with `gbtu_boot` + `gb_debug_step` and checks registers
   with `gb_debug_reg` and ticks with `gb_debug_ticks`:
   - `gb_cpu_ld_*`: 8-bit and 16-bit loads, `LD (nn),SP`, `LDH`, `PUSH/POP` (`POP AF` clears F's low nibble).
   - `gb_cpu_alu_flags`: table-driven — `ADD/ADC/SUB/SBC/AND/XOR/OR/CP`, `INC/DEC`, `ADD HL,rr`, `ADD SP,e`,
@@ -179,11 +179,11 @@ this task it only counts ticks), `uint8_t bus_read(gb_t*, uint16_t)`, `void bus_
     returns with `gb_debug_ticks` advanced by 70,224.
   - `gb_run_frame_always_returns` (Review Focus 5): `DI; HALT` and `DI; STOP` programs — three `gb_run_frame` calls
     return, ticks advance 3 × 70,224.
-- [ ] **Step 2:** run → fail.
-- [ ] **Step 3: Implement** a `switch` interpreter over the opcode (ponytail: no table generator). `gb_run_frame`
+- [x] **Step 2:** run → fail.
+- [x] **Step 3: Implement** a `switch` interpreter over the opcode (ponytail: no table generator). `gb_run_frame`
   runs instructions until the frame's tick budget (70,224, carried over by the overshoot) is used.
-- [ ] **Step 4:** `bash tools/dev.sh unit gb_` → pass.
-- [ ] **Step 5:** Commit `gb: the SM83 CPU`.
+- [x] **Step 4:** `bash tools/dev.sh unit gb_` → pass.
+- [x] **Step 5:** Commit `gb: the SM83 CPU`.
 
 ### Task 3: Timer, serial port, joypad
 
