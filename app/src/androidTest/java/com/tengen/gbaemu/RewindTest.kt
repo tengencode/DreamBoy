@@ -17,7 +17,7 @@ class RewindTest {
     @Test
     fun everyApprovedFingerprintSurvivesARewind() {
         val entries = JSONObject(TestRoms.text("expected_frames.json")).getJSONArray("frames")
-        assertEquals("approved entries", 32, entries.length())
+        assertEquals("approved entries", 38, entries.length())
         val failures = mutableListOf<String>()
         for (i in 0 until entries.length()) {
             val e = entries.getJSONObject(i)

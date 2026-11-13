@@ -16,6 +16,25 @@ object NativeBridge {
      */
     external fun loadRom(rom: ByteBuffer, savePath: String?): Int
 
+    /**
+     * As [loadRom], saying which console the game is for (CONSOLE_*, as the app worked out from the file's bytes
+     * and name); any other value: told from the ROM's own header. ERR_UNSUPPORTED: a Game Boy cartridge chip the
+     * emulator does not have.
+     */
+    external fun loadGame(rom: ByteBuffer, savePath: String?, console: Int): Int
+
+    /** The loaded game's console (CONSOLE_*), or -1 without a game. */
+    external fun console(): Int
+
+    /** The loaded game's picture: 240 x 160, or 160 x 144 for a Game Boy game (240 x 160 without a game). */
+    external fun frameWidth(): Int
+    external fun frameHeight(): Int
+
+    const val CONSOLE_GBA = 0
+    const val CONSOLE_GB = 1
+    const val CONSOLE_GBC = 2
+    const val ERR_UNSUPPORTED = 100
+
     fun loadRom(rom: ByteBuffer): Int = loadRom(rom, null)
 
     /** The BIOS for the next games: a 16 KiB BIOS file's bytes, or null = the built-in one. 0, or ERR_BIOS_SIZE. */
@@ -54,7 +73,7 @@ object NativeBridge {
     /** 0 = loaded; else a gba_err_t (GBA_ERR_STATE = 5: another game, another version, damaged, or not paused). */
     external fun loadState(path: String): Int
 
-    /** The current picture, 240×160 BGR555 (only while paused), or null. */
+    /** The current picture, frameWidth() x frameHeight() BGR555 pixels (only while paused), or null. */
     external fun frameBgr555(): ShortArray?
 
     const val ERR_BIOS_SIZE = 2
@@ -211,7 +230,7 @@ object NativeBridge {
     /** Rewind since start: [snapshots kept, their packed bytes, steps back taken]. */
     external fun debugRewindStats(): LongArray
 
-    /** Draws one 240x160 BGR555 frame offscreen; RGBA pixels (r | g<<8 | b<<16 | a<<24), top row first. */
+    /** Draws one 240x160 (or 160x144: told by the array's size) BGR555 frame offscreen; RGBA pixels (r | g<<8 | b<<16 | a<<24), top row first. */
     external fun debugDrawFrame(pixels: ShortArray, width: Int, height: Int): IntArray?
 
     /** As debugDrawFrame, with a picture size (Settings.SIZE_*) and sharp or smooth pixels. */

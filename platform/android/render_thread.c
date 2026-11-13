@@ -77,7 +77,7 @@ static bool make_surface(render_thread_t *r) {
         r->gl_ready = video_gl_init(&r->gl);
         if (!r->gl_ready) return false;
         bool fresh;
-        video_gl_upload(&r->gl, tb_take(r->tb, &fresh)); /* show the newest frame straight away */
+        video_gl_upload(&r->gl, tb_take(r->tb, &fresh), r->tb->width, r->tb->height); /* the newest frame straight away */
     }
     post_frame(r);
     return true;
@@ -99,11 +99,12 @@ static void on_frame(render_thread_t *r) {
     if (r->quit || r->surface == EGL_NO_SURFACE || !r->gl_ready) return;
     bool fresh;
     const uint16_t *frame = tb_take(r->tb, &fresh);
-    if (fresh) video_gl_upload(&r->gl, frame);
+    if (fresh) video_gl_upload(&r->gl, frame, r->tb->width, r->tb->height);
     EGLint w = 0, h = 0;
     eglQuerySurface(r->egl.display, r->surface, EGL_WIDTH, &w);
     eglQuerySurface(r->egl.display, r->surface, EGL_HEIGHT, &h);
-    picture_look_t look = {w, h, atomic_load(&r->fit_mode), atomic_load(&r->smooth), atomic_load(&r->background)};
+    picture_look_t look = {w, h, atomic_load(&r->fit_mode), r->tb->width, r->tb->height, atomic_load(&r->smooth),
+                           atomic_load(&r->background)};
     if (!picture_needs_draw(&r->drawn, look, fresh)) { /* paused: the screen keeps the last picture */
         post_frame(r);
         return;

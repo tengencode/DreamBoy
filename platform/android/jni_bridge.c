@@ -41,8 +41,8 @@ static void stop_session(void) {
     if (jni_ra()) ra_unload_game(jni_ra()); /* after the thread has stopped: no more frames */
 }
 
-JNIEXPORT jint JNICALL JNI_FN(loadRom)(JNIEnv *env, jobject self, jobject rom, jstring save_path) {
-    (void)self;
+/* loadRom / loadGame: console is EMU_AUTO or EMU_CONSOLE_* (what the app worked out from the file's name too). */
+static jint load_game(JNIEnv *env, jobject rom, jstring save_path, jint console) {
     stop_session(); /* writes the previous game's save */
     const uint8_t *data = (*env)->GetDirectBufferAddress(env, rom);
     jlong size = (*env)->GetDirectBufferCapacity(env, rom);
@@ -57,11 +57,45 @@ JNIEXPORT jint JNICALL JNI_FN(loadRom)(JNIEnv *env, jobject self, jobject rom, j
     opt.sound = s_sound;
     opt.sound_bursts = s_sound_bursts;
     opt.ra = jni_ra();
+    opt.console = console >= EMU_CONSOLE_GBA && console <= EMU_CONSOLE_GBC ? console : EMU_AUTO;
     s_next_save_type = s_next_clock = EMU_AUTO;
     gba_err_t err;
     s_emu = emu_create(data, (size_t)size, path, &opt, &err);
     if (path) (*env)->ReleaseStringUTFChars(env, save_path, path);
     return err;
+}
+
+JNIEXPORT jint JNICALL JNI_FN(loadRom)(JNIEnv *env, jobject self, jobject rom, jstring save_path) {
+    (void)self;
+    return load_game(env, rom, save_path, EMU_AUTO);
+}
+
+JNIEXPORT jint JNICALL JNI_FN(loadGame)(JNIEnv *env, jobject self, jobject rom, jstring save_path, jint console) {
+    (void)self;
+    return load_game(env, rom, save_path, console);
+}
+
+/* The loaded game's console (EMU_CONSOLE_*; -1 without a game) and its picture's size (240x160 without one). */
+JNIEXPORT jint JNICALL JNI_FN(console)(JNIEnv *env, jobject self) {
+    (void)env;
+    (void)self;
+    return s_emu ? emu_console(s_emu) : -1;
+}
+
+JNIEXPORT jint JNICALL JNI_FN(frameWidth)(JNIEnv *env, jobject self) {
+    (void)env;
+    (void)self;
+    int w = 240, h = 160;
+    if (s_emu) emu_frame_size(s_emu, &w, &h);
+    return w;
+}
+
+JNIEXPORT jint JNICALL JNI_FN(frameHeight)(JNIEnv *env, jobject self) {
+    (void)env;
+    (void)self;
+    int w = 240, h = 160;
+    if (s_emu) emu_frame_size(s_emu, &w, &h);
+    return h;
 }
 
 /* The BIOS for the next games: 16 KiB, or null for the built-in one. GBA_ERR_BIOS_SIZE (nothing changes) otherwise. */
@@ -202,8 +236,10 @@ JNIEXPORT jshortArray JNICALL JNI_FN(frameBgr555)(JNIEnv *env, jobject self) {
     (void)self;
     static uint16_t px[240 * 160];
     if (!s_emu || !emu_frame(s_emu, px)) return NULL;
-    jshortArray out = (*env)->NewShortArray(env, 240 * 160);
-    (*env)->SetShortArrayRegion(env, out, 0, 240 * 160, (const jshort *)px);
+    int w, h;
+    emu_frame_size(s_emu, &w, &h);
+    jshortArray out = (*env)->NewShortArray(env, w * h);
+    (*env)->SetShortArrayRegion(env, out, 0, w * h, (const jshort *)px);
     return out;
 }
 
@@ -388,9 +424,10 @@ JNIEXPORT jint JNICALL JNI_FN(debugKeysSeen)(JNIEnv *env, jobject self) {
 static jstring run_headless(JNIEnv *env, jobject rom, jint frames, jint state_at, jint rewind_at, jint rewind_steps) {
     const uint8_t *data = (*env)->GetDirectBufferAddress(env, rom);
     jlong size = (*env)->GetDirectBufferCapacity(env, rom);
-    gba_t *g = gba_create(NULL);
-    if (!g || !data || gba_load_rom(g, data, (size_t)size) != GBA_OK) {
-        gba_destroy(g);
+    machine_kind_t kind = data && size > 0 ? machine_detect(data, (size_t)size, NULL) : MACHINE_NONE;
+    machine_t *g = machine_create(kind == MACHINE_NONE ? MACHINE_GBA : kind); /* no header: a GBA test ROM */
+    if (!g || !data || machine_load_rom(g, data, (size_t)size) != MACHINE_OK) {
+        machine_destroy(g);
         return NULL;
     }
     uint64_t audio_hash = AUDIO_HASH_INIT;
@@ -398,9 +435,9 @@ static jstring run_headless(JNIEnv *env, jobject rom, jint frames, jint state_at
     uint64_t *hash_before = NULL; /* the audio hash before each frame's sound was read */
     if (rewind_at >= 0) {
         hash_before = malloc(sizeof(uint64_t) * (size_t)frames);
-        if (!hash_before || gba_rewind_configure(g, 64u * 1024 * 1024, REWIND_EVERY) != GBA_OK) {
+        if (!hash_before || machine_rewind_configure(g, 64u * 1024 * 1024, REWIND_EVERY) != MACHINE_OK) {
             free(hash_before);
-            gba_destroy(g);
+            machine_destroy(g);
             return NULL;
         }
     }
@@ -408,9 +445,9 @@ static jstring run_headless(JNIEnv *env, jobject rom, jint frames, jint state_at
     for (jint f = 0; f < frames; f++) {
         if (f == rewind_at && !rewound) { /* as testrunner --rewind-at */
             for (jint s = 0; s < rewind_steps; s++) {
-                if (!gba_rewind_step_back(g)) {
+                if (!machine_rewind_step_back(g)) {
                     free(hash_before);
-                    gba_destroy(g);
+                    machine_destroy(g);
                     return NULL;
                 }
             }
@@ -421,28 +458,28 @@ static jstring run_headless(JNIEnv *env, jobject rom, jint frames, jint state_at
         }
         if (hash_before) hash_before[f] = audio_hash;
         if (f == state_at) { /* carry on in a brand-new machine loaded from a state */
-            size_t n = gba_state_size(g);
+            size_t n = machine_state_size(g);
             uint8_t *state = malloc(n);
-            gba_t *fresh = gba_create(NULL);
-            bool ok = state && fresh && gba_state_save(g, state, n) == n &&
-                      gba_load_rom(fresh, data, (size_t)size) == GBA_OK && gba_state_load(fresh, state, n) == GBA_OK;
+            machine_t *fresh = machine_create(machine_kind(g));
+            bool ok = state && fresh && machine_state_save(g, state, n) == n &&
+                      machine_load_rom(fresh, data, (size_t)size) == MACHINE_OK && machine_state_load(fresh, state, n) == MACHINE_OK;
             free(state);
-            gba_destroy(g);
+            machine_destroy(g);
             g = fresh;
             if (!ok) {
-                gba_destroy(g);
+                machine_destroy(g);
                 return NULL;
             }
         }
-        gba_set_keys(g, 0);
-        gba_run_frame(g);
+        machine_set_keys(g, 0);
+        machine_run_frame(g);
         size_t n;
-        while ((n = gba_audio_read(g, buf, 1024)) > 0) audio_hash = audio_hash_update(audio_hash, buf, n * 2);
+        while ((n = machine_audio_read(g, buf, 1024)) > 0) audio_hash = audio_hash_update(audio_hash, buf, n * 2);
     }
     free(hash_before);
     char out[40];
-    snprintf(out, sizeof out, "%016" PRIx64 " %016" PRIx64, frame_hash(gba_framebuffer(g), 240 * 160), audio_hash);
-    gba_destroy(g);
+    snprintf(out, sizeof out, "%016" PRIx64 " %016" PRIx64, frame_hash(machine_framebuffer(g), (size_t)machine_width(g) * (size_t)machine_height(g)), audio_hash);
+    machine_destroy(g);
     return (*env)->NewStringUTF(env, out);
 }
 
@@ -468,10 +505,12 @@ JNIEXPORT jstring JNICALL JNI_FN(debugRunFramesViaRewind)(JNIEnv *env, jobject s
 JNIEXPORT jintArray JNICALL JNI_FN(debugDrawFrameOn)(JNIEnv *env, jobject self, jshortArray pixels, jint width,
                                                      jint height, jint fit_mode, jboolean smooth, jint background) {
     (void)self;
-    if ((*env)->GetArrayLength(env, pixels) != 240 * 160 || width <= 0 || height <= 0) return NULL;
+    jsize count = (*env)->GetArrayLength(env, pixels); /* a Game Boy Advance frame or a Game Boy one */
+    int fw = count == 160 * 144 ? 160 : 240, fh = count == 160 * 144 ? 144 : 160;
+    if (count != fw * fh || width <= 0 || height <= 0) return NULL;
     jshort *px = (*env)->GetShortArrayElements(env, pixels, NULL);
     uint32_t *out = malloc((size_t)width * (size_t)height * 4);
-    bool ok = out && gl_readback((const uint16_t *)px, width, height, fit_mode, smooth == JNI_TRUE, (uint32_t)background, out);
+    bool ok = out && gl_readback((const uint16_t *)px, fw, fh, width, height, fit_mode, smooth == JNI_TRUE, (uint32_t)background, out);
     (*env)->ReleaseShortArrayElements(env, pixels, px, JNI_ABORT);
     jintArray result = NULL;
     if (ok) {

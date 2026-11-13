@@ -75,28 +75,28 @@ kept as they are, plus `EMU_ERR_UNSUPPORTED = 100` (a cartridge chip the Game Bo
 `external fun frameHeight(): Int` (of the loaded game; 240 / 160 with none); `frame()` returns `width * height`
 shorts; `ERR_UNSUPPORTED = 100`.
 
-- [ ] **Step 1: Failing PC unit tests** (`test_platform.c`): `fit_rect` for a 160×144 frame (10:9: a 1080×2400
+- [x] **Step 1: Failing PC unit tests** (`test_platform.c`): `fit_rect` for a 160×144 frame (10:9: a 1080×2400
   surface → 1080×972 centred; a 2400×1080 surface → 1200×1080), whole-number scaling by 160×144, the GBA cases
   unchanged with (240, 160); the triple buffer carries its size.
-- [ ] **Step 2:** Implement the picture path (triple buffer, `video_gl` with a `u_size` uniform instead of the
+- [x] **Step 2:** Implement the picture path (triple buffer, `video_gl` with a `u_size` uniform instead of the
   constants and a 240×160 texture used partly, `fit_rect`, readback, render thread). `dev.sh unit` passes.
-- [ ] **Step 3:** `emu_thread.c` / `jni_bridge.c` on `machine_*`: generic calls through the machine; BIOS, forced
+- [x] **Step 3:** `emu_thread.c` / `jni_bridge.c` on `machine_*`: generic calls through the machine; BIOS, forced
   save type, cartridge hardware, sensors, rumble, cheats, achievement memory and `emu_debug_peek32` only when
   `machine_gba()` is not NULL (for a Game Boy game: cheats → `GBA_ERR_CHEAT`, sensors ignored, rumble false, **no
   RetroAchievements: `opt.ra` is dropped**, so no game is identified and no hardcore limit applies); the save file
   through `machine_save_size / write / read` (a Game Boy save of any length loads; `EMU_SAVE_EMPTY` when the
   cartridge has a save and there is no file); the clock from the phone once a second for both; the JNI calls above.
   `platform/android/CMakeLists.txt` adds `core_gb` and `machine`.
-- [ ] **Step 4: Own test ROMs.** `tools/build_test_roms.py` builds `tests/own_roms/gb_demo.gb` (plain Game Boy,
+- [x] **Step 4: Own test ROMs.** `tools/build_test_roms.py` builds `tests/own_roms/gb_demo.gb` (plain Game Boy,
   MBC1 + RAM + battery) and `gbc_demo.gbc` (colour flag, MBC5 + RAM + battery) from bytes: a scrolling background, a
   square-wave tone, and a counter written to cartridge RAM every second. Lock their frame + audio fingerprints in
   `tests/expected_frames.json` (so CTest runs them plain, through a state and through a rewind).
-- [ ] **Step 5: Failing on-device tests** (`app/src/androidTest`, next to the existing session tests): each demo ROM
+- [x] **Step 5: Failing on-device tests** (`app/src/androidTest`, next to the existing session tests): each demo ROM
   loads (`console()` 1 / 2, frame 160×144), runs at speed with sound, reproduces its PC fingerprint, saves to its
   save file, round-trips a save state, rewinds; a GBA ROM after a Game Boy ROM gives a 240×160 frame again (Review
   Focus 4); a GBA state loaded into the Game Boy demo is refused and the game goes on (Review Focus 1); a ROM with
   cartridge type 0x22 returns `ERR_UNSUPPORTED`.
-- [ ] **Step 6:** `dev.sh androidtest` and `jvmtest` pass (the existing 93 + the new ones). Commit
+- [x] **Step 6:** `dev.sh androidtest` and `jvmtest` pass (the existing 93 + the new ones). Commit
   `android: the native layer runs both consoles`.
 
 ### Task 2: Reading game files

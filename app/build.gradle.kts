@@ -85,7 +85,9 @@ kotlin {
 
 val copyTestRoms by tasks.registering(Copy::class) {
     from(rootProject.file("tests")) {
-        include("expected_frames.json", "roms/jsmolka/*.gba", "roms/tonc/*.gba", "own_roms/*.gba")
+        include("expected_frames.json", "roms/jsmolka/*.gba", "roms/tonc/*.gba", "own_roms/*.gba",
+            "own_roms/*.gb", "own_roms/*.gbc", "roms/gb/acid/*.gb", "roms/gb/acid/*.gbc",
+            "roms/gb/blargg/halt_bug.gb", "roms/gb/blargg/interrupt_time/*.gb")
     }
     into(layout.buildDirectory.dir("generated/testRoms"))
 }

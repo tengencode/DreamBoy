@@ -111,14 +111,14 @@ static int level(const gb_apu_t *a, int ch) {
 }
 
 static void put_sample(gb_t *g, int16_t left, int16_t right) {
-    if (g->audio_count == GB_AUDIO_FRAMES) { /* nobody is reading: the oldest goes */
-        g->audio_read = (g->audio_read + 1) % GB_AUDIO_FRAMES;
-        g->audio_count--;
+    if (g->audio.count == GB_AUDIO_FRAMES) { /* nobody is reading: the oldest goes */
+        g->audio.read = (g->audio.read + 1) % GB_AUDIO_FRAMES;
+        g->audio.count--;
     }
-    uint32_t at = (g->audio_read + g->audio_count) % GB_AUDIO_FRAMES;
-    g->audio[at * 2] = left;
-    g->audio[at * 2 + 1] = right;
-    g->audio_count++;
+    uint32_t at = (g->audio.read + g->audio.count) % GB_AUDIO_FRAMES;
+    g->audio.buf[at * 2] = left;
+    g->audio.buf[at * 2 + 1] = right;
+    g->audio.count++;
 }
 
 /* One output sample from the sum over 128 ticks, through the filter that takes out the steady (DC) part. */
@@ -199,14 +199,14 @@ void gb_apu_sync(gb_t *g) {
 
 size_t gb_audio_read(gb_t *g, int16_t *out, size_t max_frames) {
     gb_apu_sync(g);
-    size_t n = g->audio_count < max_frames ? g->audio_count : max_frames;
+    size_t n = g->audio.count < max_frames ? g->audio.count : max_frames;
     for (size_t i = 0; i < n; i++) {
-        uint32_t at = (g->audio_read + i) % GB_AUDIO_FRAMES;
-        out[i * 2] = g->audio[at * 2];
-        out[i * 2 + 1] = g->audio[at * 2 + 1];
+        uint32_t at = (g->audio.read + i) % GB_AUDIO_FRAMES;
+        out[i * 2] = g->audio.buf[at * 2];
+        out[i * 2 + 1] = g->audio.buf[at * 2 + 1];
     }
-    g->audio_read = (uint32_t)((g->audio_read + n) % GB_AUDIO_FRAMES);
-    g->audio_count -= (uint32_t)n;
+    g->audio.read = (uint32_t)((g->audio.read + n) % GB_AUDIO_FRAMES);
+    g->audio.count -= (uint32_t)n;
     return n;
 }
 
@@ -362,5 +362,5 @@ void gb_apu_reset(gb_t *g) {
     a->ch[0].env_timer = 3;
     for (int i = 1; i < 4; i++) a->ch[i].length = (uint16_t)max_length(i);
     a->lfsr = 0x7FFF;
-    g->audio_read = g->audio_count = 0;
+    g->audio.read = g->audio.count = 0;
 }

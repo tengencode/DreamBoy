@@ -112,6 +112,13 @@ typedef struct {
     int32_t cap_left, cap_right; /* the output filter */
 } gb_apu_t;
 
+/* The samples made and not yet read: a ring. Part of a save state, so a rewind snapshot (taken as a frame ends,
+ * before its sound is read) gives that frame's sound again. */
+typedef struct {
+    int16_t buf[GB_AUDIO_FRAMES * 2];
+    uint32_t read, count;
+} gb_audio_t;
+
 /* Game Boy Color only. */
 typedef struct {
     uint8_t double_speed, speed_armed;
@@ -161,8 +168,7 @@ struct gb {
     gb_ppu_t ppu;
     gb_apu_t apu;
     gb_cgb_t cgb;
-    int16_t audio[GB_AUDIO_FRAMES * 2]; /* samples not yet read: a ring */
-    uint32_t audio_read, audio_count;
+    gb_audio_t audio;
     uint16_t frame[GB_WIDTH * GB_HEIGHT]; /* the picture, BGR555 (frame and back: one save-state chunk) */
     uint16_t back[GB_WIDTH * GB_HEIGHT]; /* the picture being drawn; shown (copied to frame) when VBlank starts */
     struct rewind_ring *rewind; /* rewind history (core_common), NULL while off; in no state chunk */

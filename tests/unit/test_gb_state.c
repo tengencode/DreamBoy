@@ -207,7 +207,8 @@ TEST(gb_rewind_steps_back) {
     CHECK_EQ(gb_rewind_configure(g, 4u * 1024 * 1024, 4), GB_OK);
     uint64_t at8 = 0;
     run(g, 8);
-    run(twin, 8);
+    run(twin, 7);
+    gb_run_frame(twin); /* a snapshot is taken as a frame ends, its sound not read yet: so is this state */
     size_t size = gb_state_size(twin);
     uint8_t *want = malloc(size), *got = malloc(size);
     gb_state_save(twin, want, size); /* the machine after 8 frames */

@@ -5,7 +5,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#define TB_WIDTH 240
+#define TB_WIDTH 240 /* the biggest frame (a Game Boy Advance's); a Game Boy's 160x144 uses the start of a slot */
 #define TB_HEIGHT 160
 #define TB_PIXELS (TB_WIDTH * TB_HEIGHT)
 
@@ -17,11 +17,12 @@ typedef struct {
     atomic_uint middle; /* slot index, | TB_FRESH when it holds a frame the consumer has not taken */
     unsigned back;      /* producer's slot */
     unsigned front;     /* consumer's slot */
+    int width, height;  /* of every frame: width * height pixels, row after row, from the slot's start */
 } triple_buffer_t;
 
 #define TB_FRESH 4u
 
-void tb_init(triple_buffer_t *tb);
+void tb_init(triple_buffer_t *tb, int width, int height);
 uint16_t *tb_back(triple_buffer_t *tb); /* producer: the slot to fill */
 void tb_publish(triple_buffer_t *tb);   /* producer: hand the filled slot over as the newest frame */
 /* Consumer: the newest complete frame; *fresh tells whether it is new since the last call. */

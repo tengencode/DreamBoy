@@ -8,8 +8,8 @@
  * changing.
  *
  * A state may come from a file someone else made, so the values that pick a place in memory or keep a loop going
- * are checked too (values_ok), and what can be worked out again (where the cartridge's banks are) is. The ROM, the
- * sound not yet read and the rewind history are never in a state. */
+ * are checked too (values_ok), and what can be worked out again (where the cartridge's banks are) is. The ROM and the
+ * rewind history is never in a state. */
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
@@ -37,7 +37,8 @@ typedef struct {
     size_t size;   /* 0: as long as the cartridge RAM (the chunk points to it), or misc_t */
 } chunk_t;
 
-enum { C_CPU, C_MEM, C_TIMER, C_SERIAL, C_JOYPAD, C_CART, C_PPU, C_APU, C_CGB, C_PICTURE, C_RAM, C_MISC, CHUNK_COUNT };
+enum { C_CPU, C_MEM, C_TIMER, C_SERIAL, C_JOYPAD, C_CART, C_PPU, C_APU, C_CGB, C_PICTURE, C_AUDIO, C_RAM, C_MISC,
+       CHUNK_COUNT };
 
 static const chunk_t chunks[CHUNK_COUNT] = {
     [C_CPU] = {{'C', 'P', 'U', ' '}, 1, offsetof(struct gb, cpu), sizeof(gb_cpu_t)},
@@ -51,6 +52,7 @@ static const chunk_t chunks[CHUNK_COUNT] = {
     [C_CGB] = {{'C', 'G', 'B', ' '}, 1, offsetof(struct gb, cgb), sizeof(gb_cgb_t)},
     /* both pictures: the one shown and the one being drawn (they are next to each other in struct gb) */
     [C_PICTURE] = {{'P', 'I', 'C', 'T'}, 1, offsetof(struct gb, frame), 2 * sizeof(uint16_t) * GB_WIDTH * GB_HEIGHT},
+    [C_AUDIO] = {{'S', 'N', 'D', ' '}, 1, offsetof(struct gb, audio), sizeof(gb_audio_t)},
     [C_RAM] = {{'C', 'R', 'A', 'M'}, 1, 0, 0},
     [C_MISC] = {{'M', 'I', 'S', 'C'}, 1, 0, sizeof(misc_t)},
 };
@@ -107,6 +109,8 @@ static bool values_ok(const uint8_t *const data[]) {
         int32_t limit = i < 2 ? MAX_SUM : MAX_SUM * 256;
         if (v < -limit || v > limit) return false;
     }
+    if (FIELD(data[C_AUDIO], gb_audio_t, read) >= GB_AUDIO_FRAMES || FIELD(data[C_AUDIO], gb_audio_t, count) > GB_AUDIO_FRAMES)
+        return false;
     misc_t misc;
     memcpy(&misc, data[C_MISC], sizeof misc);
     return misc.frame_left <= 0 && misc.frame_left > -4096; /* between two frames */

@@ -24,17 +24,18 @@ static const char *FRAGMENT_SRC =
     "precision highp usampler2D;\n"
     "uniform usampler2D u_frame;\n"
     "uniform int u_smooth;\n"
+    "uniform ivec2 u_size;\n" /* the frame's size: it sits in the texture's top-left corner */
     "in vec2 v_uv;\n"
     "out vec4 o_color;\n"
     "vec3 texel(ivec2 t) {\n"
-    "    uint p = texelFetch(u_frame, clamp(t, ivec2(0), ivec2(239, 159)), 0).r;\n"
+    "    uint p = texelFetch(u_frame, clamp(t, ivec2(0), u_size - 1), 0).r;\n"
     "    uvec3 c = uvec3(p & 31u, (p >> 5) & 31u, (p >> 10) & 31u);\n"
     "    return vec3((c << 3) | (c >> 2)) / 255.0;\n"
     "}\n"
     "void main() {\n"
-    "    vec2 s = vec2(v_uv.x * 240.0, (1.0 - v_uv.y) * 160.0);\n"
+    "    vec2 s = vec2(v_uv.x, 1.0 - v_uv.y) * vec2(u_size);\n"
     "    if (u_smooth == 0) {\n"
-    "        o_color = vec4(texel(ivec2(min(s.x, 239.0), min(s.y, 159.0))), 1.0);\n"
+    "        o_color = vec4(texel(ivec2(s)), 1.0);\n"
     "        return;\n"
     "    }\n"
     "    vec2 p = s - 0.5;\n"
@@ -79,6 +80,9 @@ bool video_gl_init(video_gl_t *v) {
     glUseProgram(v->program);
     glUniform1i(glGetUniformLocation(v->program, "u_frame"), 0);
     v->smooth_loc = glGetUniformLocation(v->program, "u_smooth");
+    v->size_loc = glGetUniformLocation(v->program, "u_size");
+    v->frame_w = 240;
+    v->frame_h = 160;
 
     glGenTextures(1, &v->texture);
     glBindTexture(GL_TEXTURE_2D, v->texture);
@@ -89,10 +93,13 @@ bool video_gl_init(video_gl_t *v) {
     return glGetError() == GL_NO_ERROR;
 }
 
-void video_gl_upload(video_gl_t *v, const uint16_t *pixels) {
+void video_gl_upload(video_gl_t *v, const uint16_t *pixels, int frame_w, int frame_h) {
+    if (frame_w < 1 || frame_w > 240 || frame_h < 1 || frame_h > 160) return;
+    v->frame_w = frame_w;
+    v->frame_h = frame_h;
     glBindTexture(GL_TEXTURE_2D, v->texture);
     glPixelStorei(GL_UNPACK_ALIGNMENT, 2);
-    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 240, 160, GL_RED_INTEGER, GL_UNSIGNED_SHORT, pixels);
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, frame_w, frame_h, GL_RED_INTEGER, GL_UNSIGNED_SHORT, pixels);
 }
 
 void video_gl_draw(video_gl_t *v, int width, int height, int fit_mode, bool smooth, uint32_t background) {
@@ -100,11 +107,12 @@ void video_gl_draw(video_gl_t *v, int width, int height, int fit_mode, bool smoo
     glClearColor((float)((background >> 16) & 0xFF) / 255.0f, (float)((background >> 8) & 0xFF) / 255.0f,
                  (float)(background & 0xFF) / 255.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
-    fit_rect_t r = fit_rect_mode(width, height, (fit_mode_t)fit_mode);
+    fit_rect_t r = fit_rect_mode(width, height, v->frame_w, v->frame_h, (fit_mode_t)fit_mode);
     if (r.w == 0) return;
     glViewport(r.x, r.y, r.w, r.h);
     glUseProgram(v->program);
     glUniform1i(v->smooth_loc, smooth ? 1 : 0);
+    glUniform2i(v->size_loc, v->frame_w, v->frame_h);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, v->texture);
     glBindVertexArray(v->vao);

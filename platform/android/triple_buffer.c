@@ -2,8 +2,10 @@
 
 #include <string.h>
 
-void tb_init(triple_buffer_t *tb) {
+void tb_init(triple_buffer_t *tb, int width, int height) {
     memset(tb->slot, 0, sizeof tb->slot);
+    tb->width = width;
+    tb->height = height;
     tb->back = 0;
     atomic_init(&tb->middle, 1u);
     tb->front = 2;

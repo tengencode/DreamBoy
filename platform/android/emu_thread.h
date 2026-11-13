@@ -6,6 +6,7 @@
 #include <stdint.h>
 
 #include "gba.h"
+#include "machine.h"
 #include "ra.h"
 #include "triple_buffer.h"
 
@@ -31,9 +32,15 @@ typedef struct {
     size_t rewind_budget; /* bytes for rewind snapshots; 0 = rewind off */
     bool sound;           /* false: no stream, the clock paces the game */
     int sound_bursts;     /* AAudio's buffer in bursts: 2, 4 or 8 */
-    ra_t *ra; /* RetroAchievements (14): checked after every frame and its hardcore limits obeyed; NULL = none */
+    ra_t *ra; /* RetroAchievements (14): checked after every frame and its hardcore limits obeyed; NULL = none.
+                 Dropped for a Game Boy game: no achievements for those yet (17b) */
+    int console; /* EMU_AUTO: told from the ROM's own header (a Game Boy Advance when it has none), or
+                    EMU_CONSOLE_* when the caller knows better (from the file's name) */
 } emu_options_t;
 #define EMU_AUTO (-1)
+enum { EMU_CONSOLE_GBA = 0, EMU_CONSOLE_GB = 1, EMU_CONSOLE_GBC = 2 };
+/* emu_create's errors are gba_err_t numbers, plus this one: a Game Boy cartridge chip the core does not have. */
+#define EMU_ERR_UNSUPPORTED ((gba_err_t)100)
 #define EMU_REWIND_DEFAULT (64u * 1024 * 1024) /* ~2.5 minutes of snapshots in a large game (design: 5b) */
 emu_options_t emu_options_default(void);
 
@@ -58,6 +65,8 @@ void emu_set_fast_forward(emu_t *e, int speed);
  * rewind budget allows (~2.5 minutes in a large game with the default). */
 void emu_set_rewinding(emu_t *e, bool on);
 triple_buffer_t *emu_frames(emu_t *e);
+int emu_console(const emu_t *e); /* EMU_CONSOLE_*: what the loaded game runs as */
+void emu_frame_size(const emu_t *e, int *width, int *height); /* 240x160, or 160x144 */
 uint64_t emu_frame_count(const emu_t *e);
 void emu_destroy(emu_t *e); /* stops the thread (if started), writes the save, frees everything */
 
@@ -85,7 +94,7 @@ void emu_ra_idle(emu_t *e);
 /* The switched-on cheats (gba_cheats_set) — only while paused or not started; GBA_ERR_CHEAT when running or when
  * a text does not read (then no cheats are on). */
 gba_err_t emu_cheats_set(emu_t *e, const char *const *texts, const gba_cheat_type_t *types, size_t count);
-/* The current 240×160 BGR555 picture (for a state's thumbnail); same rule: only while paused. */
+/* The current BGR555 picture, emu_frame_size pixels (for a state's thumbnail); same rule: only while paused. */
 bool emu_frame(emu_t *e, uint16_t out[240 * 160]);
 
 /* Sound on/off and its delay (any thread): the emulation thread opens, closes or reopens the stream between
