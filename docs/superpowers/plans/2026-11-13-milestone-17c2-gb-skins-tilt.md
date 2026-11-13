@@ -137,14 +137,14 @@ rule (the GBA choice).
 - The Skin page's help line: "Import skins made for the Delta emulator (.deltaskin files) for Game Boy, Game Boy
   Color or GBA. Press and hold an imported skin to remove it."
 
-- [ ] **Step 1:** Failing on-device tests in `ScreensTest`: `importedTilesCarryTheirConsolesMark` (one "gba" and
+- [x] **Step 1:** Failing on-device tests in `ScreensTest`: `importedTilesCarryTheirConsolesMark` (one "gba" and
   one "gb" tile → nodes "GBA" and "GB"); `twoImportedSkinsCanBeChosenAtOnce` (both chosen: both tiles selected;
   tapping the "gb" tile reports `(number, "gb")`); `eachEditLayoutRowFollowsItsOwnFamilysSkin` (Game Boy skin with
   an upright face chosen, no GBA one: "Edit Game Boy upright layout" disabled, the three others enabled);
   `theSkinRowNamesBothFamilies`. `UiTextTest`: the new strings pass.
-- [ ] **Step 2:** Implement with impeccable. `bash tools/dev.sh jvmtest`, `androidtest`.
-- [ ] **Step 3:** Look at it on the phone emulator, light and dark (screenshots in `.impeccable/review/17c2-*`).
-- [ ] **Step 4:** Commit `app: the Skin page marks each imported skin's console and shows both choices`.
+- [x] **Step 2:** Implement with impeccable. `bash tools/dev.sh jvmtest`, `androidtest`.
+- [x] **Step 3:** Look at it on the phone emulator, light and dark (screenshots in `.impeccable/review/17c2-*`).
+- [x] **Step 4:** Commit `app: the Skin page marks each imported skin's console and shows both choices`.
 
 ### Task 4: The tilt chip in the core
 
