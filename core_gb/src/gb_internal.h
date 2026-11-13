@@ -46,11 +46,33 @@ typedef struct {
     uint8_t wram_bank; /* the bank at 0xD000: 1-7 */
 } gb_mem_t;
 
+typedef struct {
+    uint16_t div;      /* clock ticks, wrapping; DIV is the high byte */
+    uint8_t tima, tma, tac;
+    uint8_t overflow;  /* TIMA wrapped in the last cycle: TMA is loaded and the interrupt asked for in the next */
+    uint8_t reloading; /* this is that next cycle */
+} gb_timer_t;
+
+typedef struct {
+    uint8_t sb, sc;
+    uint8_t bits_left; /* of a running transfer with the internal clock */
+} gb_serial_t;
+
+typedef struct {
+    uint8_t select; /* P1 bits 4-5 as written */
+    uint8_t keys;   /* GB_KEY_* held */
+} gb_joypad_t;
+
 struct gb {
     cart_info_t info;
     uint8_t *cart_ram; /* info.ram_size bytes */
     gb_cpu_t cpu;
     gb_mem_t mem;
+    gb_timer_t timer;
+    gb_serial_t serial;
+    gb_joypad_t joypad;
+    char serial_out[4096]; /* for tests: every byte sent on the serial port */
+    uint32_t serial_len;
     uint64_t ticks;     /* clock ticks since reset */
     int32_t frame_left; /* ticks left in the frame gb_run_frame is running (<= 0: done; the overshoot carries over) */
 };
@@ -63,6 +85,15 @@ void gb_bus_write(gb_t *g, uint16_t addr, uint8_t value);
 uint8_t gb_bus_peek(const gb_t *g, uint16_t addr); /* the value, no time passing */
 void gb_cpu_reset(gb_t *g);
 void gb_cpu_step(gb_t *g); /* one instruction, interrupt entry or idle cycle */
+
+void gb_timer_tick(gb_t *g);
+uint8_t gb_timer_read(const gb_t *g, uint16_t addr); /* 0xFF04-0xFF07 */
+void gb_timer_write(gb_t *g, uint16_t addr, uint8_t value);
+void gb_serial_clock(gb_t *g); /* a falling edge of the serial clock */
+uint8_t gb_serial_read(const gb_t *g, uint16_t addr); /* 0xFF01-0xFF02 */
+void gb_serial_write(gb_t *g, uint16_t addr, uint8_t value);
+uint8_t gb_joypad_read(const gb_t *g);
+void gb_joypad_write(gb_t *g, uint8_t value);
 
 gb_err_t gb_cart_load(gb_t *g, const uint8_t *rom, size_t size);
 void gb_cart_free(gb_t *g);

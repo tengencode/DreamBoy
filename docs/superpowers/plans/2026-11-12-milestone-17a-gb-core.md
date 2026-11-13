@@ -193,7 +193,7 @@ modify `bus.c`, `gb_debug.c`.
 **Interfaces — produces:** `timer_tick(gb_t*)` etc. called from `gb_tick`; registers DIV 0xFF04, TIMA 05, TMA 06,
 TAC 07 (upper 5 bits read 1), SB 01, SC 02, P1 00; `gb_set_keys`; `gb_debug_serial`.
 
-- [ ] **Step 1: Failing tests**
+- [x] **Step 1: Failing tests**
   - `gb_div_counts`: DIV = high byte of a 16-bit counter that advances with every tick; writing any value resets it.
   - `gb_tima_rates`: TAC 0b100/101/110/111 → TIMA +1 every 1024 / 16 / 64 / 256 ticks.
   - `gb_tima_overflow_delay`: on overflow TIMA reads 0 for 4 ticks, then TMA is loaded and IF bit 2 set; a write to
@@ -204,8 +204,8 @@ TAC 07 (upper 5 bits read 1), SB 01, SC 02, P1 00; `gb_set_keys`; `gb_debug_seri
     the byte written to SB appears in `gb_debug_serial`; SC = 0x80 (external clock) never finishes.
   - `gb_joypad_matrix`: P1 select lines (bit 4 = directions, bit 5 = buttons), pressed reads 0, bits 6–7 read 1;
     pressing a selected key sets IF bit 4.
-- [ ] **Step 2–4:** fail, implement (the timer as a falling-edge detector on `counter bit & enable`), pass.
-- [ ] **Step 5:** Commit `gb: timer, serial port, joypad`.
+- [x] **Step 2–4:** fail, implement (the timer as a falling-edge detector on `counter bit & enable`), pass.
+- [x] **Step 5:** Commit `gb: timer, serial port, joypad`.
 
 ### Task 4: Cartridge chips
 

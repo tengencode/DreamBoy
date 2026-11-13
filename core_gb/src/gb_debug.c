@@ -27,3 +27,11 @@ uint64_t gb_debug_ticks(const gb_t *g) {
 int gb_debug_breakpoint(const gb_t *g) {
     return g->cpu.breakpoint;
 }
+
+size_t gb_debug_serial(const gb_t *g, char *out, size_t cap) {
+    if (!cap) return 0;
+    size_t n = g->serial_len < cap - 1 ? g->serial_len : cap - 1;
+    for (size_t i = 0; i < n; i++) out[i] = g->serial_out[i];
+    out[n] = 0;
+    return n;
+}
