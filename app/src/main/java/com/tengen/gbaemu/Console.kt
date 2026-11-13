@@ -6,6 +6,10 @@ fun loadErrorText(code: Int): String =
 
 const val NOT_A_GAME = "Not a game this app can play."
 
+/** What Game Boy and Game Boy Color games do not have yet (17b): said where the player would look for it. */
+const val NO_CHEATS_YET = "Not for Game Boy games yet"
+const val NO_ACHIEVEMENTS_YET = "No achievements for Game Boy games yet"
+
 /**
  * Which console a game is for. [native] is the number the C side uses (NativeBridge.CONSOLE_*); [frameWidth] x
  * [frameHeight] its picture; [hasShoulders]: it has L and R buttons; [mark] is printed on the game's label.

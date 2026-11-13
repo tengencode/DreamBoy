@@ -150,7 +150,7 @@ fun raSummary(ra: RaUi, hardcore: Boolean): String = when (ra.signIn) {
 fun SettingsScreen(page: SettingsPage, settings: Settings, keys: KeyBindings, keysChanged: Int, biosName: String,
                    onPage: (SettingsPage) -> Unit, onBack: () -> Unit, onChange: (Settings) -> Unit,
                    onPickKey: (bit: Int, device: Int) -> Unit, onResetKeys: () -> Unit, onChooseBios: () -> Unit,
-                   onBuiltInBios: () -> Unit, onEditLayout: (sideways: Boolean) -> Unit = {},
+                   onBuiltInBios: () -> Unit, onEditLayout: (sideways: Boolean, gameBoy: Boolean) -> Unit = { _, _ -> },
                    importedSkins: List<ImportedSkin> = emptyList(), onImportSkin: () -> Unit = {},
                    onRemoveSkin: (Int) -> Unit = {}, backup: BackupStatus = BackupStatus(), onBackUp: () -> Unit = {},
                    onRestore: () -> Unit = {}, onUndoRestore: () -> Unit = {}, onAutoBackup: (Boolean) -> Unit = {},
@@ -224,9 +224,14 @@ fun SettingsScreen(page: SettingsPage, settings: Settings, keys: KeyBindings, ke
                         val own = "This skin sets its own layout"
                         val edit = "Move and size every button and the game picture"
                         NavRow(Icons.Filled.StayCurrentPortrait, "Edit upright layout", if (chosen?.upright == true) own else edit,
-                            enabled = chosen?.upright != true) { onEditLayout(false) }
+                            enabled = chosen?.upright != true) { onEditLayout(false, false) }
                         NavRow(Icons.Filled.StayCurrentLandscape, "Edit sideways layout", if (chosen?.sideways == true) own else edit,
-                            enabled = chosen?.sideways != true, last = true) { onEditLayout(true) }
+                            enabled = chosen?.sideways != true) { onEditLayout(true, false) }
+                        // Game Boy and Game Boy Color games: another picture shape and no L and R, so their own layouts
+                        // (an imported skin is a GBA skin: never in the way here).
+                        val gb = "For Game Boy and Game Boy Color games"
+                        NavRow(Icons.Filled.StayCurrentPortrait, "Edit Game Boy upright layout", gb) { onEditLayout(false, true) }
+                        NavRow(Icons.Filled.StayCurrentLandscape, "Edit Game Boy sideways layout", gb, last = true) { onEditLayout(true, true) }
                         }
                     }
                     SettingsPage.SKIN -> {

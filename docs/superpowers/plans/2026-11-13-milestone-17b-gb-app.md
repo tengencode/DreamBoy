@@ -156,35 +156,35 @@ defaults without L and R, the picture 10:9.
 
 ### Task 6: The console mark, and what is not there yet (impeccable)
 
-- [ ] **Step 1:** impeccable: shape the console mark on the cartridge label and the Continue card (a small printed
+- [x] **Step 1:** impeccable: shape the console mark on the cartridge label and the Continue card (a small printed
   "GB" / "GBC" / "GBA" mark in the label's own type; follows `DESIGN.md`), the "not available yet" rows, and Task
   4's leftover-space look. Record decisions in the surface brief.
-- [ ] **Step 2: Failing tests:** the pause-menu model for a Game Boy game: Cheats and Achievements / Leaderboards rows
+- [x] **Step 2: Failing tests:** the pause-menu model for a Game Boy game: Cheats and Achievements / Leaderboards rows
   are replaced by one quiet line each ("Cheats for Game Boy games come in a later version", and the same for
   achievements, shown only when signed in); game settings entry hidden; the light slider and sensors never shown;
   a signed-in player gets the notice once per game start; `UiTextTest` passes on the new strings.
-- [ ] **Step 3:** Implement; on-device test with the pretend achievement server on: a Game Boy game starts, no
+- [x] **Step 3:** Implement; on-device test with the pretend achievement server on: a Game Boy game starts, no
   identify request is made, state loading and rewind stay allowed with Hardcore on (Review Focus 5).
-- [ ] **Step 4:** Commit `app: the console mark; cheats and achievements wait for a later version on Game Boy games`.
+- [x] **Step 4:** Commit `app: the console mark; cheats and achievements wait for a later version on Game Boy games`.
 
 ### Task 7: Box art for the new consoles
 
-- [ ] **Step 1: Failing tests** (`BoxArtHelper` / `GameNames` tests): the list name per console ("Nintendo - Game
+- [x] **Step 1: Failing tests** (`BoxArtHelper` / `GameNames` tests): the list name per console ("Nintendo - Game
   Boy", "Nintendo - Game Boy Color", the existing GBA one); a console's list is fetched only when the game list holds
   a game of it; lookup by CRC in the game's own console list, then the other Game Boy list; no 4-letter-code lookup
   for these consoles; the cached `names.tsv` of 1.0.0 keeps working.
-- [ ] **Step 2:** Implement (one names file per console beside the old one). Commit `app: box art for Game Boy and
+- [x] **Step 2:** Implement (one names file per console beside the old one). Commit `app: box art for Game Boy and
   Game Boy Color games`.
 
 ### Task 8: Words and version
 
-- [ ] **Step 1:** `versionName = "1.1.0"`, `versionCode + 1`; About's one-liner ("Game Boy, Game Boy Color and Game
+- [x] **Step 1:** `versionName = "1.1.0"`, `versionCode + 1`; About's one-liner ("Game Boy, Game Boy Color and Game
   Boy Advance emulator for Android"); README (first line, features with what is GBA-only for now: cheats,
   RetroAchievements, Delta skins, sensors; the homebrew credits if new screenshots are used), `PRODUCT.md`,
   `PRIVACY.md` if needed, `docs/RELEASE.md` (repo description, topics `gameboy`, `gameboy-color`, `gb-emulator`,
   `gbc-emulator`; post drafts for 1.1.0), the design spec's goal line. Tests that read the version / User-Agent
   updated.
-- [ ] **Step 2:** `jvmtest`, `public_scan`. Commit `DreamBoy 1.1.0: the words`.
+- [x] **Step 2:** `jvmtest`, `public_scan`. Commit `DreamBoy 1.1.0: the words`.
 
 ### Task 9: Claude's check on the phone emulator; the finish review
 

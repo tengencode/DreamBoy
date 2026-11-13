@@ -66,6 +66,7 @@ class MainActivity : ComponentActivity() {
     private var skinError by mutableStateOf<String?>(null) // why an import failed
     private var editLayout by mutableStateOf<Boolean?>(null) // the layout editor: sideways, upright, or closed
     private var editPicture: Bitmap? = null // the paused game's picture behind the editor
+    private var editConsole = Console.GBA // whose layout the editor edits: GBA games', or Game Boy games'
     private var orientationBeforeEditor = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
     private var editGame by mutableStateOf<Triple<String, String, GameSettings.Game>?>(null) // name, id, its settings
     private var askImport by mutableStateOf(false)
@@ -303,7 +304,7 @@ class MainActivity : ComponentActivity() {
                         onLoad = { menu = MenuPage.LOAD }, onCheats = { menu = MenuPage.CHEATS },
                         onSettings = { settingsPage = SettingsPage.MAIN },
                         onRestart = { askRestart = true }, onQuit = ::quitGame,
-                        locked = hardcoreOn, onAchievements = if (raSet) ({
+                        locked = hardcoreOn, cheatsOff = if (gameConsole != Console.GBA) NO_CHEATS_YET else null, onAchievements = if (raSet) ({
                             raList = NativeBridge.raSummary() to RaAchievement.list(NativeBridge.raAchievements())
                             menu = MenuPage.ACHIEVEMENTS
                         }) else null,
@@ -403,14 +404,14 @@ class MainActivity : ComponentActivity() {
                         version = appVersion(), onOpenGithub = ::openGithub)
                 }
                 editLayout?.let { side ->
-                    LayoutEditor(side, layouts.of(side, gameConsole.family), editPicture, settings.touchLook,
+                    LayoutEditor(side, layouts.of(side, editConsole.family), editPicture, settings.touchLook,
                         onSave = { edits ->
-                            layouts = layouts.with(side, edits, gameConsole.family)
+                            layouts = layouts.with(side, edits, editConsole.family)
                             if (!layoutStore.save(layouts)) toast("Couldn't save the layout.")
                             closeLayoutEditor()
                         },
                         onCancel = ::closeLayoutEditor, skin = if (activeSkin() != null) Skins.PLAIN else Skins.at(settings.skin),
-                        fitMode = settings.size, console = gameConsole)
+                        fitMode = settings.size, console = editConsole)
                 }
                 waitingKey?.let { (bit, device) ->
                     KeyWaitLayer(KeyMap.bindings.first { it.bit == bit }.button, device, onCancel = { waitingKey = null })
@@ -735,6 +736,9 @@ class MainActivity : ComponentActivity() {
         if (own == GameSettings.Game()) NativeBridge.cartSetup().let { gameSettings.remember(gameId, it[0], it[1]) }
         hardware = NativeBridge.cartHardware()
         manualLight = null
+        if (console != Console.GBA && ra.signIn == Achievements.SignIn.IN) { // so a signed-in player isn't left wondering
+            raPopups.note(NO_ACHIEVEMENTS_YET, SystemClock.uptimeMillis())
+        }
         val played = entry.copy(id = gameId, lastPlayed = System.currentTimeMillis(),
             console = Console.ofNative(NativeBridge.console()) ?: console)
         library.played(played)
@@ -1340,8 +1344,11 @@ class MainActivity : ComponentActivity() {
     }
 
     /** The layout editor turns the screen to the edited orientation (the phone may be held either way). */
-    private fun openLayoutEditor(sideways: Boolean) {
-        editPicture = if (playing) NativeBridge.frameBgr555()?.let(States::bitmapOf) else null // paused behind the menu
+    private fun openLayoutEditor(sideways: Boolean, gameBoy: Boolean) {
+        // The Game Boy layouts are edited with the game being played if it is one (its picture, its colours), else a plain one.
+        editConsole = if (!gameBoy) Console.GBA else gameConsole.takeIf { it != Console.GBA } ?: Console.GB
+        editPicture = if (playing && gameConsole.family == editConsole.family) NativeBridge.frameBgr555()?.let(States::bitmapOf)
+            else null // paused behind the menu
         orientationBeforeEditor = if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
             ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
         } else ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
