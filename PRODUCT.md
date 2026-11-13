@@ -7,7 +7,7 @@
 android
 
 ## Users
-The owner first: a Game Boy Advance player who plays their own ROMs (ROM hacks, commercial games they own, homebrew) on Android phones, mostly with the touch buttons, sometimes with a keyboard or gamepad. Sessions are short and frequent: open the app, tap Continue, play, pause, save a state, quit. Later the app goes public for other GBA players with their own games (confirmed by the user 2026-10-05: "me now, public later"), **free and open source** (user decision 2026-10-23: no paid version, no ads, no in-app purchases).
+The owner first: a Game Boy Advance player who plays their own ROMs (ROM hacks, commercial games they own, homebrew) on Android phones, mostly with the touch buttons, sometimes with a keyboard or gamepad. Sessions are short and frequent: open the app, tap Continue, play, pause, save a state, quit. Since 2026-11-12 the app is public as DreamBoy for other GBA players with their own games (the user 2026-10-05: "me now, public later"), **free and open source** (user decision 2026-10-23: no paid version, no ads, no in-app purchases).
 
 ## Product Purpose
 A Game Boy Advance emulator for Android comparable to Pizza Boy GBA: high compatibility, low latency, save states, rewind, fast-forward, cheats, gamepads, sensors (tilt, light, rumble) and customizable touch skins. Success: the user picks up a game exactly where they left it within seconds, and the app feels like a console of its own rather than a stock Android utility.
