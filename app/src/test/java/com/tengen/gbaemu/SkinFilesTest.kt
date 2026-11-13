@@ -98,7 +98,7 @@ class SkinFilesTest {
         assertEquals(SkinProblem.NOT_A_SKIN, problem(f, ByteArrayInputStream("not a zip at all".toByteArray())))
         assertEquals(SkinProblem.NOT_A_SKIN, problem(f, zip("readme.txt" to "hi")))
         assertEquals(SkinProblem.NOT_A_SKIN, problem(f, zip("info.json" to "{ broken")))
-        assertEquals(SkinProblem.OTHER_CONSOLE, problem(f, zip("info.json" to info(type = "com.rileytestut.delta.game.gbc"), "p.png" to "a")))
+        assertEquals(SkinProblem.OTHER_CONSOLE, problem(f, zip("info.json" to info(type = "com.rileytestut.delta.game.nes"), "p.png" to "a")))
         assertEquals(SkinProblem.PICTURE_MISSING, problem(f, zip("info.json" to info())))
         assertEquals(SkinProblem.NOT_A_SKIN, problem(f, zip("info.json" to info(image = "../p.png"), "p.png" to "a")))
         assertEquals(SkinProblem.NOT_A_SKIN, problem(f, zip("info.json" to info(), "p.png" to "a", "../evil.txt" to "x")))

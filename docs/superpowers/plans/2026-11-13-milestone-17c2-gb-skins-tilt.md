@@ -64,17 +64,17 @@ behind `machine/`; it reports the tilt hardware bit the app already acts on, so 
 - `SkinProblem.OTHER_CONSOLE.message` = "This skin is for another console. Only Game Boy, Game Boy Color and GBA
   skins work."
 
-- [ ] **Step 1:** Failing tests in `DeltaSkinTest` (use its `minimal(type = …)` helper):
+- [x] **Step 1:** Failing tests in `DeltaSkinTest` (use its `minimal(type = …)` helper):
   `aGameBoyColorSkinIsTheGameBoyFamilys` (`minimal(DeltaSkin.GBC)` → `family == "gb"`; the type in upper case
   too); `aGbaSkinIsTheGbaFamilys` (`family == "gba"`); `shouldersPressNothingInAGameBoySkin` (items `["l"]`,
   `["a","l"]`, `["r","menu"]` → the first dropped, the second `bits == KeyMap.A`, the third `bits == 0` with
   `actions == [MENU]`; the same JSON as a GBA skin keeps L and R); extend `problems()`: type
   `com.rileytestut.delta.game.nes` → `OTHER_CONSOLE`, and its message equals the text above.
-- [ ] **Step 2:** `bash tools/dev.sh jvmtest` — the new tests fail.
-- [ ] **Step 3:** Implement in `DeltaSkin.parse` (the family from the type; mask L / R out of `bits` for "gb"
+- [x] **Step 2:** `bash tools/dev.sh jvmtest` — the new tests fail.
+- [x] **Step 3:** Implement in `DeltaSkin.parse` (the family from the type; mask L / R out of `bits` for "gb"
   before the empty check). Fix the other constructors' callers and test helpers.
-- [ ] **Step 4:** `bash tools/dev.sh jvmtest` passes (`SkinFilesTest`, `UiTextTest` included).
-- [ ] **Step 5:** Commit `app: a Delta skin knows its console family (Game Boy skins are read)`.
+- [x] **Step 4:** `bash tools/dev.sh jvmtest` passes (`SkinFilesTest`, `UiTextTest` included).
+- [x] **Step 5:** Commit `app: a Delta skin knows its console family (Game Boy skins are read)`.
 
 ### Task 2: One chosen imported skin per family, used in the game
 

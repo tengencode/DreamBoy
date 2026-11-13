@@ -6,7 +6,7 @@ import kotlin.math.min
 /** Why a skin can't be imported or used (9): the message the user sees. */
 enum class SkinProblem(val message: String) {
     NOT_A_SKIN("This file isn't a skin."),
-    OTHER_CONSOLE("This skin is for another console. Only GBA skins work."),
+    OTHER_CONSOLE("This skin is for another console. Only Game Boy, Game Boy Color and GBA skins work."),
     NO_PHONE_LAYOUT("This skin has no phone layout."),
     PICTURE_MISSING("This skin's picture is missing."),
     TOO_BIG("This skin is too big."),
@@ -18,9 +18,10 @@ class SkinException(val problem: SkinProblem) : Exception(problem.message)
  * A skin made for the Delta emulator (9), read from its `info.json`: the phone layout for each direction — upright
  * (Delta's portrait) and sideways (landscape), each from `iphone.edgeToEdge` (the tall iPhones, closest to Android
  * phones), else `iphone.standard`; either may be missing. Coordinates are Delta's points in the picture's
- * `mappingSize`. Pure Kotlin, so it is tested on the PC.
+ * `mappingSize`. [family] is the console family it was made for ([Console.family]): Delta has one skin type for Game Boy
+ * and Game Boy Color, whose L and R press nothing. Pure Kotlin, so it is tested on the PC.
  */
-class DeltaSkin(val name: String, val identifier: String, val upright: Face?, val sideways: Face?) {
+class DeltaSkin(val name: String, val identifier: String, val family: String, val upright: Face?, val sideways: Face?) {
     enum class Action { MENU, QUICK_SAVE, QUICK_LOAD }
 
     data class Rect(val x: Float, val y: Float, val width: Float, val height: Float)
@@ -40,6 +41,7 @@ class DeltaSkin(val name: String, val identifier: String, val upright: Face?, va
 
     companion object {
         const val GBA = "com.rileytestut.delta.game.gba"
+        const val GBC = "com.rileytestut.delta.game.gbc"
 
         /** Reads `info.json`; throws [SkinException] (NOT_A_SKIN, OTHER_CONSOLE, NO_PHONE_LAYOUT). */
         fun parse(json: String): DeltaSkin {
@@ -54,15 +56,20 @@ class DeltaSkin(val name: String, val identifier: String, val upright: Face?, va
             val name = m["name"] as? String ?: fail(SkinProblem.NOT_A_SKIN)
             val id = m["identifier"] as? String ?: fail(SkinProblem.NOT_A_SKIN)
             val type = m["gameTypeIdentifier"] as? String ?: fail(SkinProblem.NOT_A_SKIN)
-            if (!type.equals(GBA, ignoreCase = true)) fail(SkinProblem.OTHER_CONSOLE)
+            val console = when {
+                type.equals(GBA, ignoreCase = true) -> Console.GBA
+                type.equals(GBC, ignoreCase = true) -> Console.GB
+                else -> fail(SkinProblem.OTHER_CONSOLE)
+            }
+            val keys = if (console.hasShoulders) -1 else (KeyMap.L or KeyMap.R).inv()
             val iphone = (m["representations"] as? Map<*, *>)?.get("iphone") as? Map<*, *>
             fun layout(direction: String): Face? = listOf("edgeToEdge", "standard").firstNotNullOfOrNull {
                 ((iphone?.get(it) as? Map<*, *>)?.get(direction) as? Map<*, *>)
-            }?.let(::face)
+            }?.let { face(it, keys) }
             val upright = layout("portrait")
             val sideways = layout("landscape")
             if (upright == null && sideways == null) fail(SkinProblem.NO_PHONE_LAYOUT)
-            return DeltaSkin(name, id, upright, sideways)
+            return DeltaSkin(name, id, console.family, upright, sideways)
         }
 
         private val INPUTS = mapOf(
@@ -87,13 +94,13 @@ class DeltaSkin(val name: String, val identifier: String, val upright: Face?, va
             return Edges(side("top", d.top), side("bottom", d.bottom), side("left", d.left), side("right", d.right))
         }
 
-        private fun face(m: Map<*, *>): Face {
+        private fun face(m: Map<*, *>, keys: Int): Face {
             val assets = map(m["assets"])
             val image = listOf("resizable", "large", "medium", "small").firstNotNullOfOrNull { assets[it] as? String }
                 ?: fail(SkinProblem.NOT_A_SKIN)
             val size = map(m["mappingSize"])
             val extended = edges(m["extendedEdges"], Edges())
-            val items = (m["items"] as? List<*> ?: emptyList<Any?>()).mapNotNull { item(map(it), extended) }
+            val items = (m["items"] as? List<*> ?: emptyList<Any?>()).mapNotNull { item(map(it), extended, keys) }
             val screen = ((m["screens"] as? List<*>)?.firstOrNull() as? Map<*, *>)?.get("outputFrame")?.let(::rect)
                 ?: m["gameScreenFrame"]?.let(::rect)
             val w = num(size, "width")
@@ -102,8 +109,11 @@ class DeltaSkin(val name: String, val identifier: String, val upright: Face?, va
             return Face(image, w, h, items, screen, m["translucent"] == true)
         }
 
-        /** An item, or null when none of its inputs is one we use (X, Y, the analog stick, the touch screen, ...). */
-        private fun item(m: Map<*, *>, extended: Edges): Item? {
+        /**
+         * An item, or null when none of its inputs is one we use (X, Y, the analog stick, the touch screen, ...);
+         * [keys]: the buttons the skin's console has.
+         */
+        private fun item(m: Map<*, *>, extended: Edges, keys: Int): Item? {
             val inputs = m["inputs"]
             val names = when (inputs) {
                 is Map<*, *> -> inputs.values.mapNotNull { it as? String } // a D-pad: {"up": "up", ...}
@@ -116,6 +126,7 @@ class DeltaSkin(val name: String, val identifier: String, val upright: Face?, va
                 INPUTS[n]?.let { bits = bits or it }
                 ACTIONS[n]?.let { actions += it }
             }
+            bits = bits and keys
             if (bits == 0 && actions.isEmpty()) return null
             return Item(bits, actions, inputs is Map<*, *>, rect(m["frame"]), edges(m["extendedEdges"], extended))
         }
