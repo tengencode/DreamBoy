@@ -724,7 +724,7 @@ val GB_CHEAT_TYPES = listOf("Auto", "Game Genie", "GameShark") // Game Boy and G
 @Composable
 fun CheatPanel(title: String, cheats: List<Cheat>, onToggle: (Int, Boolean) -> Unit, onEdit: (Int) -> Unit,
                onAdd: () -> Unit, onBack: () -> Unit, onImport: () -> Unit = {}, onRemoveAll: () -> Unit = {},
-               onFindOnline: () -> Unit = {}) {
+               onFindOnline: () -> Unit = {}, kinds: String = Console.GBA.cheatKinds) {
     var askRemoveAll by remember { mutableStateOf(false) }
     MenuLayer {
         Column(Modifier.padding(bottom = 16.dp).widthIn(min = 300.dp)) {
@@ -732,7 +732,7 @@ fun CheatPanel(title: String, cheats: List<Cheat>, onToggle: (Int, Boolean) -> U
             Column(Modifier.weight(1f, fill = false)) {
                 Column(Modifier.weight(1f, fill = false).heightIn(max = 360.dp).verticalScroll(rememberScrollState())) {
                     if (cheats.isEmpty()) {
-                        Text("No cheats yet. Add Action Replay, GameShark or CodeBreaker codes.",
+                        Text("No cheats yet. Add $kinds codes.",
                             color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(vertical = 8.dp))
                     }
                     if (cheats.isNotEmpty()) Column {

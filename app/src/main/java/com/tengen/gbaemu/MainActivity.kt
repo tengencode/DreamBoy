@@ -318,7 +318,7 @@ class MainActivity : ComponentActivity() {
                         onPick = { if (st.used(it)) replaceSlot = it else saveTo(it) }, onBack = { menu = MenuPage.MAIN })
                     MenuPage.LOAD -> if (st != null) SlotGrid(saving = false, st, slotsChanged,
                         onPick = ::loadFrom, onBack = { menu = MenuPage.MAIN })
-                    MenuPage.CHEATS -> CheatPanel(currentTitle, cheats,
+                    MenuPage.CHEATS -> CheatPanel(currentTitle, cheats, kinds = gameConsole.cheatKinds,
                         onToggle = { i, on -> changeCheats(cheats.toMutableList().also { it[i] = it[i].copy(on = on) }) },
                         onEdit = { editCheat = it }, onAdd = { editCheat = -1 }, onBack = { menu = MenuPage.MAIN },
                         onImport = { pickCht.launch(arrayOf("*/*")) }, onRemoveAll = { changeCheats(emptyList()) },

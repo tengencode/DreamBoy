@@ -79,6 +79,8 @@ class ConsoleTest {
         assertEquals(listOf("Auto", "Game Genie", "GameShark"), Console.GB.cheatTypes)
         assertEquals(Console.GB.cheatTypes, Console.GBC.cheatTypes)
         for (c in Console.entries) assertEquals("Auto", c.cheatTypes[NativeBridge.CHEAT_AUTO])
+        assertEquals("Action Replay, GameShark or CodeBreaker", Console.GBA.cheatKinds)
+        assertEquals("Game Genie or GameShark", Console.GBC.cheatKinds)
     }
 
     @Test

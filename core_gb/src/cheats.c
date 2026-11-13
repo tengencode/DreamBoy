@@ -24,7 +24,7 @@ static int hex(char c) {
     return -1;
 }
 
-/* One code (len characters, already trimmed) into *out. false: not a code of this type. */
+/* One code (len characters, no spaces) into *out. false: not a code of this type. */
 static bool decode(const char *s, size_t len, gb_cheat_type_t type, gb_code_t *out, gb_cheat_type_t *used) {
     int d[9];
     size_t n = 0;
@@ -73,13 +73,10 @@ static int read_text(const char *text, gb_cheat_type_t type, gb_code_t *codes, s
     const char *p = text;
     while (*p) {
         size_t len = strcspn(p, "\n+ \t\r");
-        const char *a = p, *b = p + len;
-        while (a < b && (*a == ' ' || *a == '\t' || *a == '\r')) a++;
-        while (b > a && (b[-1] == ' ' || b[-1] == '\t' || b[-1] == '\r')) b--;
-        if (b > a) {
+        if (len) { /* (nothing between two separators is no code and no mistake) */
             gb_code_t c;
             gb_cheat_type_t got;
-            if (!decode(a, (size_t)(b - a), type, &c, &got)) return line;
+            if (!decode(p, len, type, &c, &got)) return line;
             if (!any) first = got; /* (Auto reads each code as what it is; the cheat is named after its first) */
             any = true;
             if (codes) {

@@ -26,6 +26,9 @@ enum class Console(val native: Int, val frameWidth: Int, val frameHeight: Int, v
     /** The cheat types' names by number (17c): each core has its own (gba_cheat_type_t, gb_cheat_type_t); 0 is Auto. */
     val cheatTypes: List<String> get() = if (this == GBA) CHEAT_TYPES else GB_CHEAT_TYPES
 
+    /** The kinds of cheat codes the console's games take, as the empty cheat list names them. */
+    val cheatKinds: String get() = if (this == GBA) "Action Replay, GameShark or CodeBreaker" else "Game Genie or GameShark"
+
     /** Game Boy and Game Boy Color games share their buttons and layouts: one family; GBA is the other. */
     val family: String get() = if (this == GBA) "gba" else "gb"
 

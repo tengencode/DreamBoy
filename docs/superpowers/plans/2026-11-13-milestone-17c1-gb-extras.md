@@ -180,11 +180,11 @@ on-device RA tests.
 
 ### Task 8: Claude's check on the phone emulator; all tests; review
 
-- [ ] **Step 1:** `dev.sh install`. By element text, with the pretend RetroAchievements server (`files/ra-fake`): the
+- [x] **Step 1:** `dev.sh install`. By element text, with the pretend RetroAchievements server (`files/ra-fake`): the
   spec's §9.2 list. Screenshots into `.impeccable/review/17c-*`.
-- [ ] **Step 2:** All tests: `unit`, `test`, `jvmtest`, `androidtest`, `games --check`, `bench --check`;
+- [x] **Step 2:** All tests: `unit`, `test`, `jvmtest`, `androidtest`, `games --check`, `bench --check`;
   `ponytail-review` of the diff from `main`; fix what it finds.
-- [ ] **Step 3:** Commit `17c part 1: Claude's check and the review`.
+- [x] **Step 3:** Commit `17c part 1: Claude's check and the review`.
 
 ### Task 9: The user's check and the release
 
