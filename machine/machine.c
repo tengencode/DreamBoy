@@ -149,6 +149,10 @@ void machine_set_rtc(machine_t *m, int64_t unix_seconds, int32_t utc_offset_s) {
     else gb_set_rtc(m->gb, unix_seconds);
 }
 
+void machine_set_look(machine_t *m, int look) {
+    if (m->gb) gb_set_look(m->gb, look);
+}
+
 size_t machine_state_size(const machine_t *m) {
     return m->gba ? gba_state_size(m->gba) : gb_state_size(m->gb);
 }

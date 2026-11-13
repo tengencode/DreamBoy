@@ -53,6 +53,21 @@ uint32_t gb_rom_crc32(const gb_t *g);    /* CRC-32 (as zlib) of the bytes given 
 #define GB_WRAM_SIZE 0x8000u
 const uint8_t *gb_wram(const gb_t *g); /* work RAM, 8 banks of 0x1000 (a plain Game Boy uses the first two) */
 
+/* Looks for grey games: the colours a plain Game Boy's four shades are shown in — the background and the two sprite
+ * palettes each have their own four. Looks 0 .. gb_look_count()-1 are fixed: 0 the four greys (the default), 1 the
+ * first Game Boy's green, 2 the Pocket's, then the Game Boy Color's own eleven. GB_LOOK_AUTO is what a Game Boy
+ * Color picks for the loaded game from its header (grey for a game it does not know). A look is how the picture is
+ * shown, from the next drawn line on: it is in no save state, and Game Boy Color games ignore it. */
+#define GB_LOOK_AUTO (-1)
+#define GB_LOOK_GREY 0
+int gb_look_count(void);
+/* The look's colours (BGR555): background 0-3, sprites 0's 0-3, sprites 1's 0-3. A number that is no look: grey. */
+void gb_look_colours(int look, uint16_t out[12]);
+/* The look GB_LOOK_AUTO means for this ROM: GB_LOOK_GREY, or a number at or above gb_look_count() (one of the
+ * console's combinations; good for gb_look_colours and gb_set_look). */
+int gb_look_auto(const uint8_t *rom, size_t size);
+void gb_set_look(gb_t *g, int look); /* kept across gb_reset and gb_load_rom */
+
 /* The save file: the cartridge RAM, then for a clock cartridge 48 bytes (the clock registers and a Unix time),
  * the format other emulators use. */
 size_t gb_save_size(const gb_t *g); /* 0: this cartridge keeps no save */

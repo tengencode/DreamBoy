@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "gb.h"
 #include "gba.h"
 #include "gbtestutil.h"
 #include "machine.h"
@@ -130,5 +131,22 @@ TEST(machine_gb_save) {
     CHECK_EQ(machine_save_write(m, back, sizeof back), 0x2000);
     CHECK(!memcmp(save, back, sizeof save));
     CHECK_EQ(machine_save_dirty(m), 0);
+    machine_destroy(m);
+}
+
+TEST(machine_look_reaches_a_game_boy_and_nothing_else) {
+    uint8_t *rom = gbtu_rom(0x8000, 0, 0, 0);
+    machine_t *m = machine_create(MACHINE_GB);
+    CHECK_EQ(machine_load_rom(m, rom, 0x8000), MACHINE_OK);
+    free(rom);
+    machine_set_look(m, 1); /* the green screen */
+    machine_run_frame(m);
+    machine_run_frame(m);
+    uint16_t c[12];
+    gb_look_colours(1, c);
+    CHECK_EQ(machine_framebuffer(m)[0], c[0]);
+    machine_destroy(m);
+    m = machine_create(MACHINE_GBA);
+    machine_set_look(m, 1); /* nothing to do, nothing breaks */
     machine_destroy(m);
 }

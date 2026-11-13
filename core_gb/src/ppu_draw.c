@@ -4,8 +4,7 @@
 
 #include "gb_internal.h"
 
-/* The four greys of a plain Game Boy, lightest first (BGR555). */
-static const uint16_t GREY[4] = {0x7FFF, 0x56B5, 0x294A, 0x0000};
+/* A plain Game Boy's four shades are shown in the look's colours (g->look: the four greys unless a look is set). */
 
 /* Colour `index` of palette `n` in a Game Boy Color palette RAM: 15 bits, red lowest — the framebuffer's format. */
 static uint16_t palette_colour(const uint8_t *ram, int n, int index) {
@@ -85,7 +84,7 @@ static void sprites(const gb_t *g, int ly, const uint8_t *bg, const uint8_t *bg_
             out[x] = palette_colour(g->cgb.obj_palette, attrs[x] & 7, colour[x]);
         } else {
             if ((attrs[x] & 0x80) && bg[x]) continue; /* "behind": only over background colour 0 */
-            out[x] = GREY[((attrs[x] & 0x10) ? p->obp1 : p->obp0) >> (colour[x] * 2) & 3];
+            out[x] = ((attrs[x] & 0x10) ? g->look[2] : g->look[1])[((attrs[x] & 0x10) ? p->obp1 : p->obp0) >> (colour[x] * 2) & 3];
         }
     }
 }
@@ -103,9 +102,9 @@ void gb_ppu_draw_line(gb_t *g, int ly) {
                      left < 0 ? (unsigned)-left : 0, p->window_line++);
         }
         for (int x = 0; x < GB_WIDTH; x++)
-            out[x] = color ? palette_colour(g->cgb.bg_palette, bg_attr[x] & 7, bg[x]) : GREY[p->bgp >> (bg[x] * 2) & 3];
+            out[x] = color ? palette_colour(g->cgb.bg_palette, bg_attr[x] & 7, bg[x]) : g->look[0][p->bgp >> (bg[x] * 2) & 3];
     } else { /* background off: white, and sprites over all of it */
-        for (int x = 0; x < GB_WIDTH; x++) out[x] = GREY[0];
+        for (int x = 0; x < GB_WIDTH; x++) out[x] = g->look[0][0];
     }
     if (p->lcdc & 0x02) sprites(g, ly, bg, bg_attr, out);
 }

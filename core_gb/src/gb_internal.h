@@ -171,6 +171,8 @@ struct gb {
     gb_audio_t audio;
     uint16_t frame[GB_WIDTH * GB_HEIGHT]; /* the picture, BGR555 (frame and back: one save-state chunk) */
     uint16_t back[GB_WIDTH * GB_HEIGHT]; /* the picture being drawn; shown (copied to frame) when VBlank starts */
+    uint16_t look[3][4]; /* a grey game's colours: the background's, sprites 0's, sprites 1's (17c); in no state chunk */
+    int look_asked;      /* as last set: GB_LOOK_AUTO is worked out again for each loaded game */
     struct rewind_ring *rewind; /* rewind history (core_common), NULL while off; in no state chunk */
     size_t rewind_budget;       /* as last configured: a new ROM changes the state's size */
     int rewind_interval;
@@ -227,6 +229,7 @@ uint8_t gb_rtc_read(const gb_t *g, uint8_t reg); /* reg 0x08-0x0C */
 void gb_rtc_write(gb_t *g, uint8_t reg, uint8_t value);
 void gb_rtc_latch(gb_t *g, uint8_t value);
 gb_err_t gb_cart_load(gb_t *g, const uint8_t *rom, size_t size);
+void gb_look_refresh(gb_t *g); /* after a game is loaded: the automatic look is this game's */
 void gb_cart_free(gb_t *g);
 
 #endif

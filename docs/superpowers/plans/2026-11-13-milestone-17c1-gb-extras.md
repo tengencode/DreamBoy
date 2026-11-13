@@ -62,17 +62,17 @@ the one download: the colour table from SameBoy's boot ROM source, MIT).
   and `gb_load_rom` re-resolves auto; never in a state.
 - `void machine_set_look(machine_t *m, int look)` (nothing for a GBA machine).
 
-- [ ] **Step 1:** Download SameBoy's `BootROMs/cgb_boot.asm` into the scratchpad (allowed by the user); read the title
+- [x] **Step 1:** Download SameBoy's `BootROMs/cgb_boot.asm` into the scratchpad (allowed by the user); read the title
   checksum table, the fourth-letter table, the palette-combination table and the palette colours.
-- [ ] **Step 2:** Failing tests in `test_gb_looks.c`: `looks_default_is_grey` (frame of `gb_demo.gb` identical with no
+- [x] **Step 2:** Failing tests in `test_gb_looks.c`: `looks_default_is_grey` (frame of `gb_demo.gb` identical with no
   call and after `gb_set_look(GREY)`); `looks_change_background_and_sprites_apart` (a look whose bg and obj colours
   differ: a made-up ROM drawing one bg tile and one sprite of the same shade shows two colours);
   `looks_auto_known_sum`, `looks_auto_needs_fourth_letter`, `looks_auto_unknown_is_grey`,
   `looks_auto_other_licensee_is_grey` (made-up headers built in the test); `looks_out_of_range_is_grey`;
   `looks_not_in_state` (state bytes equal with two different looks; loading keeps the current look).
-- [ ] **Step 3:** Implement; `ppu_draw.c` reads `g->look[3][4]` instead of `GREY`.
-- [ ] **Step 4:** `dev.sh unit`, `dev.sh test` (fingerprints unchanged). Credit SameBoy in `third_party/README.md`.
-- [ ] **Step 5:** Commit `gb core: looks for grey games (the Game Boy Color's colours)`.
+- [x] **Step 3:** Implement; `ppu_draw.c` reads `g->look[3][4]` instead of `GREY`.
+- [x] **Step 4:** `dev.sh unit`, `dev.sh test` (fingerprints unchanged). Credit SameBoy in `third_party/README.md`.
+- [x] **Step 5:** Commit `gb core: looks for grey games (the Game Boy Color's colours)`.
 
 ### Task 2: Colours — the app
 

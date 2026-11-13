@@ -51,6 +51,9 @@ int machine_save_read(machine_t *m, const uint8_t *data, size_t size);
 int machine_save_dirty(machine_t *m);
 void machine_set_rtc(machine_t *m, int64_t unix_seconds, int32_t utc_offset_s);
 
+/* A grey Game Boy game's colours (gb.h: GB_LOOK_AUTO, 0 = grey, …); nothing for the other consoles' games. */
+void machine_set_look(machine_t *m, int look);
+
 size_t machine_state_size(const machine_t *m);
 size_t machine_state_save(const machine_t *m, void *buf, size_t cap);
 int machine_state_load(machine_t *m, const void *buf, size_t len); /* MACHINE_OK or MACHINE_ERR_STATE */

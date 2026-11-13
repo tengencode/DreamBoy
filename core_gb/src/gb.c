@@ -6,7 +6,10 @@
 
 gb_t *gb_create(void) {
     gb_t *g = calloc(1, sizeof(gb_t));
-    if (g) gb_ppu_reset(g); /* a white picture until a game draws */
+    if (g) {
+        gb_set_look(g, GB_LOOK_GREY);
+        gb_ppu_reset(g); /* a white picture until a game draws */
+    }
     return g;
 }
 
@@ -20,6 +23,7 @@ void gb_destroy(gb_t *g) {
 gb_err_t gb_load_rom(gb_t *g, const uint8_t *rom, size_t size) {
     gb_err_t err = gb_cart_load(g, rom, size);
     if (err != GB_OK) return err;
+    gb_look_refresh(g);
     gb_reset(g);
     gb_rewind_configure(g, g->rewind_budget, g->rewind_interval); /* the state's size may be another now */
     return GB_OK;
