@@ -188,10 +188,10 @@ on-device RA tests.
 
 ### Task 9: The user's check and the release
 
-- [ ] **Step 1:** `python tools/public_scan.py --history` clean; `dev.sh apk-release`; check the APK (`docs/RELEASE.md`
+- [x] **Step 1:** `python tools/public_scan.py --history` clean; `dev.sh apk-release`; check the APK (`docs/RELEASE.md`
   §3 steps 4-5, and the scan inside the APK as for 1.1.0). **Stop: the user installs it over 1.1.0 and does the spec's
   §9.3 check.**
-- [ ] **Step 2:** On the user's OK: documents (PROGRESS: 17c part 1 done, Next = part 2's spec; `CLAUDE.md`; both
+- [x] **Step 2:** On the user's OK: documents (PROGRESS: 17c part 1 done, Next = part 2's spec; `CLAUDE.md`; both
   specs), commit `milestone 17c part 1 done: DreamBoy 1.2.0`; merge into `main` (`--no-ff`); history scan; tag
   `v1.2.0`; push; `gh release create`.
 
