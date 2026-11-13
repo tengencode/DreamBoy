@@ -4,7 +4,9 @@
 #include "gb_internal.h"
 
 gb_t *gb_create(void) {
-    return calloc(1, sizeof(gb_t));
+    gb_t *g = calloc(1, sizeof(gb_t));
+    if (g) memset(g->frame, 0xFF, sizeof g->frame); /* white until something is drawn */
+    return g;
 }
 
 void gb_destroy(gb_t *g) {
@@ -54,8 +56,36 @@ uint32_t gb_rom_crc32(const gb_t *g) {
     return g->info.crc32;
 }
 
+const uint16_t *gb_framebuffer(const gb_t *g) {
+    return g->frame;
+}
+
+/* shortcut: no sound yet; plan Task 7. */
+size_t gb_audio_read(gb_t *g, int16_t *out, size_t max_frames) {
+    return 0;
+}
+
 size_t gb_save_size(const gb_t *g) {
     return g->info.battery ? g->info.ram_size : 0;
+}
+
+/* shortcut: the cartridge RAM only; the clock's footer comes with plan Task 9. */
+size_t gb_save_write(const gb_t *g, uint8_t *buf, size_t cap) {
+    size_t size = gb_save_size(g);
+    if (!size || size > cap) return 0;
+    memcpy(buf, g->cart_ram, size);
+    return size;
+}
+
+void gb_save_read(gb_t *g, const uint8_t *data, size_t size) {
+    size_t ram = gb_save_size(g);
+    if (!ram) return;
+    size_t n = size < ram ? size : ram;
+    memset(g->cart_ram, 0xFF, ram);
+    if (data && n) memcpy(g->cart_ram, data, n);
+}
+
+void gb_set_rtc(gb_t *g, int64_t unix_seconds) {
 }
 
 int gb_save_dirty(gb_t *g) {

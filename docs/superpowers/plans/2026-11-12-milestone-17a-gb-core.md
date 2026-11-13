@@ -295,18 +295,18 @@ Boy only:
 `tests/gb_tests.json`: `{"tests":[{"name":"blargg_cpu_instrs","rom":"gb/blargg/cpu_instrs/cpu_instrs.gb",
 "mode":"serial","expect":"Passed","frames":4000}, …]}` → CTest `gb_<name>`, skip code 77 when the ROM is missing.
 
-- [ ] **Step 1: Failing unit tests** (`test_machine.c`): `machine_detect_by_content` (a GBA header, a GB header, a
+- [x] **Step 1: Failing unit tests** (`test_machine.c`): `machine_detect_by_content` (a GBA header, a GB header, a
   GBC header, each under a wrong extension → content wins); `machine_detect_by_name` (no valid header: `x.GB`,
   `x.gbc`, `x.gba`, `x.bin`/NULL → NONE); `machine_gb_runs` (a `gbtu_rom`: size 160×144, a frame runs, title);
   `machine_gba_runs` (a tiny GBA ROM from `testutil`: 240×160); `machine_keys_drop_lr`.
-- [ ] **Step 2–3:** fail; implement the layer (a `switch` on kind — two cores do not need function pointers).
-- [ ] **Step 4: Port the tools.** `bash tools/dev.sh test` → every existing CTest test passes unchanged (hashes
+- [x] **Step 2–3:** fail; implement the layer (a `switch` on kind — two cores do not need function pointers).
+- [x] **Step 4: Port the tools.** `bash tools/dev.sh test` → every existing CTest test passes unchanged (hashes
   identical: the generic path must not change a GBA frame or sample).
-- [ ] **Step 5: Fetch.** Add to `tools/fetch_test_roms.py`: blargg's ROMs (`cpu_instrs`, `instr_timing`,
+- [x] **Step 5: Fetch.** Add to `tools/fetch_test_roms.py`: blargg's ROMs (`cpu_instrs`, `instr_timing`,
   `mem_timing`, `mem_timing-2`, `halt_bug`, `dmg_sound`, `cgb_sound`) and the mooneye test suite's prebuilt package
   into `tests/roms/gb/blargg/` and `tests/roms/gb/mooneye/`, each pinned by SHA-256 (download once, record the sum,
   download again and compare, as for Tonc). Run it.
-- [ ] **Step 6: First ROM tests in `gb_tests.json`:** blargg `cpu_instrs` (serial "Passed"), `instr_timing`
+- [x] **Step 6: First ROM tests in `gb_tests.json`:** blargg `cpu_instrs` (serial "Passed"), `instr_timing`
   (serial), `mem_timing` (serial), `mem_timing-2` (memtext), `halt_bug` (memtext); mooneye `acceptance/bits/*`,
   `acceptance/instr/daa`, `acceptance/timer/*`, `acceptance/` root instruction-timing tests (`add_sp_e_timing`,
   `call_timing`, `call_timing2`, `call_cc_timing`, `call_cc_timing2`, `jp_timing`, `jp_cc_timing`, `ld_hl_sp_e_timing`,
@@ -318,7 +318,7 @@ Boy only:
   superpowers:systematic-debugging; add a unit test for each bug found). Tests that need the screen's timing
   (`intr_timing` and the `halt_*` ones wait on VBlank) may move to Task 6's list if they cannot pass yet — say so in
   PROGRESS.md.
-- [ ] **Step 7:** Commit `machine: one layer over both cores; the test runner runs Game Boy test ROMs`.
+- [x] **Step 7:** Commit `machine: one layer over both cores; the test runner runs Game Boy test ROMs`.
 
 ### Task 6: The screen (Game Boy)
 

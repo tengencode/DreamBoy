@@ -84,6 +84,7 @@ struct gb {
     gb_serial_t serial;
     gb_joypad_t joypad;
     gb_cart_t cart;
+    uint16_t frame[GB_WIDTH * GB_HEIGHT]; /* the picture, BGR555 */
     char serial_out[4096]; /* for tests: every byte sent on the serial port */
     uint32_t serial_len;
     uint64_t ticks;     /* clock ticks since reset */

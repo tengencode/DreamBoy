@@ -34,6 +34,10 @@ gbaview-*.png
 .impeccable/review/
 *.gba
 !tests/own_roms/*.gba
+*.gb
+*.gbc
+!tests/own_roms/*.gb
+!tests/own_roms/*.gbc
 *.bin
 *.sav
 *.state

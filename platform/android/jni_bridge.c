@@ -441,7 +441,7 @@ static jstring run_headless(JNIEnv *env, jobject rom, jint frames, jint state_at
     }
     free(hash_before);
     char out[40];
-    snprintf(out, sizeof out, "%016" PRIx64 " %016" PRIx64, frame_hash(gba_framebuffer(g)), audio_hash);
+    snprintf(out, sizeof out, "%016" PRIx64 " %016" PRIx64, frame_hash(gba_framebuffer(g), 240 * 160), audio_hash);
     gba_destroy(g);
     return (*env)->NewStringUTF(env, out);
 }

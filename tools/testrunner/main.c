@@ -29,6 +29,13 @@
  * --load-state starts from a save state (after the ROM, BIOS and save file). --write-state <file> saves a state of
  * the machine after the run. --cheat switches on the cheat in the file (up to 8): its codes, one per line, after
  * an optional first line "type: auto|ar|gs|cb|raw".
+ * Game Boy / Game Boy Color ROMs run through the same options, except the Game Boy Advance-only ones (--bios,
+ * --result-reg, --suite, --hardware, --cheat, --notes); without --frames they run 600 frames. Three ways to run
+ * their test ROMs, each until the result shows or --frames (default 3600) pass:
+ * --gb-serial <text>: PASS when the bytes sent on the serial port contain <text>, FAIL when they contain "Failed".
+ * --gb-memtext <text>: the newer blargg ROMs, which write DE B0 61 to 0xA001 and their status to 0xA000 (0x80 while
+ *   running, 0 = passed) and their text from 0xA004: PASS on status 0 with <text> in the text.
+ * --gb-mooneye: until the game runs LD B,B; PASS when B C D E H L are 3 5 8 13 21 34.
  * Exit codes: 0 pass/done, 1 fail, 2 timeout, 3 usage/load error, 77 ROM missing (CTest skip).
  */
 #include <inttypes.h>
@@ -39,9 +46,12 @@
 
 #include "file_util.h"
 #include "frame_hash.h"
+#include "gb.h"
+#include "gb_debug.h"
 #include "gba.h"
 #include "gba_debug.h"
 #include "key_script.h"
+#include "machine.h"
 #include "png.h"
 #include "wav.h"
 
@@ -54,9 +64,11 @@ enum { EXIT_PASS = 0, EXIT_FAILED = 1, EXIT_TIMEOUT = 2, EXIT_USAGE = 3, EXIT_SK
 
 /* The buttons, and the rotation sensor while CW / CCW are held (as gbabench); the sensor is only touched
  * once a script has turned it. */
-static void set_input(gba_t *g, uint16_t keys) {
+static void set_input(machine_t *m, uint16_t keys) {
     static bool turned;
-    gba_set_keys(g, keys & 0x3FF);
+    machine_set_keys(m, keys & 0x3FF);
+    gba_t *g = machine_gba(m);
+    if (!g) return;
     if (keys & (KEY_CW | KEY_CCW)) turned = true;
     if (turned) gba_set_gyro(g, (keys & KEY_CW) ? SPIN_RATE : (keys & KEY_CCW) ? -SPIN_RATE : 0);
 }
@@ -103,18 +115,19 @@ static bool at_idle_loop(gba_t *g) {
 }
 
 /* One frame, then collect every sound sample it made. */
-static void run_frame(gba_t *g, audio_out_t *audio) {
+static void run_frame(machine_t *m, audio_out_t *audio) {
     int16_t buf[1024 * 2];
     size_t n;
-    gba_run_frame(g);
-    while ((n = gba_audio_read(g, buf, 1024)) > 0) {
+    machine_run_frame(m);
+    while ((n = machine_audio_read(m, buf, 1024)) > 0) {
         audio->hash = audio_hash_update(audio->hash, buf, n * 2);
         if (audio->writing) wav_write(&audio->wav, buf, n);
     }
 }
 
 /* Opens menu entry `group` (DOWN presses, then A) and runs until the result screen shows a score. */
-static int run_suite(gba_t *g, int group, long min_score, audio_out_t *audio) {
+static int run_suite(machine_t *m, int group, long min_score, audio_out_t *audio) {
+    gba_t *g = machine_gba(m);
     key_event_t ev[2 * SUITE_GROUP_COUNT];
     key_script_t ks = {ev, 0, 2 * SUITE_GROUP_COUNT};
     for (int i = 0; i <= group; i++) {
@@ -126,7 +139,7 @@ static int run_suite(gba_t *g, int group, long min_score, audio_out_t *audio) {
     unsigned passed = 0, total = 0;
     for (long frame = 0; frame < SUITE_MAX_FRAMES; frame++) {
         gba_set_keys(g, key_script_at(&ks, frame));
-        run_frame(g, audio);
+        run_frame(m, audio);
         if (frame > pressed_a + 2 && read_suite_score(g, &passed, &total)) {
             printf("SUITE %s %u/%u\n", SUITE_GROUPS[group], passed, total);
             if (min_score < 0 || (long)passed >= min_score) return EXIT_PASS;
@@ -169,22 +182,73 @@ static bool parse_hardware(const char *list, uint32_t *flags) {
     return true;
 }
 
-/* Save a state of *g, load it into a new machine with the same BIOS and ROM, and carry on with that one. */
-static bool switch_machine(gba_t **g, const uint8_t *bios, size_t bios_size, const uint8_t *rom, size_t rom_size) {
-    size_t size = gba_state_size(*g);
-    uint8_t *state = malloc(size);
-    gba_t *fresh = gba_create(NULL);
-    bool ok = state && fresh && gba_state_save(*g, state, size) == size &&
-              (!bios || gba_load_bios(fresh, bios, bios_size) == GBA_OK) &&
-              gba_load_rom(fresh, rom, rom_size) == GBA_OK && gba_state_load(fresh, state, size) == GBA_OK;
+/* Save a state of *m, load it into a new machine with the same BIOS and ROM, and carry on with that one. */
+static bool switch_machine(machine_t **m, const uint8_t *bios, size_t bios_size, const uint8_t *rom, size_t rom_size) {
+    size_t size = machine_state_size(*m);
+    uint8_t *state = malloc(size ? size : 1);
+    machine_t *fresh = machine_create(machine_kind(*m));
+    bool ok = state && fresh && size && machine_state_save(*m, state, size) == size &&
+              (!bios || gba_load_bios(machine_gba(fresh), bios, bios_size) == GBA_OK) &&
+              machine_load_rom(fresh, rom, rom_size) == MACHINE_OK &&
+              machine_state_load(fresh, state, size) == MACHINE_OK;
     free(state);
     if (!ok) {
-        gba_destroy(fresh);
+        machine_destroy(fresh);
         return false;
     }
-    gba_destroy(*g);
-    *g = fresh;
+    machine_destroy(*m);
+    *m = fresh;
     return true;
+}
+
+enum { GB_TEST_NONE, GB_TEST_SERIAL, GB_TEST_MEMTEXT, GB_TEST_MOONEYE };
+
+/* Runs a Game Boy test ROM until it reports (see the top of this file). */
+static int run_gb_test(machine_t *m, int mode, const char *expect, long frames, audio_out_t *audio, const char *rom) {
+    gb_t *g = machine_gb(m);
+    static char text[4097];
+    for (long frame = 0; frame < frames; frame++) {
+        run_frame(m, audio);
+        if (mode == GB_TEST_SERIAL) {
+            gb_debug_serial(g, text, sizeof text);
+            if (strstr(text, expect)) {
+                printf("PASS %s\n", rom);
+                return EXIT_PASS;
+            }
+            if (strstr(text, "Failed")) {
+                printf("FAIL %s:\n%s\n", rom, text);
+                return EXIT_FAILED;
+            }
+        } else if (mode == GB_TEST_MEMTEXT) {
+            if (gb_debug_peek(g, 0xA001) != 0xDE || gb_debug_peek(g, 0xA002) != 0xB0 || gb_debug_peek(g, 0xA003) != 0x61 ||
+                gb_debug_peek(g, 0xA000) == 0x80)
+                continue;
+            size_t n = 0;
+            for (uint8_t c; n < 1024 && (c = gb_debug_peek(g, (uint16_t)(0xA004 + n))) != 0; n++) text[n] = (char)c;
+            text[n] = 0;
+            if (gb_debug_peek(g, 0xA000) == 0 && strstr(text, expect)) {
+                printf("PASS %s\n", rom);
+                return EXIT_PASS;
+            }
+            printf("FAIL %s (status %u):\n%s\n", rom, (unsigned)gb_debug_peek(g, 0xA000), text);
+            return EXIT_FAILED;
+        } else if (gb_debug_breakpoint(g)) {
+            uint16_t bc = gb_debug_reg(g, GB_REG_BC), de = gb_debug_reg(g, GB_REG_DE), hl = gb_debug_reg(g, GB_REG_HL);
+            if (bc == 0x0305 && de == 0x080D && hl == 0x1522) {
+                printf("PASS %s\n", rom);
+                return EXIT_PASS;
+            }
+            printf("FAIL %s: BC=%04X DE=%04X HL=%04X\n", rom, bc, de, hl);
+            return EXIT_FAILED;
+        }
+    }
+    if (mode == GB_TEST_SERIAL) {
+        gb_debug_serial(g, text, sizeof text);
+        printf("TIMEOUT %s after %ld frames; serial output:\n%s\n", rom, frames, text);
+    } else {
+        printf("TIMEOUT %s after %ld frames (pc=%04X)\n", rom, frames, gb_debug_reg(g, GB_REG_PC));
+    }
+    return EXIT_TIMEOUT;
 }
 
 /* A cheat file: an optional "type: auto|ar|gs|cb|raw" line, then the codes. */
@@ -241,10 +305,10 @@ static bool set_cheats(gba_t *g, const char *const *paths, int count) {
 }
 
 /* A PNG of the current picture as <dir>/<frame, 6 digits>.png. */
-static bool write_shot(gba_t *g, const char *dir, long frame) {
+static bool write_shot(machine_t *m, const char *dir, long frame) {
     char path[1024];
     snprintf(path, sizeof path, "%s/%06ld.png", dir, frame);
-    if (png_write_bgr555(path, gba_framebuffer(g), 240, 160) != 0) {
+    if (png_write_bgr555(path, machine_framebuffer(m), machine_width(m), machine_height(m)) != 0) {
         fprintf(stderr, "cannot write %s\n", path);
         return false;
     }
@@ -259,7 +323,8 @@ static int usage(void) {
                     "                  [--keys <frame:KEY[+KEY],...>] [--suite <group> [--suite-min <n>]]\n"
                     "                  [--state-at <frame>] [--rewind-at <frame>:<steps>]\n"
                     "                  [--load-state <file>] [--write-state <file>] [--cheat <file>]...\n"
-                    "                  [--shots-every <n> --shots-dir <dir>] [--notes] [--keys @<file>]\n");
+                    "                  [--shots-every <n> --shots-dir <dir>] [--notes] [--keys @<file>]\n"
+                    "                  [--gb-serial <text> | --gb-memtext <text> | --gb-mooneye]\n");
     return EXIT_USAGE;
 }
 
@@ -283,6 +348,8 @@ int main(int argc, char **argv) {
     long shots_every = 0;
     char *keys_text = NULL;
     int result_reg = -1;
+    int gb_test = GB_TEST_NONE;
+    const char *gb_expect = "";
     for (int i = 1; i < argc; i++) {
         if (!strcmp(argv[i], "--bios") && i + 1 < argc) bios_path = argv[++i];
         else if (!strcmp(argv[i], "--frames") && i + 1 < argc) {
@@ -309,6 +376,9 @@ int main(int argc, char **argv) {
         else if (!strcmp(argv[i], "--shots-every") && i + 1 < argc) shots_every = strtol(argv[++i], NULL, 0);
         else if (!strcmp(argv[i], "--shots-dir") && i + 1 < argc) shots_dir = argv[++i];
         else if (!strcmp(argv[i], "--notes")) print_notes = true;
+        else if (!strcmp(argv[i], "--gb-serial") && i + 1 < argc) gb_test = GB_TEST_SERIAL, gb_expect = argv[++i];
+        else if (!strcmp(argv[i], "--gb-memtext") && i + 1 < argc) gb_test = GB_TEST_MEMTEXT, gb_expect = argv[++i];
+        else if (!strcmp(argv[i], "--gb-mooneye")) gb_test = GB_TEST_MOONEYE;
         else if (!strcmp(argv[i], "--cheat") && i + 1 < argc && cheat_count < MAX_CHEATS) cheat_paths[cheat_count++] = argv[++i];
         else if (!strcmp(argv[i], "--rewind-at") && i + 1 < argc) {
             char *end;
@@ -369,9 +439,26 @@ int main(int argc, char **argv) {
         return EXIT_SKIP;
     }
 
-    gba_t *g = gba_create(NULL);
+    machine_t *m = machine_create(machine_detect(rom, rom_size, rom_path));
+    gba_t *g = m ? machine_gba(m) : NULL; /* NULL: a Game Boy game */
     audio_out_t audio = {AUDIO_HASH_INIT, {NULL, 0, 0}, false};
     int code = EXIT_USAGE;
+    if (!m) {
+        fprintf(stderr, "%s: not a Game Boy, Game Boy Color or Game Boy Advance ROM\n", rom_path);
+        goto done;
+    }
+    if (!g && (bios_path || result_reg >= 0 || suite_group >= 0 || hardware || cheat_count || print_notes)) {
+        fprintf(stderr, "%s: --bios, --result-reg, --suite, --hardware, --cheat and --notes are for Game Boy Advance ROMs\n",
+                rom_path);
+        goto done;
+    }
+    if (gb_test != GB_TEST_NONE && (g || state_at >= 0 || rewind_at >= 0 || shots_every > 0)) {
+        fprintf(stderr, "%s: the --gb-... test options are for Game Boy ROMs, without --state-at, --rewind-at or --shots-every\n",
+                rom_path);
+        goto done;
+    }
+    if (gb_test != GB_TEST_NONE && !frames_given) frames = 3600;
+    if (!g) frames_given = true; /* no idle-loop detection for the Game Boy: always a fixed number of frames */
     uint8_t *bios = NULL; /* kept for --state-at's new machine */
     size_t bios_size = 0;
     if (bios_path) {
@@ -382,19 +469,21 @@ int main(int argc, char **argv) {
             goto done;
         }
     }
-    if (gba_load_rom(g, rom, rom_size) != GBA_OK) {
-        fprintf(stderr, "cannot load ROM %s\n", rom_path);
+    int load_err = machine_load_rom(m, rom, rom_size);
+    if (load_err != MACHINE_OK) {
+        fprintf(stderr, "cannot load ROM %s%s\n", rom_path,
+                load_err == MACHINE_ERR_UNSUPPORTED ? ": a cartridge chip this emulator does not have" : "");
         goto done;
     }
     if (hardware) gba_set_cart_hardware(g, hw_flags);
-    if (rtc_given) gba_set_rtc(g, rtc_seconds, 0);
+    if (rtc_given) machine_set_rtc(m, rtc_seconds, 0);
     if (save_path) {
         size_t save_size;
         uint8_t *save = read_file(save_path, &save_size);
         if (save) {
-            gba_err_t err = gba_load_saveram(g, save, save_size);
+            int err = machine_save_read(m, save, save_size);
             free(save);
-            if (err != GBA_OK) {
+            if (err != MACHINE_OK) {
                 fprintf(stderr, "cannot use %s: wrong size for this game's save chip\n", save_path);
                 goto done;
             }
@@ -403,16 +492,16 @@ int main(int argc, char **argv) {
     if (load_state) {
         size_t state_size;
         uint8_t *state = read_file(load_state, &state_size);
-        gba_err_t err = state ? gba_state_load(g, state, state_size) : GBA_ERR_STATE;
+        int err = state ? machine_state_load(m, state, state_size) : MACHINE_ERR_STATE;
         free(state);
-        if (err != GBA_OK) {
+        if (err != MACHINE_OK) {
             fprintf(stderr, "cannot load the state %s (another game, another version, or damaged)\n", load_state);
             goto done;
         }
     }
     if (cheat_count && !set_cheats(g, cheat_paths, cheat_count)) goto done;
     if (wav_path) {
-        if (wav_open(&audio.wav, wav_path, GBA_AUDIO_RATE) != 0) {
+        if (wav_open(&audio.wav, wav_path, MACHINE_AUDIO_RATE) != 0) {
             fprintf(stderr, "cannot write %s\n", wav_path);
             goto done;
         }
@@ -422,13 +511,15 @@ int main(int argc, char **argv) {
     bool exact = frames_given && result_reg < 0;
     long frame = 0;
     if (suite_group >= 0) {
-        code = run_suite(g, suite_group, suite_min, &audio);
+        code = run_suite(m, suite_group, suite_min, &audio);
+    } else if (gb_test != GB_TEST_NONE) {
+        code = run_gb_test(m, gb_test, gb_expect, frames, &audio, rom_path);
     } else {
         if (exact) {
             uint64_t *hash_before = NULL; /* the audio hash before each frame's sound was read */
             if (rewind_at >= 0) {
                 hash_before = malloc(sizeof(uint64_t) * (size_t)frames);
-                if (!hash_before || gba_rewind_configure(g, REWIND_BUDGET, REWIND_EVERY) != GBA_OK) {
+                if (!hash_before || machine_rewind_configure(m, REWIND_BUDGET, REWIND_EVERY) != MACHINE_OK) {
                     fprintf(stderr, "no memory for rewind\n");
                     free(hash_before);
                     goto done;
@@ -436,14 +527,17 @@ int main(int argc, char **argv) {
             }
             bool rewound = false;
             for (; frame < frames; frame++) {
-                if (frame == state_at && !switch_machine(&g, bios, bios_size, rom, rom_size)) {
-                    printf("FAIL %s: the state saved at frame %ld did not load\n", rom_path, frame);
-                    code = EXIT_FAILED;
-                    goto done;
+                if (frame == state_at) {
+                    if (!switch_machine(&m, bios, bios_size, rom, rom_size)) {
+                        printf("FAIL %s: the state saved at frame %ld did not load\n", rom_path, frame);
+                        code = EXIT_FAILED;
+                        goto done;
+                    }
+                    g = machine_gba(m);
                 }
                 if (frame == rewind_at && !rewound) {
                     for (long s = 0; s < rewind_steps; s++) {
-                        if (!gba_rewind_step_back(g)) {
+                        if (!machine_rewind_step_back(m)) {
                             printf("FAIL %s: rewind step %ld of %ld found no snapshot\n", rom_path, s + 1, rewind_steps);
                             free(hash_before);
                             code = EXIT_FAILED;
@@ -456,9 +550,9 @@ int main(int argc, char **argv) {
                     rewound = true;
                 }
                 if (hash_before) hash_before[frame] = audio.hash;
-                set_input(g, key_script_at(&keys, frame));
-                run_frame(g, &audio);
-                if (shots_every > 0 && (frame + 1) % shots_every == 0 && !write_shot(g, shots_dir, frame + 1)) {
+                set_input(m, key_script_at(&keys, frame));
+                run_frame(m, &audio);
+                if (shots_every > 0 && (frame + 1) % shots_every == 0 && !write_shot(m, shots_dir, frame + 1)) {
                     free(hash_before);
                     code = EXIT_USAGE;
                     goto done;
@@ -467,8 +561,8 @@ int main(int argc, char **argv) {
             free(hash_before);
         } else {
             while (frame < frames && !at_idle_loop(g)) {
-                set_input(g, key_script_at(&keys, frame));
-                run_frame(g, &audio);
+                set_input(m, key_script_at(&keys, frame));
+                run_frame(m, &audio);
                 frame++;
             }
         }
@@ -490,8 +584,8 @@ int main(int argc, char **argv) {
         }
     }
 
-    const uint16_t *fb = gba_framebuffer(g);
-    uint64_t hash = frame_hash(fb);
+    const uint16_t *fb = machine_framebuffer(m);
+    uint64_t hash = frame_hash(fb, (size_t)machine_width(m) * (size_t)machine_height(m));
     if (print_hash) printf("HASH %016" PRIx64 "\n", hash);
     if (print_audio) printf("AUDIO %016" PRIx64 "\n", audio.hash);
     if (print_notes) {
@@ -506,7 +600,7 @@ int main(int argc, char **argv) {
             printf("PRINT %" PRIu32 " %" PRIu32 " %" PRIu32 " %s\n", prints[i].level, prints[i].first_frame,
                    prints[i].count, prints[i].text);
     }
-    if (shot_path && png_write_bgr555(shot_path, fb, 240, 160) != 0) {
+    if (shot_path && png_write_bgr555(shot_path, fb, machine_width(m), machine_height(m)) != 0) {
         fprintf(stderr, "cannot write %s\n", shot_path);
         code = EXIT_USAGE;
     }
@@ -515,15 +609,19 @@ int main(int argc, char **argv) {
         code = EXIT_FAILED;
     }
 
-    size_t save_bytes = gba_saveram_size(g);
-    if (save_path && save_bytes && write_file(save_path, gba_saveram(g), save_bytes) != 0) {
-        fprintf(stderr, "cannot write %s\n", save_path);
-        code = EXIT_USAGE;
+    size_t save_bytes = machine_save_size(m);
+    if (save_path && save_bytes) {
+        uint8_t *save = malloc(save_bytes);
+        if (!save || machine_save_write(m, save, save_bytes) != save_bytes || write_file(save_path, save, save_bytes) != 0) {
+            fprintf(stderr, "cannot write %s\n", save_path);
+            code = EXIT_USAGE;
+        }
+        free(save);
     }
     if (write_state && code == EXIT_PASS) {
-        size_t size = gba_state_size(g);
-        uint8_t *state = malloc(size);
-        if (!state || gba_state_save(g, state, size) != size || write_file(write_state, state, size) != 0) {
+        size_t size = machine_state_size(m);
+        uint8_t *state = malloc(size ? size : 1);
+        if (!state || !size || machine_state_save(m, state, size) != size || write_file(write_state, state, size) != 0) {
             fprintf(stderr, "cannot write the state %s\n", write_state);
             code = EXIT_USAGE;
         }
@@ -535,7 +633,7 @@ done:
         fprintf(stderr, "cannot write %s\n", wav_path);
         code = EXIT_USAGE;
     }
-    gba_destroy(g);
+    machine_destroy(m);
     free(bios);
     free(rom);
     free(keys.ev);

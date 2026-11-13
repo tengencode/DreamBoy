@@ -431,7 +431,7 @@ int main(int argc, char **argv) {
             play(g, sc, sc->warmup, sc->warmup + sc->timed, &res.sound, shots, r == 0 ? shot_count : 0);
             res.seconds = now_seconds() - start;
             if (profile) profile_stop();
-            res.picture = frame_hash(gba_framebuffer(g));
+            res.picture = frame_hash(gba_framebuffer(g), 240 * 160);
             gba_destroy(g);
             if (r == 0) first = best = res;
             else {
