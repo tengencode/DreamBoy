@@ -466,7 +466,7 @@ class MainActivity : ComponentActivity() {
         val info = fileInfo(uri)
         val entry = library.games.firstOrNull { it.key == key }
             ?: GameEntry(key, uri.toString(), Library.nameOf(info?.first ?: uri.lastPathSegment ?: "game"), outside = true,
-                size = info?.second ?: 0)
+                size = info?.second ?: 0, console = info?.first?.let(Console::ofName))
         open(entry)
     }
 
@@ -602,7 +602,7 @@ class MainActivity : ComponentActivity() {
         old.edit().clear().apply()
     }
 
-    /** The game's bytes (from a .gba or a .zip), or null. */
+    /** The game's bytes (from a game file or a .zip), or null. */
     private fun readGame(uri: Uri): ByteArray? = try {
         contentResolver.openInputStream(uri)?.use(RomFile::read)
     } catch (e: Exception) {
@@ -687,23 +687,28 @@ class MainActivity : ComponentActivity() {
         val slow = Runnable { if (busy == null) busy = OPENING }
         handler.postDelayed(slow, 300)
         thread(name = "open-game") {
-            val bytes: Any? = try {
-                contentResolver.openInputStream(Uri.parse(entry.uri))?.use(RomFile::read)
+            val read: Any? = try {
+                contentResolver.openInputStream(Uri.parse(entry.uri))?.use(RomFile::readNamed)
             } catch (e: RomFile.NotAGame) {
                 e
             } catch (e: Exception) {
                 null
             }
+            val bytes: Any? = (read as? RomFile.Named)?.bytes ?: read
             val id = (bytes as? ByteArray)?.let(GameId::of)
+            // The console: by the game's own bytes; else by the zip's inner name or what the list knows from the
+            // file's name; a game nothing is known about is tried as a GBA game, as before there were others.
+            val console = (bytes as? ByteArray)?.let { Console.of(it, (read as? RomFile.Named)?.zipName) }
+                ?: entry.console ?: Console.GBA
             runOnUiThread {
                 opening = false
                 handler.removeCallbacks(slow)
                 if (busy == OPENING) busy = null
                 if (isDestroyed) return@runOnUiThread
                 when {
-                    bytes is RomFile.NotAGame -> message = "Not a GBA game."
+                    bytes is RomFile.NotAGame -> message = NOT_A_GAME
                     bytes !is ByteArray || id == null -> message = "Can't open ${entry.name}."
-                    else -> openRead(entry, resumeAuto, bytes, id)
+                    else -> openRead(entry.copy(console = console), resumeAuto, bytes, id)
                 }
             }
         }
@@ -720,14 +725,17 @@ class MainActivity : ComponentActivity() {
         NativeBridge.setBios(bios)
         val own = gameSettings.of(gameId)
         NativeBridge.setGameOverrides(own.saveType, own.clock)
-        if (NativeBridge.loadRom(rom, File(saves, "$gameId.sav").path) != 0) {
-            message = "Not a GBA game."
+        val console = entry.console ?: Console.GBA
+        val loadError = NativeBridge.loadGame(rom, File(saves, "$gameId.sav").path, console.native)
+        if (loadError != 0) { // (the previous game's session is already stopped and saved)
+            message = loadErrorText(loadError)
             return
         }
         if (own == GameSettings.Game()) NativeBridge.cartSetup().let { gameSettings.remember(gameId, it[0], it[1]) }
         hardware = NativeBridge.cartHardware()
         manualLight = null
-        val played = entry.copy(id = gameId, lastPlayed = System.currentTimeMillis())
+        val played = entry.copy(id = gameId, lastPlayed = System.currentTimeMillis(),
+            console = Console.ofNative(NativeBridge.console()) ?: console)
         library.played(played)
         library.save()
         rows = library.rows()
@@ -747,7 +755,8 @@ class MainActivity : ComponentActivity() {
         raBoards = emptyList()
         openBoard = null
         hardcoreOn = false
-        if (ra.loadGame(rom)) waitForAchievements { game -> useAchievements(game); continueOpen(st, resumeAuto) }
+        // RetroAchievements: GBA games only for now (17b) — a Game Boy game is not even identified.
+        if (console == Console.GBA && ra.loadGame(rom)) waitForAchievements { game -> useAchievements(game); continueOpen(st, resumeAuto) }
         else continueOpen(st, resumeAuto)
     }
 

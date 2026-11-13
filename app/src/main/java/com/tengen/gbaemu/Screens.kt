@@ -275,7 +275,7 @@ private fun EmptyLibrary(folderName: String?, scanning: Boolean, onChangeFolder:
         }
         if (!scanning) {
             Spacer(Modifier.height(20.dp))
-            Text("Put .gba or .zip files there, or pick another folder.", textAlign = TextAlign.Center,
+            Text("Put .gba, .gb, .gbc or .zip files there, or pick another folder.", textAlign = TextAlign.Center,
                 color = MaterialTheme.colorScheme.onSurfaceVariant)
             Spacer(Modifier.height(20.dp))
             Button(onClick = onChangeFolder, modifier = Modifier.heightIn(min = 52.dp)) {

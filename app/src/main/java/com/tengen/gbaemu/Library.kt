@@ -7,7 +7,8 @@ import java.io.File
  * same for the folder's copy of a file and for the file picked on its own); [uri] is how it is read. [id] (the
  * CRC-32 of its bytes, the key of its saves and states) is empty until the game is opened; [lastPlayed] 0 until then.
  * [outside]: opened with "Open a game…" from outside the games folder; it stays until removed. [size]: the file's
- * size in bytes (0 = unknown).
+ * size in bytes (0 = unknown). [console]: which console the game is for — null until known (a list written before
+ * there were Game Boy games, or a zip not looked into yet); such a game is shown and opened as a GBA game.
  */
 data class GameEntry(
     val key: String,
@@ -17,10 +18,11 @@ data class GameEntry(
     val lastPlayed: Long = 0,
     val outside: Boolean = false,
     val size: Long = 0,
+    val console: Console? = null,
 )
 
-/** A game file found in the games folder now ([size] in bytes, 0 = unknown). */
-data class FoundGame(val key: String, val uri: String, val name: String, val size: Long = 0)
+/** A game file found in the games folder now ([size] in bytes, 0 = unknown; [console] as its name says, if it does). */
+data class FoundGame(val key: String, val uri: String, val name: String, val size: Long = 0, val console: Console? = null)
 
 /**
  * The game list in `files/library.json`: the games folder (its tree URI) and what the app knows of each game.
@@ -65,8 +67,9 @@ class Library(filesDir: File) {
             val twin = outside.firstOrNull { it.name == f.name && it.size > 0 && it.size == f.size }?.also { outside.remove(it) }
             val base = listOfNotNull(own, twin).maxByOrNull { it.lastPlayed }
             base?.copy(key = f.key, uri = f.uri, name = f.name, outside = false, size = f.size,
-                id = base.id.ifEmpty { own?.id?.ifEmpty { null } ?: twin?.id ?: "" })
-                ?: GameEntry(f.key, f.uri, f.name, size = f.size)
+                id = base.id.ifEmpty { own?.id?.ifEmpty { null } ?: twin?.id ?: "" },
+                console = base.console ?: f.console) // what opening the game found out beats the file's name
+                ?: GameEntry(f.key, f.uri, f.name, size = f.size, console = f.console)
         }
         games = inFolder + outside
     }
@@ -105,7 +108,9 @@ class Library(filesDir: File) {
             games.forEachIndexed { i, g ->
                 append(if (i == 0) "\n" else ",\n")
                 append("    {\"key\": ${Json.str(g.key)}, \"uri\": ${Json.str(g.uri)}, \"name\": ${Json.str(g.name)}, ")
-                append("\"id\": ${Json.str(g.id)}, \"lastPlayed\": ${g.lastPlayed}, \"outside\": ${g.outside}, \"size\": ${g.size}}")
+                append("\"id\": ${Json.str(g.id)}, \"lastPlayed\": ${g.lastPlayed}, \"outside\": ${g.outside}, \"size\": ${g.size}")
+                g.console?.let { append(", \"console\": ${Json.str(it.name.lowercase())}") }
+                append("}")
             }
             append(if (games.isEmpty()) "]\n}\n" else "\n  ]\n}\n")
         }
@@ -125,6 +130,7 @@ class Library(filesDir: File) {
                         var last = 0L
                         var outside = false
                         var size = 0L
+                        var console: Console? = null
                         obj { field ->
                             when (field) {
                                 "key" -> k = string()
@@ -134,11 +140,12 @@ class Library(filesDir: File) {
                                 "lastPlayed" -> last = number()
                                 "outside" -> outside = bool()
                                 "size" -> size = number()
+                                "console" -> console = string().let { c -> Console.entries.firstOrNull { it.name.lowercase() == c } }
                                 else -> error("unknown key $field")
                             }
                         }
                         if (k.isEmpty() || uri.isEmpty()) error("a game without its file")
-                        games += GameEntry(k, uri, name, id, last, outside, size)
+                        games += GameEntry(k, uri, name, id, last, outside, size, console)
                     }
                     else -> error("unknown key $key")
                 }

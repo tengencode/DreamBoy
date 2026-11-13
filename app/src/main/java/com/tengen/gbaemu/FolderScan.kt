@@ -12,9 +12,9 @@ import android.provider.DocumentsContract.Document
 object FolderScan {
     private const val MAX_DEPTH = 8
 
-    /** Whether each zip holds a game, by key and size: a zip without one is read to its end, so read it once.
-     *  shortcut: kept only while the app runs, read again after a restart. */
-    private val zipHasGame = java.util.concurrent.ConcurrentHashMap<String, Boolean>()
+    /** The game file's name inside each zip ("" = none), by key and size: a zip without one is read to its end, so
+     *  read it once. shortcut: kept only while the app runs, read again after a restart. */
+    private val zipGame = java.util.concurrent.ConcurrentHashMap<String, String>()
 
     /** How the library matches a file however it was reached: its provider and document id. */
     fun keyOf(uri: Uri): String = "${uri.authority}/${DocumentsContract.getDocumentId(uri)}"
@@ -58,16 +58,17 @@ object FolderScan {
                 if (!Library.isGameFile(name)) continue
                 val uri = DocumentsContract.buildDocumentUriUsingTree(tree, id)
                 val size = if (it.isNull(3)) 0L else it.getLong(3)
+                var gameName = name // the file whose ending tells the console: the zip's inner one for a zip
                 if (name.endsWith(".zip", ignoreCase = true)) {
                     val known = "${keyOf(uri)} $size"
-                    val ok = zipHasGame[known] ?: try { // a zip that can't be read now is tried again next time
-                        (resolver.openInputStream(uri)?.use(RomFile::zipHasGame) ?: false).also { has -> zipHasGame[known] = has }
+                    gameName = zipGame[known] ?: try { // a zip that can't be read now is tried again next time
+                        (resolver.openInputStream(uri)?.use(RomFile::zipGameName) ?: "").also { inner -> zipGame[known] = inner }
                     } catch (e: Exception) {
-                        false
+                        ""
                     }
-                    if (!ok) continue
+                    if (gameName.isEmpty()) continue
                 }
-                out += FoundGame(keyOf(uri), uri.toString(), Library.nameOf(name), size)
+                out += FoundGame(keyOf(uri), uri.toString(), Library.nameOf(name), size, Console.ofName(gameName))
             }
         }
     }

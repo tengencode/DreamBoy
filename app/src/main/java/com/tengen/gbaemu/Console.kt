@@ -1,5 +1,11 @@
 package com.tengen.gbaemu
 
+/** Why a game did not open, in the player's words ([code]: what NativeBridge.loadGame returned, not 0). */
+fun loadErrorText(code: Int): String =
+    if (code == NativeBridge.ERR_UNSUPPORTED) "This cartridge type isn't supported yet." else NOT_A_GAME
+
+const val NOT_A_GAME = "Not a game this app can play."
+
 /**
  * Which console a game is for. [native] is the number the C side uses (NativeBridge.CONSOLE_*); [frameWidth] x
  * [frameHeight] its picture; [hasShoulders]: it has L and R buttons; [mark] is printed on the game's label.

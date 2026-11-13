@@ -9,6 +9,43 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class LibraryTest {
+    @Test
+    fun aGameListFromBeforeGameBoyGamesStillReads() {
+        // exactly what 1.0.0 wrote: no "console" field
+        val old = """{
+  "folder": "content://tree/games",
+  "games": [
+    {"key": "docs/a.gba", "uri": "content://tree/a.gba", "name": "a", "id": "0badf00d", "lastPlayed": 5, "outside": false, "size": 99}
+  ]
+}
+"""
+        val (folder, games) = Library.fromJson(old)
+        assertEquals("content://tree/games", folder)
+        assertEquals(listOf(GameEntry("docs/a.gba", "content://tree/a.gba", "a", "0badf00d", 5, false, 99, null)), games)
+        assertEquals(old, Library.toJson(folder, games)) // and is written back unchanged
+    }
+
+    @Test
+    fun theConsoleIsKeptAndWhatOpeningFoundBeatsTheFilesName() {
+        val games = listOf(GameEntry("k1", "u1", "shock", console = Console.GB), GameEntry("k2", "u2", "city", console = Console.GBC),
+            GameEntry("k3", "u3", "quest", console = Console.GBA), GameEntry("k4", "u4", "zip"))
+        assertEquals(games, Library.fromJson(Library.toJson(null, games)).second)
+        val lib = Library(Files.createTempDirectory("lib").toFile())
+        lib.merge(listOf(FoundGame("docs/x.gb", "content://tree/x.gb", "x", 10, Console.GB),
+            FoundGame("docs/y.zip", "content://tree/y.zip", "y", 20, Console.GBC), FoundGame("docs/z.gba", "content://tree/z.gba", "z", 30, null)))
+        assertEquals(listOf(Console.GB, Console.GBC, null), lib.games.map { it.console })
+        lib.played(lib.games[0].copy(id = "11111111", lastPlayed = 3, console = Console.GBC)) // a colour game named .gb
+        lib.merge(listOf(FoundGame("docs/x.gb", "content://tree/x.gb", "x", 10, Console.GB)))
+        assertEquals(Console.GBC, lib.games.single().console)
+    }
+
+    @Test
+    fun whyAGameDidNotOpen() {
+        assertEquals("This cartridge type isn't supported yet.", loadErrorText(NativeBridge.ERR_UNSUPPORTED))
+        assertEquals(NOT_A_GAME, loadErrorText(1))
+        assertEquals(NOT_A_GAME, loadErrorText(3))
+    }
+
     private fun found(name: String) = FoundGame("docs/$name", "content://tree/$name", Library.nameOf(name))
 
     @Test

@@ -119,13 +119,13 @@ and checksum; else a Game Boy header checksum with a size byte that fits; else t
 shown and treated as GBA until the game is opened once — Review Focus 2); set from `Console.of` whenever the game's
 bytes are read (open, id computing).
 
-- [ ] **Step 1: Failing tests:** `LibraryTest`: a 1.0.0 game list without the field reads and writes back; the field
+- [x] **Step 1: Failing tests:** `LibraryTest`: a 1.0.0 game list without the field reads and writes back; the field
   survives a round trip; `MainActivity`'s load-error text function (pure, new: `loadErrorText(code): String`) gives
   "This cartridge type isn't supported yet" for `ERR_UNSUPPORTED`, the existing texts for the others.
-- [ ] **Step 2:** Implement: the open flow stores the console, shows the error (as today's errors are shown) and
+- [x] **Step 2:** Implement: the open flow stores the console, shows the error (as today's errors are shown) and
   returns to the list with no session left (Review Focus 3); the first-start and empty-folder texts name the three
   endings.
-- [ ] **Step 3:** On-device test: opening the Game Boy demo from a folder puts it in the list with its console;
+- [x] **Step 3:** On-device test: opening the Game Boy demo from a folder puts it in the list with its console;
   opening an unsupported-chip file shows the message. Commit `app: the game list knows each game's console`.
 
 ### Task 4: The picture's shape everywhere
