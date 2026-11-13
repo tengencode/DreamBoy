@@ -130,4 +130,16 @@ class ChtFileTest {
         assertEquals("No cheats could be read from this file.", note(0, 3, 0))
         assertEquals("This file has no cheats.", ChtFile.NO_CHEATS)
     }
+
+    @Test
+    fun aGameBoyFilesCodesStayReadable() { // 17c: Game Genie codes keep their dashes; GameShark codes joined with + share a line
+        val found = ChtFile.parse("""
+            cheats = 2
+            cheat0_desc = "Lives"
+            cheat0_code = "00A-17B-C49+3EA-17B"
+            cheat1_desc = "Energy"
+            cheat1_code = "01AA23C1+01BB24C1"
+        """.trimIndent())
+        assertEquals(listOf("Lives" to "00A-17B-C49\n3EA-17B", "Energy" to "01AA23C1 01BB24C1"), found)
+    }
 }

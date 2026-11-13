@@ -70,8 +70,8 @@ int gb_look_auto(const uint8_t *rom, size_t size);
 void gb_set_look(gb_t *g, int look); /* kept across gb_reset and gb_load_rom */
 
 /* Cheats: Game Genie (ABC-DEF or ABC-DEF-GHI, dashes optional: a ROM byte reads as another) and GameShark
- * (TTVVLLHH: a RAM byte is written every frame). A cheat is its codes as text, one per line or joined by '+'
- * (spaces and blank lines allowed); Auto reads each code as what it is. */
+ * (TTVVLLHH: a RAM byte is written every frame). A cheat is its codes as text, one per line or separated by '+'
+ * or spaces (blank lines allowed); Auto reads each code as what it is. */
 typedef enum { GB_CHEAT_AUTO, GB_CHEAT_GAME_GENIE, GB_CHEAT_GAMESHARK } gb_cheat_type_t;
 /* Reads a cheat without a machine: the type it is read as with *bad_line = 0, or *bad_line = the first line that
  * is not a code of that type (1-based, blank lines counted; 1 for a text without any code). */

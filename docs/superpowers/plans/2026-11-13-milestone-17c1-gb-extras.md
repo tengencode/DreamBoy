@@ -141,11 +141,11 @@ uses the loaded game's console), `Console.kt` (drop `NO_CHEATS_YET`; `cheatTypes
 `Screens.kt`, `MainActivity.kt`, `BoxArtHelper.kt` (cheat list / file URLs per console), `ChtFile.kt` only if `+` is
 not split yet; tests `ConsoleTest.kt`, `ChtFileTest.kt`, `BoxArtHelperTest.kt`, `GameBoyDeviceTest.kt`.
 
-- [ ] **Step 1:** Failing tests: Kotlin — the type names per console; a `.cht` text with a Game Genie and a
+- [x] **Step 1:** Failing tests: Kotlin — the type names per console; a `.cht` text with a Game Genie and a
   GameShark cheat merges with `readable` asked per code; the cheat folder URL for GB and GBC. On-device —
   `aGameSharkCheatHoldsMemory` (gb_demo + `debugSaveRam` or a frame difference), `checkCheat` reads a Game Genie code
   only in a Game Boy game.
-- [ ] **Step 2:** Implement; the pause menu's Cheats row is a normal row for every console; hardcore still switches
+- [x] **Step 2:** Implement; the pause menu's Cheats row is a normal row for every console; hardcore still switches
   it off. `jvmtest`, `androidtest`. Commit `app: cheats for Game Boy and Game Boy Color games`.
 
 ### Task 6: RetroAchievements

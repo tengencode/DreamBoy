@@ -179,4 +179,25 @@ class BoxArtHelperTest {
         assertNull(helper(dir, net).cheatFile("Missing (USA).cht"))
         assertNull(helper(tmp(), FakeNet(mutableMapOf(BoxArtHelper.CHEAT_LIST_URL to Net.Failed))).cheatFiles(sample))
     }
+
+    @Test
+    fun cheatFilesComeFromTheGamesOwnConsole() { // 17c
+        assertEquals(BoxArtHelper.CHEAT_LIST_URL, BoxArtHelper.cheatListUrl(Console.GBA)) // where it always was
+        assertEquals(BoxArtHelper.CHEAT_URL, BoxArtHelper.cheatUrl(Console.GBA))
+        assertTrue(BoxArtHelper.cheatListUrl(Console.GB).endsWith("/cht/Nintendo%20-%20Game%20Boy"))
+        assertTrue(BoxArtHelper.cheatUrl(Console.GBC).endsWith("/cht/Nintendo%20-%20Game%20Boy%20Color/"))
+        val dir = tmp()
+        val gb = "Shock Hunt (World) (Game Genie).cht"
+        val gbc = "Tiny City (World) (GameShark).cht"
+        val net = FakeNet(mutableMapOf(
+            BoxArtHelper.cheatListUrl(Console.GB) to Net.Got("""[{"name": "$gb", "type": "file"}]""".toByteArray()),
+            BoxArtHelper.cheatListUrl(Console.GBC) to Net.Got("""[{"name": "$gbc", "type": "file"}]""".toByteArray()),
+            BoxArtHelper.cheatUrl(Console.GBC) + BoxArtHelper.encode(gbc) to Net.Got("cheat0_desc = \"y\"".toByteArray())))
+        assertEquals(listOf("Game Genie" to gb), helper(dir, net).cheatFiles("Shock Hunt (World)", Console.GB))
+        assertEquals(listOf("GameShark" to gbc), helper(dir, net).cheatFiles("Tiny City (World)", Console.GBC))
+        assertEquals(emptyList<Pair<String, String>>(), helper(dir, net).cheatFiles("Tiny City (World)", Console.GB)) // each list is kept apart
+        assertEquals(1, net.asked.count { it == BoxArtHelper.cheatListUrl(Console.GB) })
+        assertEquals("cheat0_desc = \"y\"", helper(dir, net).cheatFile(gbc, Console.GBC))
+        assertNull(helper(dir, net).cheatFile(gbc, Console.GB))
+    }
 }

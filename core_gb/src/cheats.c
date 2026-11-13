@@ -1,4 +1,4 @@
-/* Cheats (17c). A cheat is its codes as text, one per line or joined by '+':
+/* Cheats (17c). A cheat is its codes as text, one per line or separated by '+' or spaces:
  *
  * - Game Genie, ABC-DEF or ABC-DEF-GHI (dashes optional): a byte of the cartridge ROM reads as a new value. Value
  *   AB; address F C D E with F XORed by 0xF; the nine-digit form has a compare byte, (G I rotated right by 2) XOR
@@ -72,7 +72,7 @@ static int read_text(const char *text, gb_cheat_type_t type, gb_code_t *codes, s
     gb_cheat_type_t first = type;
     const char *p = text;
     while (*p) {
-        size_t len = strcspn(p, "\n+");
+        size_t len = strcspn(p, "\n+ \t\r");
         const char *a = p, *b = p + len;
         while (a < b && (*a == ' ' || *a == '\t' || *a == '\r')) a++;
         while (b > a && (b[-1] == ' ' || b[-1] == '\t' || b[-1] == '\r')) b--;
@@ -86,8 +86,6 @@ static int read_text(const char *text, gb_cheat_type_t type, gb_code_t *codes, s
                 if (*count >= cap) return -1;
                 codes[(*count)++] = c;
             }
-        } else if (p[len] == '+') {
-            return line; /* nothing before or after a '+' */
         }
         p += len;
         if (*p == '\n') line++;

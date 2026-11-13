@@ -309,7 +309,7 @@ class MainActivity : ComponentActivity() {
                         onLoad = { menu = MenuPage.LOAD }, onCheats = { menu = MenuPage.CHEATS },
                         onSettings = { settingsPage = SettingsPage.MAIN },
                         onRestart = { askRestart = true }, onQuit = ::quitGame,
-                        locked = hardcoreOn, cheatsOff = if (gameConsole != Console.GBA) NO_CHEATS_YET else null, onAchievements = if (raSet) ({
+                        locked = hardcoreOn, onAchievements = if (raSet) ({
                             raList = NativeBridge.raSummary() to RaAchievement.list(NativeBridge.raAchievements())
                             menu = MenuPage.ACHIEVEMENTS
                         }) else null,
@@ -347,7 +347,7 @@ class MainActivity : ComponentActivity() {
                     null -> {}
                 }
                 editCheat?.let { i ->
-                    CheatDialog(editing = cheats.getOrNull(i), check = NativeBridge::checkCheat,
+                    CheatDialog(editing = cheats.getOrNull(i), check = NativeBridge::checkCheat, types = gameConsole.cheatTypes,
                         onSave = { c ->
                             changeCheats(cheats.toMutableList().also { if (i in it.indices) it[i] = c else it += c })
                             editCheat = null
@@ -1082,11 +1082,12 @@ class MainActivity : ComponentActivity() {
         thread(name = "cheats-online") {
             val h = newBoxHelper()
             val known = boxArt.entry(g.id)?.name?.ifEmpty { null }
-            val names = if (known == null) h.names() else null
-            val name = known ?: names?.find(g.id, code)
+            val console = g.console ?: Console.GBA
+            val names = if (known == null) h.names(console) else null
+            val name = known ?: names?.find(g.id, if (console == Console.GBA) code else "") // (only GBA headers carry a game code)
             val state = when {
                 name == null -> OnlineCheats.Message(if (names == null) CheatSources.NO_INTERNET else CheatSources.NONE_FOUND)
-                else -> when (val files = h.cheatFiles(name)) {
+                else -> when (val files = h.cheatFiles(name, console)) {
                     null -> OnlineCheats.Message(CheatSources.NO_INTERNET)
                     else -> if (files.isEmpty()) OnlineCheats.Message(CheatSources.NONE_FOUND) else OnlineCheats.Found(files)
                 }
@@ -1099,7 +1100,7 @@ class MainActivity : ComponentActivity() {
     private fun pickOnlineCheats(file: String) {
         onlineCheats = OnlineCheats.Looking
         thread(name = "cheats-online") {
-            val text = newBoxHelper().cheatFile(file)
+            val text = newBoxHelper().cheatFile(file, current?.console ?: Console.GBA)
             runOnUiThread {
                 if (onlineCheats == null) return@runOnUiThread // closed meanwhile
                 onlineCheats = null

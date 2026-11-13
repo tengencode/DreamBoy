@@ -652,15 +652,14 @@ gba_err_t emu_state_load(emu_t *e, const char *path) {
     return err;
 }
 
-gba_err_t emu_cheats_set(emu_t *e, const char *const *texts, const gba_cheat_type_t *types, size_t count) {
-    if (!e->g) return count ? GBA_ERR_CHEAT : GBA_OK; /* no cheats for Game Boy games yet (17b) */
+gba_err_t emu_cheats_set(emu_t *e, const char *const *texts, const int *types, size_t count) {
     if (!core_take(e)) return GBA_ERR_CHEAT;
     gba_err_t err;
     if (hardcore(e)) { /* hardcore: no cheats (14) */
-        gba_cheats_set(e->g, NULL, NULL, 0);
+        machine_cheats_set(e->m, NULL, NULL, 0);
         err = count ? GBA_ERR_CHEAT : GBA_OK;
     } else {
-        err = gba_cheats_set(e->g, texts, types, count);
+        err = machine_cheats_set(e->m, texts, types, count) == MACHINE_OK ? GBA_OK : GBA_ERR_CHEAT;
     }
     core_give(e);
     return err;

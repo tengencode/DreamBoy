@@ -96,8 +96,8 @@ class BoxArtHelper(
         }
     }
 
-    /** The GBA game list (also for cheat files, which exist for GBA games only). */
-    fun names(): GameNames? = list(Console.GBA)?.also { listTime = it.time }?.names
+    /** A console's game list (also for finding a game's cheat files by its name). */
+    fun names(console: Console = Console.GBA): GameNames? = list(console)?.also { listTime = it.time }?.names
 
     /** A console's game list: the kept one if younger than 30 days, else downloaded (the old one if that fails); null if none. */
     private fun load(console: Console): Listed? {
@@ -117,11 +117,11 @@ class BoxArtHelper(
     }
 
     /** libretro's cheat files for the game called [name], as (label, file); null if the list can't be had. */
-    fun cheatFiles(name: String): List<Pair<String, String>>? {
-        val file = File(dir, "cheat-files.txt")
+    fun cheatFiles(name: String, console: Console = Console.GBA): List<Pair<String, String>>? {
+        val file = File(dir, CHEAT_FILES.getValue(console))
         val kept = readKept(file)
         val files = if (kept != null && now() - kept.first < MONTH) lines(kept.second) else {
-            val got = fetch(CHEAT_LIST_URL, MAX_LISTING)
+            val got = fetch(cheatListUrl(console), MAX_LISTING)
             val listed = (got as? Net.Got)?.let { CheatSources.fromListing(it.bytes.toString(Charsets.UTF_8)) }
             if (listed != null) {
                 writeKept(file, now(), listed.joinToString("") { "$it\n" })
@@ -132,8 +132,8 @@ class BoxArtHelper(
     }
 
     /** One cheat file's text, or null if it can't be had. */
-    fun cheatFile(file: String): String? =
-        (fetch(CHEAT_URL + encode(file), ChtFile.MAX_BYTES) as? Net.Got)?.bytes?.toString(Charsets.UTF_8)
+    fun cheatFile(file: String, console: Console = Console.GBA): String? =
+        (fetch(cheatUrl(console) + encode(file), ChtFile.MAX_BYTES) as? Net.Got)?.bytes?.toString(Charsets.UTF_8)
 
     private fun lines(text: String) = text.lines().filter { it.isNotEmpty() && !it.startsWith("#") }
 
@@ -173,6 +173,16 @@ class BoxArtHelper(
         fun boxUrl(console: Console) = "https://thumbnails.libretro.com/${SYSTEMS.getValue(console)}/Named_Boxarts/"
         const val CHEAT_LIST_URL = "https://api.github.com/repos/libretro/libretro-database/contents/cht/$SYSTEM"
         const val CHEAT_URL = "https://raw.githubusercontent.com/libretro/libretro-database/master/cht/$SYSTEM/"
+
+        /** libretro's cheat files for each console (17c), and the file each list of them is kept in (the GBA's as before). */
+        private val CHEAT_FILES = mapOf(Console.GBA to "cheat-files.txt", Console.GB to "cheat-files-gb.txt",
+            Console.GBC to "cheat-files-gbc.txt")
+
+        fun cheatListUrl(console: Console) =
+            "https://api.github.com/repos/libretro/libretro-database/contents/cht/${SYSTEMS.getValue(console)}"
+
+        fun cheatUrl(console: Console) =
+            "https://raw.githubusercontent.com/libretro/libretro-database/master/cht/${SYSTEMS.getValue(console)}/"
 
         /** A file name as one part of a URL path (spaces as %20, not +). */
         fun encode(part: String): String = URLEncoder.encode(part, "UTF-8").replace("+", "%20")

@@ -71,6 +71,8 @@ TEST(gb_cheat_plus_joins_codes_on_a_line) {
     CHECK_EQ(bad, 0);
     check("01AA23C1\n01BB24C1+XYZ", GB_CHEAT_AUTO, &bad);
     CHECK_EQ(bad, 2);
+    CHECK_EQ(check("01AA23C1 01BB24C1", GB_CHEAT_AUTO, &bad), GB_CHEAT_GAMESHARK); /* as the app writes a cheat file's pair */
+    CHECK_EQ(bad, 0);
     gb_t *g = writer(0x1B, 2, 0);
     CHECK_EQ(set1(g, "01AA23C1 + 01BB24C1"), GB_OK);
     gbtu_frames(g, 1);

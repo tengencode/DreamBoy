@@ -545,8 +545,7 @@ internal fun MenuLayer(maxWidth: Dp = 440.dp, content: @Composable ColumnScope.(
 @Composable
 fun GameMenu(title: String, fastSpeed: Int, onFastSpeed: (Int) -> Unit, onResume: () -> Unit, onSave: () -> Unit,
              onLoad: () -> Unit, onCheats: () -> Unit, onSettings: () -> Unit, onRestart: () -> Unit, onQuit: () -> Unit,
-             locked: Boolean = false, onAchievements: (() -> Unit)? = null, onLeaderboards: (() -> Unit)? = null,
-             cheatsOff: String? = null) {
+             locked: Boolean = false, onAchievements: (() -> Unit)? = null, onLeaderboards: (() -> Unit)? = null) {
     BoxWithConstraints {
         val wide = maxWidth > maxHeight && maxHeight < 520.dp
         MenuLayer(maxWidth = if (wide) 720.dp else 420.dp) {
@@ -559,7 +558,7 @@ fun GameMenu(title: String, fastSpeed: Int, onFastSpeed: (Int) -> Unit, onResume
                         RestartQuit(onRestart, onQuit)
                     }
                     Column(Modifier.weight(1f).align(Alignment.CenterVertically)) {
-                        MenuTilesCut(onSave, onLoad, onCheats, onSettings, locked, onAchievements, onLeaderboards, cheatsOff)
+                        MenuTilesCut(onSave, onLoad, onCheats, onSettings, locked, onAchievements, onLeaderboards)
                     }
                 }
             } else {
@@ -568,7 +567,7 @@ fun GameMenu(title: String, fastSpeed: Int, onFastSpeed: (Int) -> Unit, onResume
                     Spacer(Modifier.height(16.dp))
                     ResumeButton(onResume)
                     Spacer(Modifier.height(14.dp))
-                    MenuTiles(onSave, onLoad, onCheats, onSettings, locked, onAchievements, onLeaderboards, cheatsOff)
+                    MenuTiles(onSave, onLoad, onCheats, onSettings, locked, onAchievements, onLeaderboards)
                     SpeedChoices(fastSpeed, onFastSpeed)
                     RestartQuit(onRestart, onQuit)
                 }
@@ -588,9 +587,8 @@ private fun ResumeButton(onResume: () -> Unit) {
 
 @Composable
 private fun MenuTiles(onSave: () -> Unit, onLoad: () -> Unit, onCheats: () -> Unit, onSettings: () -> Unit,
-                      locked: Boolean = false, onAchievements: (() -> Unit)? = null, onLeaderboards: (() -> Unit)? = null,
-                      cheatsOff: String? = null) {
-    val rows = menuRows(onSave, onLoad, onCheats, onSettings, locked, onAchievements, onLeaderboards, cheatsOff)
+                      locked: Boolean = false, onAchievements: (() -> Unit)? = null, onLeaderboards: (() -> Unit)? = null) {
+    val rows = menuRows(onSave, onLoad, onCheats, onSettings, locked, onAchievements, onLeaderboards)
     Column {
         rows.forEachIndexed { i, row ->
             if (i > 0) HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
@@ -602,24 +600,21 @@ private fun MenuTiles(onSave: () -> Unit, onLoad: () -> Unit, onCheats: () -> Un
 /** Sideways the rows sit in their own column; on a short screen it scrolls, cut partway through a row so it plainly goes on. */
 @Composable
 private fun ColumnScope.MenuTilesCut(onSave: () -> Unit, onLoad: () -> Unit, onCheats: () -> Unit, onSettings: () -> Unit,
-                                     locked: Boolean, onAchievements: (() -> Unit)?, onLeaderboards: (() -> Unit)?,
-                                     cheatsOff: String?) {
-    val rows = menuRows(onSave, onLoad, onCheats, onSettings, locked, onAchievements, onLeaderboards, cheatsOff)
+                                     locked: Boolean, onAchievements: (() -> Unit)?, onLeaderboards: (() -> Unit)?) {
+    val rows = menuRows(onSave, onLoad, onCheats, onSettings, locked, onAchievements, onLeaderboards)
     CutList(rows.size, rows.size) { i -> rows[i]() }
 }
 
-/** The pause menu's rows, in order: Save state, Load state, Achievements and Leaderboards (games that have them), Cheats, Settings.
- *  [cheatsOff]: why this game has no cheats (a Game Boy game, for now) — the row stays in place, off, with that under it. */
+/** The pause menu's rows, in order: Save state, Load state, Achievements and Leaderboards (games that have them), Cheats, Settings. */
 private fun menuRows(onSave: () -> Unit, onLoad: () -> Unit, onCheats: () -> Unit, onSettings: () -> Unit, locked: Boolean,
-                     onAchievements: (() -> Unit)?, onLeaderboards: (() -> Unit)?, cheatsOff: String?): List<@Composable () -> Unit> {
+                     onAchievements: (() -> Unit)?, onLeaderboards: (() -> Unit)?): List<@Composable () -> Unit> {
     val off = "Off in hardcore mode"
     return buildList {
         add { MenuRow(Icons.Filled.Save, "Save state", onSave) }
         add { MenuRow(Icons.Filled.FolderOpen, "Load state", onLoad, enabled = !locked, note = if (locked) off else null) }
         if (onAchievements != null) add { MenuRow(Icons.Filled.EmojiEvents, "Achievements", onAchievements) }
         if (onLeaderboards != null) add { MenuRow(Icons.Filled.Leaderboard, "Leaderboards", onLeaderboards) }
-        add { MenuRow(Icons.Filled.AutoFixHigh, "Cheats", onCheats, enabled = !locked && cheatsOff == null,
-            note = cheatsOff ?: if (locked) off else null) }
+        add { MenuRow(Icons.Filled.AutoFixHigh, "Cheats", onCheats, enabled = !locked, note = if (locked) off else null) }
         add { MenuRow(Icons.Filled.Settings, "Settings", onSettings) }
     }
 }
@@ -720,6 +715,7 @@ private fun SaveSticker(slot: Int, picture: Bitmap?, date: Pair<String, String>?
 
 /** The type picker's names, by NativeBridge.CHEAT_* value. */
 val CHEAT_TYPES = listOf("Auto", "Action Replay v3", "GameShark v1/v2", "CodeBreaker", "address:value")
+val GB_CHEAT_TYPES = listOf("Auto", "Game Genie", "GameShark") // Game Boy and Game Boy Color games (17c)
 
 /**
  * The game's cheats: one row each (name, on/off switch); a tap on the name edits it. Below: Add cheat, Import cheat
@@ -828,10 +824,10 @@ fun OnlineCheatsDialog(state: OnlineCheats, onPick: (String) -> Unit, onClose: (
  */
 @Composable
 fun CheatDialog(editing: Cheat?, check: (String, Int) -> IntArray, onSave: (Cheat) -> Unit, onDelete: (() -> Unit)?,
-                onCancel: () -> Unit) {
+                onCancel: () -> Unit, types: List<String> = CHEAT_TYPES) {
     var name by remember { mutableStateOf(editing?.name ?: "") }
     var codes by remember { mutableStateOf(editing?.codes ?: "") }
-    var type by remember { mutableStateOf(editing?.type ?: NativeBridge.CHEAT_AUTO) }
+    var type by remember { mutableStateOf(editing?.type?.takeIf { it in types.indices } ?: NativeBridge.CHEAT_AUTO) }
     var picking by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
     val found = remember(codes, type) { if (codes.isBlank()) null else check(codes, type) }
@@ -849,9 +845,9 @@ fun CheatDialog(editing: Cheat?, check: (String, Int) -> IntArray, onSave: (Chea
                     modifier = Modifier.fillMaxWidth())
                 Spacer(Modifier.height(8.dp))
                 Box {
-                    OutlinedButton(onClick = { picking = true }) { Text("Type: ${CHEAT_TYPES[type]}") }
+                    OutlinedButton(onClick = { picking = true }) { Text("Type: ${types[type]}") }
                     DropdownMenu(expanded = picking, onDismissRequest = { picking = false }) {
-                        CHEAT_TYPES.forEachIndexed { i, t ->
+                        types.forEachIndexed { i, t ->
                             DropdownMenuItem(text = { Text(t) }, onClick = { type = i; picking = false; error = null })
                         }
                     }
@@ -860,7 +856,7 @@ fun CheatDialog(editing: Cheat?, check: (String, Int) -> IntArray, onSave: (Chea
                     error != null -> error
                     found == null -> null
                     found[1] != 0 -> "Line ${found[1]} isn't a code this app can read."
-                    type == NativeBridge.CHEAT_AUTO -> "Found: ${CHEAT_TYPES[found[0]]}"
+                    type == NativeBridge.CHEAT_AUTO -> "Found: ${types.getOrElse(found[0]) { types[0] }}"
                     else -> null
                 }
                 if (hint != null) {

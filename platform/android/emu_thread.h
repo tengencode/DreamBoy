@@ -96,7 +96,7 @@ gba_err_t emu_state_load(emu_t *e, const char *path);
 void emu_ra_idle(emu_t *e);
 /* The switched-on cheats (gba_cheats_set) — only while paused or not started; GBA_ERR_CHEAT when running or when
  * a text does not read (then no cheats are on). */
-gba_err_t emu_cheats_set(emu_t *e, const char *const *texts, const gba_cheat_type_t *types, size_t count);
+gba_err_t emu_cheats_set(emu_t *e, const char *const *texts, const int *types, size_t count);
 /* The current BGR555 picture, emu_frame_size pixels (for a state's thumbnail); same rule: only while paused. */
 bool emu_frame(emu_t *e, uint16_t out[240 * 160]);
 
