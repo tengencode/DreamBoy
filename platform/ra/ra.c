@@ -259,6 +259,7 @@ void ra_md5_hex(const uint8_t *data, size_t size, char out[33]) {
 
 uint32_t ra_peek(const ra_memory_t *mem, uint32_t address, uint8_t *buffer, uint32_t count) {
     if (!mem) return 0;
+    if (mem->peek) return mem->peek(mem->ctx, address, buffer, count);
     for (uint32_t i = 0; i < count; i++) {
         uint32_t a = address + i;
         const uint8_t *p = NULL;

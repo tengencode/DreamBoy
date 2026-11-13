@@ -6,6 +6,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -155,8 +156,12 @@ fun SettingsScreen(page: SettingsPage, settings: Settings, keys: KeyBindings, ke
                    onRemoveSkin: (Int) -> Unit = {}, backup: BackupStatus = BackupStatus(), onBackUp: () -> Unit = {},
                    onRestore: () -> Unit = {}, onUndoRestore: () -> Unit = {}, onAutoBackup: (Boolean) -> Unit = {},
                    onChangeFolder: () -> Unit = {}, ra: RaUi = RaUi(), onRaSignIn: (String, String) -> Unit = { _, _ -> },
-                   onRaSignOut: () -> Unit = {}, version: String = "", onOpenGithub: () -> Unit = {}) {
+                   onRaSignOut: () -> Unit = {}, version: String = "", onOpenGithub: () -> Unit = {},
+                   lookStrips: List<IntArray> = emptyList()) {
     val s = settings
+    var pickLook by remember { mutableStateOf(false) }
+    if (pickLook) LookDialog(s.greyLook, lookStrips, null, onPick = { onChange(s.copy(greyLook = it)); pickLook = false },
+        onCancel = { pickLook = false })
     var licence by rememberSaveable { mutableIntStateOf(0) } // the one Settings → About → licences shows
     val chosen = importedSkins.firstOrNull { it.number == s.skinImport } // an imported skin in use, or null
     val skinName = chosen?.name ?: Skins.at(s.skin).name
@@ -197,6 +202,7 @@ fun SettingsScreen(page: SettingsPage, settings: Settings, keys: KeyBindings, ke
                             help = "Whole steps: every GBA pixel the same size (crisper, a little smaller). Sideways, the size matters most.")
                         SwitchRow("Show speed", s.showSpeed, { onChange(s.copy(showSpeed = it)) },
                             help = "Frames per second at the top of the game, and how many times real speed (1.0× = normal).")
+                        NavRow(Icons.Filled.Palette, "Grey Game Boy games", Looks.name(s.greyLook), last = true) { pickLook = true }
                     }
                     SettingsPage.SOUND -> Group {
                         SwitchRow("Sound", s.sound, { onChange(s.copy(sound = it)) })
@@ -524,21 +530,27 @@ private fun ValueRow(label: String, value: String, onClick: () -> Unit) {
     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
 }
 
-/** A pick list: tapping a choice picks it. */
+/**
+ * A pick list: tapping a choice picks it. [strips]: four colours shown after a choice's name (a look for grey games;
+ * an empty one shows nothing); [help] under the list.
+ */
 @Composable
-fun ChoiceDialog(title: String, options: List<String>, selected: Int, onPick: (Int) -> Unit, onCancel: () -> Unit) {
+fun ChoiceDialog(title: String, options: List<String>, selected: Int, onPick: (Int) -> Unit, onCancel: () -> Unit,
+                 strips: List<IntArray> = emptyList(), help: String? = null) {
     AlertDialog(
         onDismissRequest = onCancel,
         title = { Text(title) },
         text = {
-            Column {
+            Column(Modifier.verticalScroll(rememberScrollState())) {
                 options.forEachIndexed { i, label ->
                     Row(Modifier.fillMaxWidth().selectable(selected = i == selected, onClick = { onPick(i) }).heightIn(min = 48.dp),
                         verticalAlignment = Alignment.CenterVertically) {
                         RadioButton(selected = i == selected, onClick = null)
-                        Text(label, modifier = Modifier.padding(start = 8.dp))
+                        Text(label, modifier = Modifier.padding(start = 8.dp).weight(1f))
+                        strips.getOrNull(i)?.takeIf { it.isNotEmpty() }?.let { LookStrip(it) }
                     }
                 }
+                help?.let { Help(it) }
             }
         },
         confirmButton = { TextButton(onClick = onCancel) { Text("Cancel") } },
@@ -606,10 +618,50 @@ fun UnusualBiosDialog(onUse: () -> Unit, onCancel: () -> Unit) {
     )
 }
 
-/** Game settings (a game's sheet → Game settings): save type and clock, Auto showing what was detected. */
+/** A look's four background colours, lightest first, as one small strip. */
+@Composable
+fun LookStrip(colours: IntArray) {
+    Row(Modifier.padding(start = 12.dp).clip(MaterialTheme.shapes.extraSmall)
+        .border(1.dp, MaterialTheme.colorScheme.outlineVariant, MaterialTheme.shapes.extraSmall)) {
+        for (c in colours) Box(Modifier.size(width = 18.dp, height = 22.dp).background(Color(c)))
+    }
+}
+
+/** The looks list for grey Game Boy games: [first] = an extra first choice (a game's "Same as in Settings"), or null. */
+@Composable
+fun LookDialog(look: Int, strips: List<IntArray>, first: String?, onPick: (Int) -> Unit, onCancel: () -> Unit) {
+    val extra = if (first != null) 1 else 0
+    ChoiceDialog("Grey Game Boy games", listOfNotNull(first) + Looks.CHOICES.map(Looks::name),
+        if (Looks.valid(look)) Looks.CHOICES.indexOf(look) + extra else 0,
+        onPick = { onPick(if (it < extra) Looks.SAME else Looks.CHOICES[it - extra]) }, onCancel = onCancel,
+        strips = List(extra) { IntArray(0) } + strips, help = Looks.AUTO_HELP)
+}
+
+/**
+ * Game settings (a game's sheet → Game settings). A GBA game: save type and clock, Auto showing what was detected.
+ * A grey Game Boy game ([grey]): its colours.
+ */
 @Composable
 fun GameSettingsDialog(name: String, game: GameSettings.Game, detected: Pair<Int, Boolean>?, onChange: (GameSettings.Game) -> Unit,
-                       onDone: () -> Unit) {
+                       onDone: () -> Unit, grey: Boolean = false, lookStrips: List<IntArray> = emptyList()) {
+    if (grey) {
+        var picking by remember { mutableStateOf(false) }
+        AlertDialog(
+            onDismissRequest = onDone,
+            title = { Text("Game settings") },
+            text = {
+                Column {
+                    Text(name, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 8.dp))
+                    ValueRow("Colours", Looks.name(game.look)) { picking = true }
+                    Help("Used the next time this game opens.")
+                }
+            },
+            confirmButton = { TextButton(onClick = onDone) { Text("Done") } },
+        )
+        if (picking) LookDialog(game.look, lookStrips, Looks.name(Looks.SAME), onPick = { onChange(game.copy(look = it)); picking = false },
+            onCancel = { picking = false })
+        return
+    }
     var choosing by remember { mutableStateOf<Choice?>(null) }
     val autoSave = "Auto" + (detected?.let { " (${GameSettings.saveName(it.first)})" } ?: "")
     val autoClock = "Auto" + (detected?.let { if (it.second) " (has one)" else " (none)" } ?: "")

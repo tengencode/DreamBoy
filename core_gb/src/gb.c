@@ -6,20 +6,26 @@
 
 gb_t *gb_create(void) {
     gb_t *g = calloc(1, sizeof(gb_t));
-    if (g) gb_ppu_reset(g); /* a white picture until a game draws */
+    if (g) {
+        gb_set_look(g, GB_LOOK_GREY);
+        gb_ppu_reset(g); /* a white picture until a game draws */
+    }
     return g;
 }
 
 void gb_destroy(gb_t *g) {
     if (!g) return;
+    gb_cheats_clear(g);
     gb_cart_free(g);
     rewind_ring_free(g->rewind);
     free(g);
 }
 
 gb_err_t gb_load_rom(gb_t *g, const uint8_t *rom, size_t size) {
+    gb_cheats_clear(g); /* they were the old game's */
     gb_err_t err = gb_cart_load(g, rom, size);
     if (err != GB_OK) return err;
+    gb_look_refresh(g);
     gb_reset(g);
     gb_rewind_configure(g, g->rewind_budget, g->rewind_interval); /* the state's size may be another now */
     return GB_OK;
@@ -47,6 +53,7 @@ void gb_reset(gb_t *g) {
 void gb_run_frame(gb_t *g) {
     g->frame_left += GB_FRAME_TICKS;
     while (g->frame_left > 0) gb_cpu_step(g);
+    gb_cheats_run(g);
     gb_apu_sync(g); /* every sample of the frame is there to be read, and a state taken now has nothing pending */
     gb_rewind_after_frame(g);
 }

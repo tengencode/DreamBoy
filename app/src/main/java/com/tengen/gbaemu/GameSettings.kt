@@ -2,20 +2,26 @@ package com.tengen.gbaemu
 
 /**
  * Each game's own settings (Game settings… in its hold menu), by game id in an [IntStore] (the "game_settings"
- * preferences): its save type and clock, [AUTO] = what the app detects. Also what was detected the last time the
- * game ran without overrides, to show beside Auto.
+ * preferences): a GBA game's save type and clock, [AUTO] = what the app detects, and a grey Game Boy game's look
+ * ([Looks.SAME] = the one in Settings). Also what was detected the last time the game ran without overrides, to show
+ * beside Auto.
  */
 class GameSettings(private val store: IntStore) {
-    data class Game(val saveType: Int = AUTO, val clock: Int = AUTO)
+    data class Game(val saveType: Int = AUTO, val clock: Int = AUTO, val look: Int = Looks.SAME) {
+        /** Nothing is forced on the cartridge: what the app detects is what runs. */
+        val detects: Boolean get() = saveType == AUTO && clock == AUTO
+    }
 
     fun of(id: String): Game = Game(
         store.get("$id.save")?.takeIf { it in SAVE_CHOICES } ?: AUTO,
         store.get("$id.clock")?.takeIf { it == CLOCK_OFF || it == CLOCK_ON } ?: AUTO,
+        store.get("$id.look")?.takeIf(Looks::valid) ?: Looks.SAME,
     )
 
     fun set(id: String, game: Game) {
         store.put("$id.save", game.saveType.takeIf { it != AUTO })
         store.put("$id.clock", game.clock.takeIf { it != AUTO })
+        store.put("$id.look", game.look.takeIf(Looks::valid))
     }
 
     /** The detected save type and whether a clock was found, or null if the game has not run yet. */

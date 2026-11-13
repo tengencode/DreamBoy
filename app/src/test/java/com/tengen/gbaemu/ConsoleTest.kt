@@ -72,4 +72,19 @@ class ConsoleTest {
         assertEquals(160 to 144, Console.GB.frameWidth to Console.GB.frameHeight)
         assertEquals(false, Console.GBC.hasShoulders)
     }
+
+    @Test
+    fun eachConsoleHasItsOwnCheatTypes() { // 17c: the numbers are the cores' (gba_cheat_type_t, gb_cheat_type_t)
+        assertEquals(listOf("Auto", "Action Replay v3", "GameShark v1/v2", "CodeBreaker", "address:value"), Console.GBA.cheatTypes)
+        assertEquals(listOf("Auto", "Game Genie", "GameShark"), Console.GB.cheatTypes)
+        assertEquals(Console.GB.cheatTypes, Console.GBC.cheatTypes)
+        for (c in Console.entries) assertEquals("Auto", c.cheatTypes[NativeBridge.CHEAT_AUTO])
+        assertEquals("Action Replay, GameShark or CodeBreaker", Console.GBA.cheatKinds)
+        assertEquals("Game Genie or GameShark", Console.GBC.cheatKinds)
+    }
+
+    @Test
+    fun eachConsoleHasItsRetroAchievementsNumber() { // 17c
+        assertEquals(listOf(5, 4, 6), Console.entries.map { it.raId })
+    }
 }

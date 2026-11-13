@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "gb.h"
 #include "gba.h"
 #include "gbtestutil.h"
 #include "machine.h"
@@ -130,5 +131,64 @@ TEST(machine_gb_save) {
     CHECK_EQ(machine_save_write(m, back, sizeof back), 0x2000);
     CHECK(!memcmp(save, back, sizeof save));
     CHECK_EQ(machine_save_dirty(m), 0);
+    machine_destroy(m);
+}
+
+TEST(machine_look_reaches_a_game_boy_and_nothing_else) {
+    uint8_t *rom = gbtu_rom(0x8000, 0, 0, 0);
+    machine_t *m = machine_create(MACHINE_GB);
+    CHECK_EQ(machine_load_rom(m, rom, 0x8000), MACHINE_OK);
+    free(rom);
+    machine_set_look(m, 1); /* the green screen */
+    machine_run_frame(m);
+    machine_run_frame(m);
+    uint16_t c[12];
+    gb_look_colours(1, c);
+    CHECK_EQ(machine_framebuffer(m)[0], c[0]);
+    machine_destroy(m);
+    m = machine_create(MACHINE_GBA);
+    machine_set_look(m, 1); /* nothing to do, nothing breaks */
+    machine_destroy(m);
+}
+
+TEST(machine_passes_a_game_boy_rumble_cartridge_on) { /* 17c */
+    uint8_t *rom = gbtu_rom(0x10000, 0x1C, 0, 0);
+    machine_t *m = machine_create(MACHINE_GB);
+    CHECK_EQ(machine_load_rom(m, rom, 0x10000), MACHINE_OK);
+    free(rom);
+    CHECK_EQ(machine_has_rumble(m), 1);
+    CHECK_EQ(machine_rumble_active(m), 0);
+    gb_bus_write(machine_gb(m), 0x4000, 0x08);
+    CHECK_EQ(machine_rumble_active(m), 1);
+    machine_destroy(m);
+    rom = gbtu_rom(0x8000, 0, 0, 0);
+    m = machine_create(MACHINE_GB);
+    CHECK_EQ(machine_load_rom(m, rom, 0x8000), MACHINE_OK);
+    free(rom);
+    CHECK_EQ(machine_has_rumble(m), 0);
+    machine_destroy(m);
+}
+
+TEST(machine_cheats_go_to_the_right_core) { /* 17c */
+    int bad = -1;
+    CHECK_EQ(machine_cheat_check(MACHINE_GB, "01AA23C1", 0, &bad), (int)GB_CHEAT_GAMESHARK);
+    CHECK_EQ(bad, 0);
+    CHECK_EQ(machine_cheat_check(MACHINE_GBC, "00A-17B-C49", 0, &bad), (int)GB_CHEAT_GAME_GENIE);
+    CHECK_EQ(bad, 0);
+    machine_cheat_check(MACHINE_GBA, "00A-17B-C49", 0, &bad); /* no Game Boy Advance code */
+    CHECK_EQ(bad, 1);
+    CHECK_EQ(machine_cheat_check(MACHINE_GBA, "02000000:12", 0, &bad), (int)GBA_CHEAT_RAW);
+    CHECK_EQ(bad, 0);
+    uint8_t *rom = gbtu_rom(0x8000, 0, 0, 0);
+    machine_t *m = machine_create(MACHINE_GB);
+    CHECK_EQ(machine_load_rom(m, rom, 0x8000), MACHINE_OK);
+    free(rom);
+    const char *good = "01AA23C1", *bad_text = "02000000:12";
+    int type = 0;
+    CHECK_EQ(machine_cheats_set(m, &good, &type, 1), MACHINE_OK);
+    machine_run_frame(m);
+    CHECK_EQ(gb_wram(machine_gb(m))[0x123], 0xAA);
+    CHECK_EQ(machine_cheats_set(m, &bad_text, &type, 1), MACHINE_ERR_CHEAT);
+    CHECK_EQ(machine_cheats_set(m, NULL, NULL, 0), MACHINE_OK);
     machine_destroy(m);
 }

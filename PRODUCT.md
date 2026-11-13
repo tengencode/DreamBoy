@@ -27,7 +27,7 @@ A Game Boy, Game Boy Color and Game Boy Advance emulator for Android (the last c
 - Stack: Kotlin + Jetpack Compose (Compose 1.11.4, Material 3 1.4.0, material-icons-extended 1.7.8); Android 8+ (minSdk 26), target 36. Gradle builds offline; any new library or font file needs the user's OK to download.
 - The emulator core (C/asm) is out of scope for UI work and must not change.
 - No ROMs or BIOS ship with the app; never show or bundle copyrighted game art other than the user's own game pictures and libretro box art downloaded on the phone.
-- Free and open source (user decision 2026-10-23) under GPL-3.0-or-later (2026-10-24, `LICENSE`). Released as **DreamBoy** on GitHub only (`https://github.com/tengencode/DreamBoy`, sideloaded; no Play Store) — decided 2026-11-12 (milestone 16). One app for Game Boy, Game Boy Color and GBA: 1.0.0 played GBA only; 1.1.0 (milestone 17b) adds the other two — without cheats, RetroAchievements, Delta skins and sensor cartridges for them yet (17c).
+- Free and open source (user decision 2026-10-23) under GPL-3.0-or-later (2026-10-24, `LICENSE`). Released as **DreamBoy** on GitHub only (`https://github.com/tengencode/DreamBoy`, sideloaded; no Play Store) — decided 2026-11-12 (milestone 16). One app for Game Boy, Game Boy Color and GBA: 1.0.0 played GBA only; 1.1.0 (milestone 17b) adds the other two; 1.2.0 (17c part 1) gives them cheats, RetroAchievements, colours for grey games and rumble; Delta skins and tilt cartridges for them wait for 1.3.0 (17c part 2).
 
 ## Brand Commitments
 - Plain, short wording: sentence case, buttons start with a verb, no "…", no "&", no "please", no "!" (enforced by `UiTextTest`).

@@ -182,4 +182,61 @@ class GameBoyDeviceTest {
         assertEquals("picture", 0xFF0000FF.toInt(), px[300 * w + 315])
         assertEquals("black bar", 0xFF000000.toInt(), px[310 * w + 160])
     }
+
+    /** 17c: a look colours a grey game from its next frame on, for this game and the ones opened after; never a Color game. */
+    @Test
+    fun aLookColoursAGreyGameAndLeavesAColorGameAlone() {
+        fun framesAfter(look: Int, rom: String): Set<Short> {
+            NativeBridge.setLook(look)
+            assertEquals(0, NativeBridge.loadRom(TestRoms.rom(rom)))
+            NativeBridge.start()
+            val from = NativeBridge.debugFrameCount()
+            while (NativeBridge.debugFrameCount() < from + 10) Thread.sleep(5)
+            NativeBridge.pause()
+            return NativeBridge.frameBgr555()!!.toSet()
+        }
+        try {
+            val greys = setOf<Short>(0x7FFF, 0x56B5, 0x294A, 0)
+            val grey = framesAfter(Looks.AUTO, "../own_roms/gb_demo.gb") // a made-up game: the console doesn't know it
+            assertTrue(grey.isNotEmpty() && greys.containsAll(grey))
+            val green = NativeBridge.lookColours(1).take(4).toSet()
+            assertEquals(12, NativeBridge.lookColours(1).size)
+            assertTrue(green.intersect(greys).isEmpty())
+            val shown = framesAfter(1, "../own_roms/gb_demo.gb")
+            assertTrue(shown.isNotEmpty() && green.containsAll(shown))
+            // While it runs: back to grey from the next frame.
+            NativeBridge.setLook(0)
+            NativeBridge.resume()
+            val from = NativeBridge.debugFrameCount()
+            while (NativeBridge.debugFrameCount() < from + 10) Thread.sleep(5)
+            NativeBridge.pause()
+            assertTrue(greys.containsAll(NativeBridge.frameBgr555()!!.toSet()))
+            assertEquals(framesAfter(0, "../own_roms/gbc_demo.gbc"), framesAfter(1, "../own_roms/gbc_demo.gbc"))
+        } finally {
+            NativeBridge.setLook(0)
+        }
+    }
+
+    /** 17c: cheats are read and set as the loaded game's console has them. */
+    @Test
+    fun cheatsAreReadAsTheLoadedGamesConsoleReadsThem() {
+        val genie = "00A-17B-C49"
+        val shark = "01AA23C1"
+        val gbaRaw = "02000000:12"
+        assertEquals(0, NativeBridge.loadRom(TestRoms.rom("../own_roms/gb_demo.gb")))
+        assertArrayEquals(intArrayOf(1, 0), NativeBridge.checkCheat(genie, NativeBridge.CHEAT_AUTO)) // 1 = Game Genie
+        assertArrayEquals(intArrayOf(2, 0), NativeBridge.checkCheat(shark, NativeBridge.CHEAT_AUTO)) // 2 = GameShark
+        assertEquals(1, NativeBridge.checkCheat(gbaRaw, NativeBridge.CHEAT_AUTO)[1])
+        assertEquals(0, NativeBridge.setCheats(arrayOf(genie, shark), intArrayOf(0, 0)))
+        assertEquals(NativeBridge.ERR_CHEAT, NativeBridge.setCheats(arrayOf(gbaRaw), intArrayOf(0)))
+        assertEquals(0, NativeBridge.setCheats(arrayOf(shark), intArrayOf(2)))
+        NativeBridge.start() // a frame with the cheat on, a state saved and loaded with it on
+        val from = NativeBridge.debugFrameCount()
+        while (NativeBridge.debugFrameCount() < from + 5) Thread.sleep(5)
+        NativeBridge.pause()
+        assertEquals(0, NativeBridge.setCheats(emptyArray(), IntArray(0)))
+        assertEquals(0, NativeBridge.loadRom(TestRoms.rom("tonc/m7_demo.gba")))
+        assertEquals(1, NativeBridge.checkCheat(genie, NativeBridge.CHEAT_AUTO)[1]) // no GBA code
+        assertEquals(0, NativeBridge.checkCheat(gbaRaw, NativeBridge.CHEAT_AUTO)[1])
+    }
 }

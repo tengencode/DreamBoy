@@ -105,13 +105,13 @@ static void answer(ra_fake_t *f, ra_t *ra, const ra_request_t *rq) {
             return;
         }
         snprintf(body, cap,
-                 "{\"Success\":true,\"GameId\":1234,\"Title\":\"Test Game\",\"ConsoleId\":5,"
+                 "{\"Success\":true,\"GameId\":1234,\"Title\":\"Test Game\",\"ConsoleId\":%d,"
                  "\"ImageIconUrl\":\"https://media.retroachievements.org/Images/000001.png\","
                  "\"RichPresenceGameId\":1234,\"RichPresencePatch\":\"\",\"Sets\":[{\"AchievementSetId\":1111,"
                  "\"GameId\":1234,\"Title\":null,\"Type\":\"core\","
                  "\"ImageIconUrl\":\"https://media.retroachievements.org/Images/000001.png\","
                  "\"Achievements\":%s,\"Leaderboards\":%s}]}",
-                 list, boards);
+                 f->console ? f->console : 5, list, boards);
         say(ra, rq->id, 200, body);
         free(body);
     } else if (!strcmp(r, "startsession")) {

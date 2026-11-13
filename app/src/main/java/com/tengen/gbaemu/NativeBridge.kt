@@ -99,6 +99,12 @@ object NativeBridge {
     external fun setLight(level: Int)
 
     /** The loaded cartridge's extras: HW_* bits below. */
+    /** Grey Game Boy games' colours (17c; [Looks]): the running game from its next frame, and every game opened after. */
+    external fun setLook(look: Int)
+
+    /** A look's twelve colours: the background's four, then each sprite palette's (15 bits, red lowest). */
+    external fun lookColours(look: Int): ShortArray
+
     external fun cartHardware(): Int
 
     /** True while the cartridge's rumble motor runs (as of the last frame). */

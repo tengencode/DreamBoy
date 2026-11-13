@@ -29,7 +29,7 @@ gitignored, and their format is described in `tests/games/games.txt` and `tests/
 - `core/`: the Game Boy Advance emulator (CPU, memory, graphics, sound, save chips, cartridge hardware, the built-in
   BIOS, save states, cheats), plain C11 with ARM64 fast paths in `core/arch/arm64`, each with a plain-C twin it is
   tested against
-- `core_gb/`: the Game Boy and Game Boy Color emulator (in work: the PC tools run it, the app does not yet), plain C11
+- `core_gb/`: the Game Boy and Game Boy Color emulator (in the app since 1.1.0), plain C11
 - `core_common/`: what both share (the rewind history); `machine/`: one set of calls over both emulators
 - `platform/android/`: OpenGL ES, AAudio, threads and JNI; `platform/ra/`: the RetroAchievements glue
 - `app/`: the Kotlin app

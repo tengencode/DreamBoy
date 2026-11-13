@@ -8,6 +8,7 @@
 
 #include "emu_thread.h"
 #include "frame_hash.h"
+#include "gb.h"
 #include "gl_readback.h"
 #include "jni_shared.h"
 #include "render_thread.h"
@@ -26,6 +27,7 @@ static bool s_smooth;
 static uint32_t s_background = 0xFF000000u; /* round the picture: the skin's body (8b) */
 /* The next game's own settings (used by the next loadRom only). */
 static int s_next_save_type = EMU_AUTO, s_next_clock = EMU_AUTO;
+static int s_look; /* grey Game Boy games' colours: for the running game and the next ones */
 
 #define JNI_FN(name) Java_com_tengen_gbaemu_NativeBridge_##name
 
@@ -57,6 +59,7 @@ static jint load_game(JNIEnv *env, jobject rom, jstring save_path, jint console)
     opt.sound = s_sound;
     opt.sound_bursts = s_sound_bursts;
     opt.ra = jni_ra();
+    opt.look = s_look;
     opt.console = console >= EMU_CONSOLE_GBA && console <= EMU_CONSOLE_GBC ? console : EMU_AUTO;
     s_next_save_type = s_next_clock = EMU_AUTO;
     gba_err_t err;
@@ -195,7 +198,9 @@ JNIEXPORT jintArray JNICALL JNI_FN(checkCheat)(JNIEnv *env, jobject self, jstrin
     (void)self;
     const char *t = (*env)->GetStringUTFChars(env, text, NULL);
     int bad = 1;
-    gba_cheat_type_t used = t ? gba_cheat_check(t, (gba_cheat_type_t)type, &bad) : (gba_cheat_type_t)type;
+    /* as the loaded game's console reads it (a Game Boy Advance code without a game) */
+    machine_kind_t kind = s_emu ? (machine_kind_t)(emu_console(s_emu) + 1) : MACHINE_GBA;
+    int used = t ? machine_cheat_check(kind, t, type, &bad) : type;
     if (t) (*env)->ReleaseStringUTFChars(env, text, t);
     jint v[2] = {(jint)used, bad};
     jintArray out = (*env)->NewIntArray(env, 2);
@@ -211,14 +216,14 @@ JNIEXPORT jint JNICALL JNI_FN(setCheats)(JNIEnv *env, jobject self, jobjectArray
     if ((*env)->GetArrayLength(env, types) != n) return GBA_ERR_CHEAT;
     const char **t = calloc((size_t)n + 1, sizeof *t);
     jstring *js = calloc((size_t)n + 1, sizeof *js);
-    gba_cheat_type_t *ty = calloc((size_t)n + 1, sizeof *ty);
+    int *ty = calloc((size_t)n + 1, sizeof *ty);
     jint *raw = (*env)->GetIntArrayElements(env, types, NULL);
     gba_err_t err = t && js && ty && raw ? GBA_OK : GBA_ERR_NOMEM;
     for (jsize i = 0; err == GBA_OK && i < n; i++) {
         js[i] = (jstring)(*env)->GetObjectArrayElement(env, texts, i);
         t[i] = js[i] ? (*env)->GetStringUTFChars(env, js[i], NULL) : NULL;
         if (!t[i]) err = GBA_ERR_CHEAT;
-        ty[i] = (gba_cheat_type_t)raw[i];
+        ty[i] = (int)raw[i];
     }
     if (err == GBA_OK) err = emu_cheats_set(s_emu, t, ty, (size_t)n);
     for (jsize i = 0; js && i < n; i++) {
@@ -253,6 +258,24 @@ JNIEXPORT void JNICALL JNI_FN(setLight)(JNIEnv *env, jobject self, jint level) {
     (void)env;
     (void)self;
     if (s_emu) emu_set_light(s_emu, level);
+}
+
+/* Grey Game Boy games' colours (17c): the running game from its next frame, and every game opened after. */
+JNIEXPORT void JNICALL JNI_FN(setLook)(JNIEnv *env, jobject self, jint look) {
+    (void)env;
+    (void)self;
+    s_look = look;
+    if (s_emu) emu_set_look(s_emu, look);
+}
+
+/* A look's twelve colours (the background's four, then each sprite palette's), BGR555. */
+JNIEXPORT jshortArray JNICALL JNI_FN(lookColours)(JNIEnv *env, jobject self, jint look) {
+    (void)self;
+    uint16_t c[12];
+    gb_look_colours(look, c);
+    jshortArray out = (*env)->NewShortArray(env, 12);
+    if (out) (*env)->SetShortArrayRegion(env, out, 0, 12, (const jshort *)c);
+    return out;
 }
 
 JNIEXPORT jint JNICALL JNI_FN(cartHardware)(JNIEnv *env, jobject self) {

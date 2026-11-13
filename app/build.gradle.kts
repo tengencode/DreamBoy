@@ -21,8 +21,8 @@ android {
         applicationId = "com.tengen.dreamboy"
         minSdk = 26
         targetSdk = 36
-        versionCode = 2
-        versionName = "1.1.0"
+        versionCode = 3
+        versionName = "1.2.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         ndk { abiFilters += listOf("x86_64", "arm64-v8a") }
         // -PgbaForceGeneric=ON: the arm64 core with only the plain-C twins of its fast paths (tools/dev.sh GENERIC=1)
@@ -73,6 +73,7 @@ android {
 val copyAboutAssets by tasks.registering(Copy::class) {
     from(rootProject.file("LICENSE")) { rename { "licences/gpl-3.0.txt" } }
     from(rootProject.file("third_party/rcheevos/LICENSE")) { rename { "licences/rcheevos-mit.txt" } }
+    from(rootProject.file("third_party/sameboy-boot-rom-LICENSE.txt")) { rename { "licences/sameboy-mit.txt" } }
     from(rootProject.file("PRIVACY.md")) { rename { "privacy.md" } }
     into(layout.buildDirectory.dir("generated/aboutAssets"))
 }

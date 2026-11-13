@@ -6,9 +6,6 @@ fun loadErrorText(code: Int): String =
 
 const val NOT_A_GAME = "Not a game this app can play."
 
-/** What Game Boy and Game Boy Color games do not have yet (17b): said where the player would look for it. */
-const val NO_CHEATS_YET = "Not for Game Boy games yet"
-const val NO_ACHIEVEMENTS_YET = "No achievements for Game Boy games yet"
 
 /**
  * Which console a game is for. [native] is the number the C side uses (NativeBridge.CONSOLE_*); [frameWidth] x
@@ -18,6 +15,19 @@ enum class Console(val native: Int, val frameWidth: Int, val frameHeight: Int, v
     GBA(0, 240, 160, true, "GBA"),
     GB(1, 160, 144, false, "GB"),
     GBC(2, 160, 144, false, "GBC");
+
+    /** RetroAchievements' number for the console (rcheevos' rc_consoles.h). */
+    val raId: Int get() = when (this) {
+        GBA -> 5
+        GB -> 4
+        GBC -> 6
+    }
+
+    /** The cheat types' names by number (17c): each core has its own (gba_cheat_type_t, gb_cheat_type_t); 0 is Auto. */
+    val cheatTypes: List<String> get() = if (this == GBA) CHEAT_TYPES else GB_CHEAT_TYPES
+
+    /** The kinds of cheat codes the console's games take, as the empty cheat list names them. */
+    val cheatKinds: String get() = if (this == GBA) "Action Replay, GameShark or CodeBreaker" else "Game Genie or GameShark"
 
     /** Game Boy and Game Boy Color games share their buttons and layouts: one family; GBA is the other. */
     val family: String get() = if (this == GBA) "gba" else "gb"

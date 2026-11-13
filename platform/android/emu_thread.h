@@ -32,10 +32,11 @@ typedef struct {
     size_t rewind_budget; /* bytes for rewind snapshots; 0 = rewind off */
     bool sound;           /* false: no stream, the clock paces the game */
     int sound_bursts;     /* AAudio's buffer in bursts: 2, 4 or 8 */
-    ra_t *ra; /* RetroAchievements (14): checked after every frame and its hardcore limits obeyed; NULL = none.
-                 Dropped for a Game Boy game: no achievements for those yet (17b) */
+    ra_t *ra; /* RetroAchievements (14; every console since 17c): checked after every frame and its hardcore limits
+                 obeyed; NULL = none */
     int console; /* EMU_AUTO: told from the ROM's own header (a Game Boy Advance when it has none), or
                     EMU_CONSOLE_* when the caller knows better (from the file's name) */
+    int look; /* a grey Game Boy game's colours (gb.h: GB_LOOK_AUTO, 0 = grey, …); other games ignore it */
 } emu_options_t;
 #define EMU_AUTO (-1)
 enum { EMU_CONSOLE_GBA = 0, EMU_CONSOLE_GB = 1, EMU_CONSOLE_GBC = 2 };
@@ -73,6 +74,8 @@ void emu_destroy(emu_t *e); /* stops the thread (if started), writes the save, f
 /* Cartridge sensors (any thread; applied at the next frame start): tilt and turn ±32767, light 0..255. */
 void emu_set_motion(emu_t *e, int tilt_x, int tilt_y, int turn);
 void emu_set_light(emu_t *e, int level);
+/* A grey Game Boy game's colours from the next frame on (17c); nothing for other games. */
+void emu_set_look(emu_t *e, int look);
 uint32_t emu_cart_hardware(const emu_t *e); /* GBA_HW_* extras of the loaded cartridge */
 gba_save_type_t emu_save_type(const emu_t *e); /* the save chip (detected or forced) */
 bool emu_rumble_active(emu_t *e);           /* the rumble motor after the last frame */
@@ -93,7 +96,7 @@ gba_err_t emu_state_load(emu_t *e, const char *path);
 void emu_ra_idle(emu_t *e);
 /* The switched-on cheats (gba_cheats_set) — only while paused or not started; GBA_ERR_CHEAT when running or when
  * a text does not read (then no cheats are on). */
-gba_err_t emu_cheats_set(emu_t *e, const char *const *texts, const gba_cheat_type_t *types, size_t count);
+gba_err_t emu_cheats_set(emu_t *e, const char *const *texts, const int *types, size_t count);
 /* The current BGR555 picture, emu_frame_size pixels (for a state's thumbnail); same rule: only while paused. */
 bool emu_frame(emu_t *e, uint16_t out[240 * 160]);
 

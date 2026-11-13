@@ -21,6 +21,7 @@ typedef struct {
     uint32_t user_rank;       /* Tester's rank on board 501, which has 30 players (0 = not on it); every other board is empty */
     uint32_t refuse;
     bool offline;
+    int console;      /* the game's RetroAchievements console number; 0 = 5, Game Boy Advance (4 Game Boy, 6 Color) */
     int answered;     /* requests answered so far */
     int awarded;      /* unlocks accepted since the last session start */
     char last[1024];  /* the last request's form data (r=…&u=…), for checks */

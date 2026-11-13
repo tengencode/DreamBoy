@@ -13,6 +13,7 @@
 #include "audio_out.h"
 #include "audio_ring.h"
 #include "frame_pacer.h"
+#include "gb.h"
 #include "gba_debug.h"
 #include "key_latch.h"
 #include "rate_control.h"
@@ -34,6 +35,8 @@ struct emu {
     gba_t *g; /* the machine's Game Boy Advance core, for what only that console has; NULL for a Game Boy game */
     size_t pixels;    /* in a frame */
     int clock_frames; /* a Game Boy cartridge clock is told the time about once a second */
+    atomic_int look;  /* a grey game's colours as last asked for */
+    int look_set;     /* … and as the machine has them (the emulation thread's) */
     triple_buffer_t tb;
     pthread_t thread;
     bool started;
@@ -233,12 +236,20 @@ static void keep_rewind_stats(emu_t *e) {
     atomic_store(&e->rw_bytes, (long long)bytes);
 }
 
+static uint32_t gb_memory(void *ctx, uint32_t address, uint8_t *buffer, uint32_t count) {
+    return gb_ra_peek(ctx, address, buffer, count);
+}
+
 static ra_memory_t memory_of(emu_t *e) {
+    if (!e->g) { /* a Game Boy game: its own layout (17c) */
+        ra_memory_t gb = {.peek = gb_memory, .ctx = machine_gb(e->m)};
+        return gb;
+    }
     size_t sram = gba_saveram_size(e->g);
     /* a chip whose size isn't known yet (no save so far) still has its bytes: else rcheevos would switch off, for
      * the whole session, every achievement that watches save memory */
     if (!sram && gba_save_type(e->g) != GBA_SAVE_NONE) sram = RA_SRAM_END - RA_SRAM_AT;
-    ra_memory_t m = {gba_iwram(e->g), gba_ewram(e->g), gba_saveram(e->g), sram};
+    ra_memory_t m = {gba_iwram(e->g), gba_ewram(e->g), gba_saveram(e->g), sram, NULL, NULL};
     return m;
 }
 
@@ -260,13 +271,15 @@ static void play_frame(emu_t *e, int speed) {
     atomic_fetch_or(&e->keys_seen, keys);
     machine_set_keys(e->m, (uint16_t)keys);
     apply_sensors(e);
+    int look = atomic_load(&e->look);
+    if (look != e->look_set) machine_set_look(e->m, e->look_set = look);
     if (!e->g && ++e->clock_frames >= 60) {
         e->clock_frames = 0;
         machine_set_rtc(e->m, (int64_t)time(NULL), 0);
     }
     machine_run_frame(e->m);
     check_achievements(e);
-    atomic_store(&e->rumble, e->g && gba_rumble_active(e->g) != 0);
+    atomic_store(&e->rumble, machine_rumble_active(e->m) != 0);
     memcpy(tb_back(&e->tb), machine_framebuffer(e->m), sizeof(uint16_t) * e->pixels);
     tb_publish(&e->tb);
     feed_sound(e, speed);
@@ -395,7 +408,7 @@ static void load_save(emu_t *e) {
 }
 
 emu_options_t emu_options_default(void) {
-    emu_options_t o = {NULL, 0, EMU_AUTO, EMU_AUTO, EMU_REWIND_DEFAULT, true, 2, NULL, EMU_AUTO};
+    emu_options_t o = {NULL, 0, EMU_AUTO, EMU_AUTO, EMU_REWIND_DEFAULT, true, 2, NULL, EMU_AUTO, 0};
     return o;
 }
 
@@ -479,7 +492,9 @@ emu_t *emu_create(const uint8_t *rom, size_t size, const char *save_path, const 
     atomic_init(&e->rw_bytes, 0);
     atomic_init(&e->rw_steps, 0);
     atomic_init(&e->ra_reset, false);
-    e->ra = e->g ? o.ra : NULL; /* no achievements for Game Boy games yet: no session, so no hardcore limits */
+    atomic_init(&e->look, o.look);
+    machine_set_look(e->m, e->look_set = o.look);
+    e->ra = o.ra;
     if (o.rewind_budget && machine_rewind_configure(e->m, o.rewind_budget, REWIND_EVERY) != MACHINE_OK) {
         LOGW("no memory for rewind: rewind off");
     }
@@ -566,8 +581,12 @@ void emu_set_light(emu_t *e, int level) {
     atomic_store(&e->light, clamp(level, 0, 255));
 }
 
+void emu_set_look(emu_t *e, int look) {
+    atomic_store(&e->look, look);
+}
+
 uint32_t emu_cart_hardware(const emu_t *e) {
-    return e->g ? gba_cart_hardware(e->g) : 0;
+    return e->g ? gba_cart_hardware(e->g) : machine_has_rumble(e->m) ? GBA_HW_RUMBLE : 0; /* (a Game Boy rumble cartridge, 17c) */
 }
 
 gba_save_type_t emu_save_type(const emu_t *e) {
@@ -642,15 +661,14 @@ gba_err_t emu_state_load(emu_t *e, const char *path) {
     return err;
 }
 
-gba_err_t emu_cheats_set(emu_t *e, const char *const *texts, const gba_cheat_type_t *types, size_t count) {
-    if (!e->g) return count ? GBA_ERR_CHEAT : GBA_OK; /* no cheats for Game Boy games yet (17b) */
+gba_err_t emu_cheats_set(emu_t *e, const char *const *texts, const int *types, size_t count) {
     if (!core_take(e)) return GBA_ERR_CHEAT;
     gba_err_t err;
     if (hardcore(e)) { /* hardcore: no cheats (14) */
-        gba_cheats_set(e->g, NULL, NULL, 0);
+        machine_cheats_set(e->m, NULL, NULL, 0);
         err = count ? GBA_ERR_CHEAT : GBA_OK;
     } else {
-        err = gba_cheats_set(e->g, texts, types, count);
+        err = machine_cheats_set(e->m, texts, types, count) == MACHINE_OK ? GBA_OK : GBA_ERR_CHEAT;
     }
     core_give(e);
     return err;

@@ -1,6 +1,6 @@
 # DreamBoy privacy policy
 
-_Last updated: 13 November 2026 (only the app's description changed: it now plays Game Boy and Game Boy Color games too; what happens with your data is the same). Applies to DreamBoy 1.0.0 and later._
+_Last updated: 13 November 2026 (the app now plays Game Boy and Game Boy Color games too, and from 1.2.0 RetroAchievements and cheat files work for them as for Game Boy Advance games; what happens with your data is the same). Applies to DreamBoy 1.0.0 and later._
 
 DreamBoy is a free, open-source Game Boy, Game Boy Color and Game Boy Advance emulator for Android. This page says what the app does with your
 data. The short version: **your games, saves and settings stay on your phone, and the app has no server of its own.**

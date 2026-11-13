@@ -17,6 +17,7 @@ typedef enum {
     GB_ERR_UNSUPPORTED_CART, /* a cartridge chip this core does not have */
     GB_ERR_NOMEM,
     GB_ERR_STATE,            /* a save state of another game, another format or version, or damaged */
+    GB_ERR_CHEAT,            /* a cheat text that does not read, or too many codes */
 } gb_err_t;
 
 enum { /* the same bits as GBA_KEY_* */
@@ -52,6 +53,43 @@ const char *gb_rom_title(const gb_t *g); /* the header's title, printable ASCII 
 uint32_t gb_rom_crc32(const gb_t *g);    /* CRC-32 (as zlib) of the bytes given to gb_load_rom */
 #define GB_WRAM_SIZE 0x8000u
 const uint8_t *gb_wram(const gb_t *g); /* work RAM, 8 banks of 0x1000 (a plain Game Boy uses the first two) */
+
+/* Looks for grey games: the colours a plain Game Boy's four shades are shown in — the background and the two sprite
+ * palettes each have their own four. Looks 0 .. gb_look_count()-1 are fixed: 0 the four greys (the default), 1 the
+ * first Game Boy's green, 2 the Pocket's, then the Game Boy Color's own eleven. GB_LOOK_AUTO is what a Game Boy
+ * Color picks for the loaded game from its header (grey for a game it does not know). A look is how the picture is
+ * shown, from the next drawn line on: it is in no save state, and Game Boy Color games ignore it. */
+#define GB_LOOK_AUTO (-1)
+#define GB_LOOK_GREY 0
+int gb_look_count(void);
+/* The look's colours (BGR555): background 0-3, sprites 0's 0-3, sprites 1's 0-3. A number that is no look: grey. */
+void gb_look_colours(int look, uint16_t out[12]);
+/* The look GB_LOOK_AUTO means for this ROM: GB_LOOK_GREY, or a number at or above gb_look_count() (one of the
+ * console's combinations; good for gb_look_colours and gb_set_look). */
+int gb_look_auto(const uint8_t *rom, size_t size);
+void gb_set_look(gb_t *g, int look); /* kept across gb_reset and gb_load_rom */
+
+/* Cheats: Game Genie (ABC-DEF or ABC-DEF-GHI, dashes optional: a ROM byte reads as another) and GameShark
+ * (TTVVLLHH: a RAM byte is written every frame). A cheat is its codes as text, one per line or separated by '+'
+ * or spaces (blank lines allowed); Auto reads each code as what it is. */
+typedef enum { GB_CHEAT_AUTO, GB_CHEAT_GAME_GENIE, GB_CHEAT_GAMESHARK } gb_cheat_type_t;
+/* Reads a cheat without a machine: the type it is read as with *bad_line = 0, or *bad_line = the first line that
+ * is not a code of that type (1-based, blank lines counted; 1 for a text without any code). */
+gb_cheat_type_t gb_cheat_check(const char *text, gb_cheat_type_t type, int *bad_line);
+/* The switched-on cheats, replacing the previous ones (whose ROM patches are undone first). Call between frames.
+ * GameShark codes run at the end of every gb_run_frame; save states and rewind never contain cheats, and loading
+ * another ROM drops them. GB_ERR_CHEAT (a text that does not read, more than 256 codes) leaves none on. */
+gb_err_t gb_cheats_set(gb_t *g, const char *const *texts, const gb_cheat_type_t *types, size_t count);
+
+/* The memory as RetroAchievements addresses it (rcheevos' layout for both consoles: 0x0000-0xFFFF as the game sees
+ * it, but always cartridge RAM bank 0 at 0xA000 and work RAM bank 1 at 0xD000; work RAM banks 2-7 at 0x10000 on a
+ * Game Boy Color; cartridge RAM banks 1-15 at 0x16000). Copies count bytes from address on and returns how many
+ * exist there (it stops at the first missing one). Changes nothing in the machine. */
+uint32_t gb_ra_peek(const gb_t *g, uint32_t address, uint8_t *buffer, uint32_t count);
+
+/* Rumble cartridges (MBC5 with a motor). */
+int gb_has_rumble(const gb_t *g);    /* 1: the loaded cartridge has a motor */
+int gb_rumble_active(const gb_t *g); /* 1 while the game holds the motor on */
 
 /* The save file: the cartridge RAM, then for a clock cartridge 48 bytes (the clock registers and a Unix time),
  * the format other emulators use. */

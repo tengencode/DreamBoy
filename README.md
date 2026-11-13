@@ -20,13 +20,18 @@ For every game (`.gba`, `.gb`, `.gbc`, or one of them in a `.zip`):
 - Touch controls with a layout editor, 13 console skins, keyboards and gamepads
 - In-game saves in the usual `.sav` format, and the real-time clock of cartridges that have one
 - Box art for your game list, and backup and restore of everything as one `.zip`
+- Cheats: Game Genie and GameShark for Game Boy and Game Boy Color games; Action Replay, GameShark, CodeBreaker and
+  raw codes for Game Boy Advance games; libretro `.cht` files for all
+- [RetroAchievements](https://retroachievements.org): achievements and leaderboards (sign in with your own account)
+- Rumble cartridges
+
+For grey Game Boy games: colours — the ones a Game Boy Color gives each game, or a look you pick (grey, the original
+green, and more), for all games or for one.
 
 For Game Boy Advance games today, for Game Boy and Game Boy Color games in a later version:
 
-- Cheats: Action Replay, GameShark, CodeBreaker, raw codes and libretro `.cht` files
-- [RetroAchievements](https://retroachievements.org): achievements and leaderboards (sign in with your own account)
 - Imported Delta skins (`.deltaskin`)
-- Tilt, gyro, solar sensor and rumble cartridges
+- Tilt cartridges (Game Boy Advance games also have the gyro and solar sensors)
 
 Game Boy Advance games use a built-in BIOS (your own BIOS file is optional); Game Boy games need none.
 
@@ -45,7 +50,7 @@ DreamBoy needs Android 8 or newer. To get new versions automatically, add this p
 ## RetroAchievements
 
 Sign in under Settings → RetroAchievements with your own retroachievements.org account. Achievements unlock and
-leaderboards can be viewed in Game Boy Advance games. Hardcore mode, and with it sending leaderboard scores, waits until
+leaderboards can be viewed in games of all three consoles. Hardcore mode, and with it sending leaderboard scores, waits until
 RetroAchievements approves DreamBoy, which they consider once an emulator has been public for six months.
 
 ## How it was made
