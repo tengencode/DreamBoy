@@ -417,7 +417,9 @@ class MainActivity : ComponentActivity() {
                             if (!layoutStore.save(layouts)) toast("Couldn't save the layout.")
                             closeLayoutEditor()
                         },
-                        onCancel = ::closeLayoutEditor, skin = if (activeSkin() != null) Skins.PLAIN else Skins.at(settings.skin),
+                        onCancel = ::closeLayoutEditor,
+                        // (the family being edited, not the playing game's: a Delta skin lacking this direction uses Plain)
+                        skin = if (chosenSkin(settings, editConsole.family, importedSkins) != null) Skins.PLAIN else Skins.at(settings.skin),
                         fitMode = settings.size, console = editConsole)
                 }
                 waitingKey?.let { (bit, device) ->
