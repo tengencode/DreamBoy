@@ -44,6 +44,49 @@ class BoxArtHelperTest {
     private fun withList() = FakeNet(mutableMapOf(BoxArtHelper.NAMES_URL to Net.Got(dat.toByteArray()),
         sampleBox to Net.Got(byteArrayOf(9, 9))))
 
+    private fun gbDat(system: String, name: String, crc: String) = """
+        clrmamepro (
+        	name "Nintendo - $system"
+        )
+
+        game (
+        	name "$name"
+        	rom ( name "$name.gb" size 32768 crc $crc )
+        )
+    """.trimIndent()
+
+    @Test
+    fun gameBoyGamesAreLookedUpInTheirOwnListsAndOnlyWhenThereAreSome() {
+        val gbBox = BoxArtHelper.boxUrl(Console.GB) + "Shock%20Hunt%20%28World%29.png"
+        val gbcBox = BoxArtHelper.boxUrl(Console.GBC) + "Tiny%20City%20%28World%29.png"
+        val net = withList().also {
+            it.replies[BoxArtHelper.namesUrl(Console.GB)] = Net.Got(gbDat("Game Boy", "Shock Hunt (World)", "AAAA0001").toByteArray())
+            it.replies[BoxArtHelper.namesUrl(Console.GBC)] = Net.Got(gbDat("Game Boy Color", "Tiny City (World)", "BBBB0002").toByteArray())
+            it.replies[gbBox] = Net.Got(byteArrayOf(1))
+            it.replies[gbcBox] = Net.Got(byteArrayOf(2))
+        }
+        assertEquals(BoxArtHelper.NAMES_URL, BoxArtHelper.namesUrl(Console.GBA)) // the GBA list is where it always was
+        assertEquals(BoxArtHelper.BOX_URL, BoxArtHelper.boxUrl(Console.GBA))
+        val dir = tmp()
+        val art = BoxArt(dir)
+        // Only GBA games: the Game Boy lists are never asked for.
+        helper(dir, net, art).run(listOf(game("e", "1f1c08fb")), onId = { _, _ -> }, onPicture = {})
+        assertTrue(net.asked.none { "Game%20Boy.dat" in it || "Game%20Boy%20Color.dat" in it })
+        net.asked.clear()
+        // A Game Boy game, a Color game, and a colour-enhanced game whose file says .gb but which is in the Color list.
+        val games = listOf(game("s", "aaaa0001").copy(console = Console.GB), game("c", "bbbb0002").copy(console = Console.GBC),
+            game("enhanced", "bbbb0002").copy(console = Console.GB), game("hack", "cccc0003").copy(console = Console.GB))
+        helper(dir, net, art, roms = mapOf("hack" to ByteArray(0x8000))).run(games, onId = { _, _ -> }, onPicture = {})
+        assertEquals(BoxArt.State.FOUND, art.entry("aaaa0001")!!.state)
+        assertEquals("Tiny City (World)", art.entry("bbbb0002")!!.name)
+        assertEquals(BoxArt.State.NONE, art.entry("cccc0003")!!.state) // no header code to fall back on for these consoles
+        assertEquals(1, net.asked.count { it == BoxArtHelper.namesUrl(Console.GB) })
+        assertEquals(1, net.asked.count { it == BoxArtHelper.namesUrl(Console.GBC) })
+        assertTrue(gbBox in net.asked && gbcBox in net.asked)
+        assertTrue(net.asked.none { it == BoxArtHelper.NAMES_URL }) // the GBA list is kept from before
+        assertTrue(File(dir, "names-gb.tsv").isFile && File(dir, "names-gbc.tsv").isFile && File(dir, "names.tsv").isFile)
+    }
+
     @Test
     fun theGameListIsDownloadedOnceAndKeptForAMonth() {
         val dir = tmp()
