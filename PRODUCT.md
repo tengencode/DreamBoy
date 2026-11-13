@@ -7,10 +7,10 @@
 android
 
 ## Users
-The owner first: a Game Boy Advance player who plays their own ROMs (ROM hacks, commercial games they own, homebrew) on Android phones, mostly with the touch buttons, sometimes with a keyboard or gamepad. Sessions are short and frequent: open the app, tap Continue, play, pause, save a state, quit. Since 2026-11-12 the app is public as DreamBoy for other GBA players with their own games (the user 2026-10-05: "me now, public later"), **free and open source** (user decision 2026-10-23: no paid version, no ads, no in-app purchases).
+The owner first: a Game Boy, Game Boy Color and Game Boy Advance player who plays their own ROMs (ROM hacks, commercial games they own, homebrew) on Android phones, mostly with the touch buttons, sometimes with a keyboard or gamepad. Sessions are short and frequent: open the app, tap Continue, play, pause, save a state, quit. Since 2026-11-12 the app is public as DreamBoy for other players with their own games (the user 2026-10-05: "me now, public later"), **free and open source** (user decision 2026-10-23: no paid version, no ads, no in-app purchases).
 
 ## Product Purpose
-A Game Boy Advance emulator for Android comparable to Pizza Boy GBA: high compatibility, low latency, save states, rewind, fast-forward, cheats, gamepads, sensors (tilt, light, rumble) and customizable touch skins. Success: the user picks up a game exactly where they left it within seconds, and the app feels like a console of its own rather than a stock Android utility.
+A Game Boy, Game Boy Color and Game Boy Advance emulator for Android (the last comparable to Pizza Boy GBA; the first two added in milestone 17, version 1.1.0, with their own core): high compatibility, low latency, save states, rewind, fast-forward, cheats, gamepads, sensors (tilt, light, rumble) and customizable touch skins. Success: the user picks up a game exactly where they left it within seconds, and the app feels like a console of its own rather than a stock Android utility.
 
 ## Positioning
 - The core is written in C with hand-written ARM64 assembly and NEON; it runs games at 3.4–6.4× real speed on a 2018 phone's small core (phone B, measured in milestone 7b), so it suits cheap and old phones.
@@ -27,7 +27,7 @@ A Game Boy Advance emulator for Android comparable to Pizza Boy GBA: high compat
 - Stack: Kotlin + Jetpack Compose (Compose 1.11.4, Material 3 1.4.0, material-icons-extended 1.7.8); Android 8+ (minSdk 26), target 36. Gradle builds offline; any new library or font file needs the user's OK to download.
 - The emulator core (C/asm) is out of scope for UI work and must not change.
 - No ROMs or BIOS ship with the app; never show or bundle copyrighted game art other than the user's own game pictures and libretro box art downloaded on the phone.
-- Free and open source (user decision 2026-10-23) under GPL-3.0-or-later (2026-10-24, `LICENSE`). Released as **DreamBoy** on GitHub only (`https://github.com/tengencode/DreamBoy`, sideloaded; no Play Store) — decided 2026-11-12 (milestone 16). Long-term goal: one app for Game Boy, Game Boy Color and GBA; the first release plays GBA only.
+- Free and open source (user decision 2026-10-23) under GPL-3.0-or-later (2026-10-24, `LICENSE`). Released as **DreamBoy** on GitHub only (`https://github.com/tengencode/DreamBoy`, sideloaded; no Play Store) — decided 2026-11-12 (milestone 16). One app for Game Boy, Game Boy Color and GBA: 1.0.0 played GBA only; 1.1.0 (milestone 17b) adds the other two — without cheats, RetroAchievements, Delta skins and sensor cartridges for them yet (17c).
 
 ## Brand Commitments
 - Plain, short wording: sentence case, buttons start with a verb, no "…", no "&", no "please", no "!" (enforced by `UiTextTest`).
