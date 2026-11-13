@@ -190,8 +190,8 @@ static void sound_pace(emu_t *e) {
 static void apply_sensors(emu_t *e) {
     int x = atomic_load(&e->tilt_x), y = atomic_load(&e->tilt_y);
     int turn = atomic_load(&e->turn), light = atomic_load(&e->light);
+    machine_set_tilt(e->m, (int16_t)x, (int16_t)y); /* a tilt cartridge of either console */
     if (e->g) {
-        gba_set_tilt(e->g, (int16_t)x, (int16_t)y);
         gba_set_gyro(e->g, (int16_t)turn);
         gba_set_light(e->g, (uint8_t)light);
     }
@@ -586,7 +586,9 @@ void emu_set_look(emu_t *e, int look) {
 }
 
 uint32_t emu_cart_hardware(const emu_t *e) {
-    return e->g ? gba_cart_hardware(e->g) : machine_has_rumble(e->m) ? GBA_HW_RUMBLE : 0; /* (a Game Boy rumble cartridge, 17c) */
+    if (e->g) return gba_cart_hardware(e->g);
+    /* A Game Boy cartridge's extras (17c), named as the GBA's so the app's sensors and rumble start for them too. */
+    return (machine_has_rumble(e->m) ? GBA_HW_RUMBLE : 0) | (machine_has_tilt(e->m) ? GBA_HW_TILT : 0);
 }
 
 gba_save_type_t emu_save_type(const emu_t *e) {

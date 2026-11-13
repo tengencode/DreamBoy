@@ -239,4 +239,33 @@ class GameBoyDeviceTest {
         assertEquals(1, NativeBridge.checkCheat(genie, NativeBridge.CHEAT_AUTO)[1]) // no GBA code
         assertEquals(0, NativeBridge.checkCheat(gbaRaw, NativeBridge.CHEAT_AUTO)[1])
     }
+
+    /** 17c part 2: a tilt cartridge (our own gb_tilt.gb: a ball that sits where the sensor says) feels the phone's tilt. */
+    @Test
+    fun aGameBoyTiltCartridgeTakesThePhonesTilt() {
+        fun ballColumn(): Int { // after some more frames: the black ball's leftmost column in the picture
+            NativeBridge.resume()
+            val from = NativeBridge.debugFrameCount()
+            while (NativeBridge.debugFrameCount() < from + 20) Thread.sleep(5)
+            NativeBridge.pause()
+            val at = NativeBridge.frameBgr555()!!.drop(160 * 8).indexOfFirst { it == 0.toShort() } // (below the corner square)
+            assertTrue("no ball in the picture", at >= 0)
+            return at % 160
+        }
+        val save = File(dir, "tilt.sav")
+        assertEquals(0, NativeBridge.loadRom(TestRoms.rom("../own_roms/gb_tilt.gb"), save.path))
+        assertEquals(NativeBridge.HW_TILT, NativeBridge.cartHardware())
+        NativeBridge.setMotion(0, 0, 0)
+        NativeBridge.start()
+        val level = ballColumn()
+        assertEquals(76, level) // the middle
+        NativeBridge.setMotion(24000, 0, 0) // the right edge down
+        assertEquals(level + 41, ballColumn()) // half of 24000 / 32767 x 0x70
+        NativeBridge.setKeys(KeyMap.START) // the game writes its save chip
+        ballColumn()
+        NativeBridge.setKeys(0)
+        NativeBridge.stop() // writes the save file
+        assertEquals(256L, save.length())
+        assertArrayEquals(byteArrayOf(0xA5.toByte(), 0x5A), save.readBytes().copyOf(2))
+    }
 }

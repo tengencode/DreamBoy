@@ -248,11 +248,11 @@ script's unit test; create `tests/own_roms/gb_tilt.gb` (built by the script, com
 `emu_cart_hardware` returns `GBA_HW_TILT` for a Game Boy tilt cartridge (or-ed with the rumble bit's rule). No
 Kotlin change: `MotionInput` starts the accelerometer on the bit.
 
-- [ ] **Step 1:** Failing on-device test `aGameBoyTiltCartridgeTakesThePhonesTilt` (`gb_tilt.gb`:
+- [x] **Step 1:** Failing on-device test `aGameBoyTiltCartridgeTakesThePhonesTilt` (`gb_tilt.gb`:
   `NativeBridge.cartHardware() and HW_TILT != 0`; `setMotion(24000, 0, 0)` for some frames moves the picture's
   ball right of where it is with `setMotion(0, 0, 0)`; the save file is 256 bytes after START).
-- [ ] **Step 2:** Implement. `bash tools/dev.sh androidtest` (and `unit` for the `platform/` PC tests, if any).
-- [ ] **Step 3:** Commit `app: tilt cartridges take the phone's tilt`.
+- [x] **Step 2:** Implement. `bash tools/dev.sh androidtest` (and `unit` for the `platform/` PC tests, if any).
+- [x] **Step 3:** Commit `app: tilt cartridges take the phone's tilt`.
 
 ### Task 7: The words and the version
 
