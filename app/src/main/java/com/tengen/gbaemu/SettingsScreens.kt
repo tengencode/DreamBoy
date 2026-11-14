@@ -255,7 +255,8 @@ fun SettingsScreen(page: SettingsPage, settings: Settings, keys: KeyBindings, ke
                             onPickImported = { n, family -> onChange(s.withImported(family, n)) }, onImport = onImportSkin,
                             onRemove = onRemoveSkin)
                         Help("Import skins made for the Delta emulator (.deltaskin files) for Game Boy, Game Boy Color or GBA. " +
-                            "Each console keeps its own. Press and hold an imported skin to remove it.")
+                            "Each console keeps its own imported skin; a built-in skin is for every console. " +
+                            "Press and hold an imported skin to remove it.")
                     }
                     SettingsPage.BACKUP -> {
                         Spacer(Modifier.height(8.dp))
@@ -408,7 +409,7 @@ private sealed interface Tile {
 /**
  * The Skin page (8b, 9): every built-in skin as a small phone in its colours, then the imported Delta skins (their
  * picture and their console's printed mark), then Import; the chosen ones — an imported skin per console family (17c),
- * the built-in one where a family has none — with an amber border. A tap picks it at once; pressing and holding an imported
+ * the built-in one where a family has none — with an accent border. A tap picks it at once; pressing and holding an imported
  * skin asks to remove it. Rows of tiles (the page already scrolls): 3 across upright, more on a wide screen.
  */
 @Composable
@@ -455,13 +456,13 @@ private fun ImportedTile(skin: ImportedSkin, chosen: Boolean, onClick: () -> Uni
                 skin.thumb?.let {
                     Image(it.asImageBitmap(), contentDescription = null, contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize())
                 }
-                // Whose games it is for: the console mark as the cartridge labels print it (GB also means Game Boy Color).
-                Surface(color = MaterialTheme.colorScheme.inverseSurface, shape = RoundedCornerShape(4.dp),
-                    modifier = Modifier.align(Alignment.TopStart).padding(4.dp)) {
-                    Text(if (skin.family == Console.GBA.family) Console.GBA.mark else Console.GB.mark,
-                        style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.inverseOnSurface,
-                        modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp))
-                }
+                // Whose games it is for: the console mark printed on label stock, as the cartridge labels print it
+                // (print, so the same in both themes; GB also means Game Boy Color).
+                Text(if (skin.family == Console.GBA.family) Console.GBA.mark else Console.GB.mark,
+                    style = MaterialTheme.typography.labelMedium, color = Color(Palette.LIGHT.ink),
+                    modifier = Modifier.align(Alignment.TopStart).padding(4.dp)
+                        .background(Color(Palette.LABEL_STOCK), RoundedCornerShape(3.dp))
+                        .padding(horizontal = 4.dp, vertical = 1.dp))
             }
             Text(skin.name, style = MaterialTheme.typography.labelLarge, maxLines = 1, overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.padding(top = 6.dp))

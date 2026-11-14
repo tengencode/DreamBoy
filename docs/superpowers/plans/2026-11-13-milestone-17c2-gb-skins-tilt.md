@@ -271,7 +271,7 @@ says tilt or skins are GBA only, `PRIVACY.md` only if its date line is tied to t
 
 ### Task 8: Claude's check, all tests, the reviews
 
-- [ ] **Step 1:** On the phone emulator (drive it by element text; back up the debug app's settings first and put
+- [x] **Step 1:** On the phone emulator (drive it by element text; back up the debug app's settings first and put
   them back after): import `tests/skins/gbc/Standard.deltaskin` (and the optional community skin, if one was
   downloaded) — upright and sideways: the picture sharp, the game exactly in the skin's screen, every button and
   the D-pad's diagonals, menu, quick save / load; a GBA skin and a Game Boy skin chosen at once, each in its own
@@ -279,11 +279,11 @@ says tilt or skins are GBA only, `PRIVACY.md` only if its date line is tied to t
   message. `gb_tilt.gb` steered with the emulator's virtual sensors and with I / J / K / L, upright and sideways
   (the ball must go the way the phone tips in both); its save survives force-closing the app. Screenshots in
   `.impeccable/review/17c2-*`.
-- [ ] **Step 2:** impeccable finish review of the Skin page and the Touch buttons page: `ship`, or fix and repeat.
+- [x] **Step 2:** impeccable finish review of the Skin page and the Touch buttons page: `ship`, or fix and repeat.
 - [x] **Step 3:** `ponytail-review` of the diff from `main`; fix what it finds.
 - [x] **Step 4:** All tests on a calm emulator (`adb shell uptime` first): `unit`, `test`, `jvmtest`,
   `androidtest`, `games --check`, `bench --check`. Record the counts in `docs/PROGRESS.md`.
-- [ ] **Step 5:** Commit `17c part 2: the check on the emulator, the reviews`.
+- [x] **Step 5:** Commit `17c part 2: the check on the emulator, the reviews`.
 
 ### Task 9: The user's check and the release
 

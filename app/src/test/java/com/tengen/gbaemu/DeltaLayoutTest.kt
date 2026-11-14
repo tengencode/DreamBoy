@@ -26,6 +26,21 @@ class DeltaLayoutTest {
 
     private fun bitsAt(x: Float, y: Float): Int? = p(x, y).let { (px, py) -> layout.at(px, py)?.bits }
 
+    @Test
+    fun anEdgeColourSkipsSeeThroughAndBlendedPixels() {
+        // 40 × 40, purple inside; the right edge's last column see-through white, the one before it half see-through.
+        val purple = 0xFF6C19CB.toInt()
+        val pixel = { x: Int, _: Int ->
+            when (x) { 39 -> 0x00FFFFFF; 38 -> 0x80B7B7B7.toInt(); else -> purple }
+        }
+        val e = DeltaLayout.edgeColours(40, 40, pixel)
+        assertEquals(purple, e[DeltaLayout.RIGHT])
+        assertEquals(purple, e[DeltaLayout.LEFT])
+        assertEquals(purple, e[DeltaLayout.TOP])
+        // Nothing opaque at all: black, never white.
+        assertEquals(0xFF000000.toInt(), DeltaLayout.edgeColours(4, 4) { _, _ -> 0 }[DeltaLayout.BOTTOM])
+    }
+
     private fun assertBox(l: Float, t: Float, r: Float, b: Float, box: TouchLayout.Box) {
         assertEquals(l, box.left, 0.01f)
         assertEquals(t, box.top, 0.01f)

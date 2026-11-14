@@ -304,7 +304,7 @@ A committed plastic palette: neutral greys own every surface, black label bands 
 
 **The Label Red Rule.** Red means danger and errors. It is never a second accent, and danger actions sit apart from the safe ones (after a divider in sheets, last in the pause menu).
 
-**The Printed Stock Rule.** Label stock appears only where something is printed: a box, a picture, a blank label, a filled save slot, a downloaded badge, and the user's own rank in a score table (a small printed sticker in day ink). An empty save slot, a badge not yet downloaded and a leaderboard's mark are bare plastic (cart-high), so those pages stay dark at night.
+**The Printed Stock Rule.** Label stock appears only where something is printed: a box, a picture, a blank label, a filled save slot, a downloaded badge, the user's own rank in a score table (a small printed sticker in day ink), and an imported skin's console mark on its Skin-page tile ("GBA" / "GB" in tag lettering, day ink, 3dp corners). An empty save slot, a badge not yet downloaded and a leaderboard's mark are bare plastic (cart-high), so those pages stay dark at night.
 
 **The Contrast Floor Rule.** Every text pairing and every derived accent is at least 4.5:1, enforced by the palette and accent tests; a new colour is checked against the darkest light ground (grey plastic) and the lightest dark ground (cart-smoked-high).
 
