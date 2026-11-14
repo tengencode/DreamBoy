@@ -287,7 +287,7 @@ says tilt or skins are GBA only, `PRIVACY.md` only if its date line is tied to t
 
 ### Task 9: The user's check and the release
 
-- [ ] **Step 1:** Build the signed APK as `docs/RELEASE.md` says; `python tools/public_scan.py --history` says
+- [x] **Step 1:** Build the signed APK as `docs/RELEASE.md` says; `python tools/public_scan.py --history` says
   `clean`; scan the APK as for 1.2.0.
 - [ ] **Step 2:** **Stop for the user:** 1.3.0 installed over 1.2.0 on their phone — they import a Game Boy skin
   and play a Game Boy and a Game Boy Color game with it; their GBA skin choice, games, saves and settings are as
