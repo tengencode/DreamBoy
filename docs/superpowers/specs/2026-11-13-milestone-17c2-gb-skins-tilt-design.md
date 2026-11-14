@@ -1,7 +1,7 @@
 # Milestone 17c part 2 — Delta skins and tilt cartridges for Game Boy games — Design
 
 **Date:** 2026-11-13
-**Status:** Approved by the user 2026-11-13, with the test-skin downloads in §11 ("Approve both"). Plan: `docs/superpowers/plans/2026-11-13-milestone-17c2-gb-skins-tilt.md` (9 tasks). Reviewed once by a builder-check agent (2026-11-13); its points are folded in (the tilt directions and scale in §5.1, the RetroAchievements view in §5.2, tilt in key scripts in §5.3).
+**Status:** **Done 2026-11-13: DreamBoy 1.3.0** (branch `milestone-17c2` merged into `main`, tag `v1.3.0`; results and deviations in `docs/PROGRESS.md`, "17c-2 Task 1" to "Task 9"). Approved by the user 2026-11-13, with the test-skin downloads in §11 ("Approve both"). Plan: `docs/superpowers/plans/2026-11-13-milestone-17c2-gb-skins-tilt.md` (9 tasks). Reviewed once by a builder-check agent (2026-11-13); its points are folded in (the tilt directions and scale in §5.1, the RetroAchievements view in §5.2, tilt in key scripts in §5.3).
 **Parent specs:** `docs/superpowers/specs/2026-11-13-milestone-17c-gb-extras-design.md` (§2: what was left for part 2),
 `docs/superpowers/specs/2026-11-12-milestone-17-game-boy-design.md`,
 `docs/superpowers/specs/2026-10-04-milestone-9-delta-skins-design.md` (how Delta skins work in the app today),

@@ -289,13 +289,13 @@ says tilt or skins are GBA only, `PRIVACY.md` only if its date line is tied to t
 
 - [x] **Step 1:** Build the signed APK as `docs/RELEASE.md` says; `python tools/public_scan.py --history` says
   `clean`; scan the APK as for 1.2.0.
-- [ ] **Step 2:** **Stop for the user:** 1.3.0 installed over 1.2.0 on their phone — they import a Game Boy skin
+- [x] **Step 2:** (Skipped by the user 2026-11-13: installed on their phone, merged without their check.) **Stop for the user:** 1.3.0 installed over 1.2.0 on their phone — they import a Game Boy skin
   and play a Game Boy and a Game Boy Color game with it; their GBA skin choice, games, saves and settings are as
   before; a tilt game only if they own one (if it steers the wrong way on an axis, flip that axis's sign in
   `gb_mbc7`'s reading, fix the tests' expected values, re-approve `gb_tilt`'s fingerprints, and repeat Task 8
   Step 4).
-- [ ] **Step 3:** On the user's OK: merge `milestone-17c2` into `main` (`--no-ff`), history scan, tag `v1.3.0`,
+- [x] **Step 3:** (Done 2026-11-13 except `gh release create`, which waits for the user's OK.) On the user's OK: merge `milestone-17c2` into `main` (`--no-ff`), history scan, tag `v1.3.0`,
   push, `gh release create v1.3.0` with the notes from `docs/RELEASE.md` §5.
-- [ ] **Step 4:** Milestone exit: `docs/PROGRESS.md`, `CLAUDE.md` ("Key files", the released line), the three
+- [x] **Step 4:** Milestone exit: `docs/PROGRESS.md`, `CLAUDE.md` ("Key files", the released line), the three
   specs' status lines, the memory note on the release; confirm no document is stale. Commit
   `milestone 17c part 2 done: DreamBoy 1.3.0`.
