@@ -80,4 +80,45 @@ class SettingsTest {
         store.put("grey_look", 99)
         assertEquals(Looks.AUTO, Settings.load(store).greyLook)
     }
+
+    @Test
+    fun eachFamilyKeepsItsOwnImportedSkin() {
+        val store = MemoryStore()
+        val s = Settings(skinImport = 2, skinImportGb = 5)
+        s.save(store)
+        assertEquals(s, Settings.load(store))
+        assertEquals(2, s.skinImportFor("gba"))
+        assertEquals(5, s.skinImportFor("gb"))
+        store.put("touch_skin_import_gb", -1)
+        assertEquals(0, Settings.load(store).skinImportGb)
+    }
+
+    @Test
+    fun aSettingsFileFrom120ReadsAsBefore() {
+        val store = MemoryStore()
+        store.put("touch_skin_import", 3) // 1.2.0 knew only this one: the GBA games' skin
+        val s = Settings.load(store)
+        assertEquals(3, s.skinImport)
+        assertEquals(0, s.skinImportGb)
+    }
+
+    @Test
+    fun pickingAnImportedSkinTouchesOnlyItsFamily() {
+        val s = Settings(skin = 4, skinImport = 2)
+        assertEquals(Settings(skin = 4, skinImport = 2, skinImportGb = 5), s.withImported("gb", 5))
+        assertEquals(Settings(skin = 4, skinImport = 7), s.withImported("gba", 7))
+    }
+
+    @Test
+    fun aBuiltInSkinClearsBothImportedChoices() {
+        assertEquals(Settings(skin = 6), Settings(skin = 4, skinImport = 2, skinImportGb = 5).withBuiltIn(6))
+    }
+
+    @Test
+    fun removingASkinClearsItsOwnChoice() {
+        val s = Settings(skinImport = 2, skinImportGb = 5)
+        assertEquals(Settings(skinImport = 2), s.withoutImported(5))
+        assertEquals(Settings(skinImportGb = 5), s.withoutImported(2))
+        assertEquals(s, s.withoutImported(9))
+    }
 }

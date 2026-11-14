@@ -15,6 +15,12 @@
       "audio": "3378ac766cbf75d5"
     },
     {
+      "name": "own_gb_tilt",
+      "rom": "../own_roms/gb_tilt.gb",
+      "frames": 60,
+      "hash": "22ec7dbb4e5301a5"
+    },
+    {
       "name": "gb_cgb_acid2",
       "rom": "gb/acid/cgb-acid2.gbc",
       "frames": 60,

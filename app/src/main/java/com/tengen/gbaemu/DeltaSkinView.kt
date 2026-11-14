@@ -186,11 +186,7 @@ class DeltaSkinView(context: Context) : View(context) {
         }
     }
 
-    /** The middle pixel of each edge of the picture, opaque. */
-    private fun edgeColours(b: Bitmap) = intArrayOf(
-        b.getPixel(b.width / 2, 0), b.getPixel(b.width / 2, b.height - 1),
-        b.getPixel(0, b.height / 2), b.getPixel(b.width - 1, b.height / 2),
-    ).map { it or (0xFF shl 24) }.toIntArray()
+    private fun edgeColours(b: Bitmap) = DeltaLayout.edgeColours(b.width, b.height) { x, y -> b.getPixel(x, y) }
 
     private companion object {
         const val SHADE = 0x40000000 // black at 25 %

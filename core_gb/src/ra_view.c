@@ -12,6 +12,8 @@ static bool byte_at(const gb_t *g, uint32_t a, uint8_t *out) {
         *out = gb_cart_read(g, (uint16_t)a); /* bank 0, then the bank mapped at 0x4000 */
     } else if (a < 0xA000) {
         *out = g->ppu.vram[g->cgb.vbk * 0x2000u + (a & 0x1FFF)];
+    } else if (a < 0xC000 && g->info.mbc == MBC7) { /* a tilt cartridge: its registers, whatever its switches say */
+        *out = a < 0xB000 ? gb_mbc7_peek(g, (uint16_t)a) : 0xFF;
     } else if (a < 0xC000) {
         if (a - 0xA000 >= g->info.ram_size) return false;
         *out = g->cart_ram[a - 0xA000];
@@ -28,7 +30,7 @@ static bool byte_at(const gb_t *g, uint32_t a, uint8_t *out) {
         *out = g->mem.wram[0x2000 + (a - 0x10000)];
     } else {
         uint32_t at = 0x2000 + (a - 0x16000);
-        if (a >= 0x34000 || at >= g->info.ram_size) return false;
+        if (a >= 0x34000 || at >= g->info.ram_size || g->info.mbc == MBC7) return false;
         *out = g->cart_ram[at];
     }
     return true;

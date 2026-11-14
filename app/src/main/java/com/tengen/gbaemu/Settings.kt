@@ -17,7 +17,10 @@ data class Settings(
     val biosFile: Boolean = false, // a BIOS file was chosen (Bios.file); the next game starts through it
     val showSpeed: Boolean = false, // the frames per second label on the game screen (7a)
     val skin: Int = 0, // the touch buttons' skin (8b): its number in Skins.ALL; 0 = Plain
-    val skinImport: Int = 0, // an imported Delta skin (9): its folder number in files/skins; 0 = the built-in [skin]
+    // An imported Delta skin (9): its folder number in files/skins; 0 = the built-in [skin]. One per console family
+    // (17c): [skinImport] for GBA games, [skinImportGb] for Game Boy and Game Boy Color games.
+    val skinImport: Int = 0,
+    val skinImportGb: Int = 0,
     val boxArt: Boolean = true, // box art downloaded for the game list (10b)
     // RetroAchievements' hardcore mode (14): its limits apply only in games with a set. Off by default until
     // RetroAchievements approves the app: until then its server refuses hardcore unlocks (user decision 2026-10-06).
@@ -40,6 +43,20 @@ data class Settings(
         else -> 64L * MIB
     }
 
+    /** The imported skin chosen for a console [family] ([Console.family]); 0 = none. */
+    fun skinImportFor(family: String): Int = if (family == Console.GBA.family) skinImport else skinImportGb
+
+    /** Imported skin [number] chosen for its [family]; the other family's choice stays. */
+    fun withImported(family: String, number: Int): Settings =
+        if (family == Console.GBA.family) copy(skinImport = number) else copy(skinImportGb = number)
+
+    /** Built-in skin [skin] for every console: back from any imported skin. */
+    fun withBuiltIn(skin: Int): Settings = copy(skin = skin, skinImport = 0, skinImportGb = 0)
+
+    /** Imported skin [number] is gone: no family uses it any more. */
+    fun withoutImported(number: Int): Settings = copy(skinImport = if (skinImport == number) 0 else skinImport,
+        skinImportGb = if (skinImportGb == number) 0 else skinImportGb)
+
     fun save(store: IntStore) {
         store.put("smooth", flag(smooth))
         store.put("size", size)
@@ -54,6 +71,7 @@ data class Settings(
         store.put("show_speed", flag(showSpeed))
         store.put("touch_skin", skin)
         store.put("touch_skin_import", skinImport)
+        store.put("touch_skin_import_gb", skinImportGb)
         store.put("box_art", flag(boxArt))
         store.put("ra_hardcore", flag(hardcore))
         store.put("ra_lb_notes", flag(leaderboardNotes))
@@ -101,6 +119,7 @@ data class Settings(
                 showSpeed = bool(store, "show_speed", d.showSpeed),
                 skin = choice(store, "touch_skin", Skins.ALL.indices, d.skin),
                 skinImport = store.get("touch_skin_import")?.takeIf { it >= 0 } ?: d.skinImport,
+                skinImportGb = store.get("touch_skin_import_gb")?.takeIf { it >= 0 } ?: d.skinImportGb,
                 boxArt = bool(store, "box_art", d.boxArt),
                 hardcore = bool(store, "ra_hardcore", d.hardcore),
                 leaderboardNotes = bool(store, "ra_lb_notes", d.leaderboardNotes),

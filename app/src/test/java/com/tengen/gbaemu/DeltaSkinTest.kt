@@ -121,7 +121,9 @@ class DeltaSkinTest {
 
     @Test
     fun problems() {
-        assertEquals(SkinProblem.OTHER_CONSOLE, problem(minimal(type = "com.rileytestut.delta.game.gbc")))
+        assertEquals(SkinProblem.OTHER_CONSOLE, problem(minimal(type = "com.rileytestut.delta.game.nes")))
+        assertEquals("This skin is for another console. Only Game Boy, Game Boy Color and GBA skins work.",
+            SkinProblem.OTHER_CONSOLE.message)
         assertEquals(SkinProblem.NO_PHONE_LAYOUT, problem(minimal(phone = """"ipad": {"standard": {}}""")))
         assertEquals(SkinProblem.NOT_A_SKIN, problem("{"))
         assertEquals(SkinProblem.NOT_A_SKIN, problem("[]"))
@@ -136,5 +138,29 @@ class DeltaSkinTest {
             assertEquals(size, SkinProblem.NOT_A_SKIN, problem(minimal(phone = phone)))
         }
         assertEquals(SkinProblem.NOT_A_SKIN, problem("[".repeat(200_000))) // nested too deep: no crash
+    }
+
+    @Test
+    fun aGameBoyColorSkinIsTheGameBoyFamilys() {
+        assertEquals("gb", DeltaSkin.parse(minimal(DeltaSkin.GBC)).family)
+        assertEquals("gb", DeltaSkin.parse(minimal("COM.RILEYTESTUT.DELTA.GAME.GBC")).family)
+    }
+
+    @Test
+    fun aGbaSkinIsTheGbaFamilys() {
+        assertEquals("gba", DeltaSkin.parse(minimal()).family)
+    }
+
+    @Test
+    fun shouldersPressNothingInAGameBoySkin() {
+        fun item(inputs: String) = """{"inputs": $inputs, "frame": {"x": 1, "y": 2, "width": 3, "height": 4}}"""
+        val phone = portrait.replace(item("""["a"]"""),
+            item("""["l"]""") + "," + item("""["a", "l"]""") + "," + item("""["r", "menu"]"""))
+        assertTrue(phone != portrait)
+        val gb = DeltaSkin.parse(minimal(DeltaSkin.GBC, phone)).upright!!.items
+        assertEquals(listOf(KeyMap.A, 0), gb.map { it.bits }) // the item with only L is gone
+        assertEquals(listOf(DeltaSkin.Action.MENU), gb[1].actions)
+        val gba = DeltaSkin.parse(minimal(DeltaSkin.GBA, phone)).upright!!.items
+        assertEquals(listOf(KeyMap.L, KeyMap.A or KeyMap.L, KeyMap.R), gba.map { it.bits })
     }
 }

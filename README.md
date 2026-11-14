@@ -18,20 +18,17 @@ For every game (`.gba`, `.gb`, `.gbc`, or one of them in a `.zip`):
 
 - Save states (10 slots and a quick slot), rewind and fast-forward
 - Touch controls with a layout editor, 13 console skins, keyboards and gamepads
+- Imported Delta skins (`.deltaskin`) made for Game Boy, Game Boy Color or Game Boy Advance; each console keeps its
+  own
 - In-game saves in the usual `.sav` format, and the real-time clock of cartridges that have one
 - Box art for your game list, and backup and restore of everything as one `.zip`
 - Cheats: Game Genie and GameShark for Game Boy and Game Boy Color games; Action Replay, GameShark, CodeBreaker and
   raw codes for Game Boy Advance games; libretro `.cht` files for all
 - [RetroAchievements](https://retroachievements.org): achievements and leaderboards (sign in with your own account)
-- Rumble cartridges
+- Rumble and tilt cartridges (tilt the phone); Game Boy Advance games also have the gyro and solar sensors
 
 For grey Game Boy games: colours — the ones a Game Boy Color gives each game, or a look you pick (grey, the original
 green, and more), for all games or for one.
-
-For Game Boy Advance games today, for Game Boy and Game Boy Color games in a later version:
-
-- Imported Delta skins (`.deltaskin`)
-- Tilt cartridges (Game Boy Advance games also have the gyro and solar sensors)
 
 Game Boy Advance games use a built-in BIOS (your own BIOS file is optional); Game Boy games need none.
 

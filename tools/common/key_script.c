@@ -24,7 +24,9 @@ bool key_script_parse(const char *list, key_script_t *ks) {
     } names[] = {{"A", GBA_KEY_A},         {"B", GBA_KEY_B},         {"SELECT", GBA_KEY_SELECT},
                  {"START", GBA_KEY_START}, {"RIGHT", GBA_KEY_RIGHT}, {"LEFT", GBA_KEY_LEFT},
                  {"UP", GBA_KEY_UP},       {"DOWN", GBA_KEY_DOWN},   {"R", GBA_KEY_R},
-                 {"L", GBA_KEY_L},         {"CW", KEY_CW},           {"CCW", KEY_CCW}};
+                 {"L", GBA_KEY_L},         {"CW", KEY_CW},           {"CCW", KEY_CCW},
+                 {"TILT_LEFT", KEY_TILT_LEFT}, {"TILT_RIGHT", KEY_TILT_RIGHT},
+                 {"TILT_UP", KEY_TILT_UP},     {"TILT_DOWN", KEY_TILT_DOWN}};
     const size_t name_count = sizeof names / sizeof names[0];
     const char *p = list;
     ks->count = 0;

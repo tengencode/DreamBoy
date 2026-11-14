@@ -112,3 +112,7 @@ class SkinFiles(filesDir: File, private val thumbnail: (dir: File, face: DeltaSk
         }
     }
 }
+
+/** The imported skin games of console [family] use: the one chosen for it, if it is there and made for that family. */
+fun chosenSkin(settings: Settings, family: String, imported: List<SkinFiles.Imported>): SkinFiles.Imported? =
+    settings.skinImportFor(family).takeIf { it != 0 }?.let { n -> imported.firstOrNull { it.number == n && it.skin.family == family } }

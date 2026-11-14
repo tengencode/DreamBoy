@@ -119,7 +119,8 @@ val SIZE_SHORT = listOf("Fit", "Whole steps", "Stretch")
 val LENGTH_SHORT = listOf("1 min", "2½ min", "5 min")
 
 /** An imported Delta skin as the Skin page shows it (9): its number, name, tile picture and which directions it covers. */
-data class ImportedSkin(val number: Int, val name: String, val thumb: Bitmap?, val upright: Boolean, val sideways: Boolean)
+data class ImportedSkin(val number: Int, val name: String, val thumb: Bitmap?, val upright: Boolean, val sideways: Boolean,
+                        val family: String = Console.GBA.family)
 
 /** What the Backup page shows (11): the last backup (0 = none), automatic backup and its folder, Undo, and whether a game is open. */
 data class BackupStatus(val lastBackup: Long = 0, val auto: Boolean = false, val folderName: String? = null,
@@ -144,8 +145,8 @@ fun raSummary(ra: RaUi, hardcore: Boolean): String = when (ra.signIn) {
 /**
  * Settings (from the library's gear and the in-game menu). [keysChanged] changes whenever the key bindings do, so
  * the key table is read again. Every change goes to [onChange] at once (saved and applied by the caller).
- * [importedSkins]: the imported Delta skins (9); the chosen one ([Settings.skinImport]) sets the layout of the
- * directions it covers.
+ * [importedSkins]: the imported Delta skins (9); each console family has its own chosen one (17c), which sets the
+ * layout of the directions it covers in that family's games.
  */
 @Composable
 fun SettingsScreen(page: SettingsPage, settings: Settings, keys: KeyBindings, keysChanged: Int, biosName: String,
@@ -163,8 +164,13 @@ fun SettingsScreen(page: SettingsPage, settings: Settings, keys: KeyBindings, ke
     if (pickLook) LookDialog(s.greyLook, lookStrips, null, onPick = { onChange(s.copy(greyLook = it)); pickLook = false },
         onCancel = { pickLook = false })
     var licence by rememberSaveable { mutableIntStateOf(0) } // the one Settings → About → licences shows
-    val chosen = importedSkins.firstOrNull { it.number == s.skinImport } // an imported skin in use, or null
-    val skinName = chosen?.name ?: Skins.at(s.skin).name
+    // The imported skin each console family's games use, or null (the built-in one).
+    fun chosen(family: String) = importedSkins.firstOrNull { it.number == s.skinImportFor(family) && it.family == family }
+    val chosenGba = chosen(Console.GBA.family)
+    val chosenGb = chosen(Console.GB.family)
+    val builtIn = Skins.at(s.skin).name
+    val skinName = if (chosenGba == null && chosenGb == null) builtIn
+        else "GBA: ${chosenGba?.name ?: builtIn} · Game Boy: ${chosenGb?.name ?: builtIn}"
     Surface(Modifier.fillMaxSize()) {
         Column(Modifier.fillMaxSize().systemBarsPadding().imePadding()) { // the sign-in fields stay above the keyboard
             ScreenHeader(page.title, onBack = onBack, subtitle = if (page == SettingsPage.LICENCE) Licences.SHIPPED[licence].part else null)
@@ -229,22 +235,28 @@ fun SettingsScreen(page: SettingsPage, settings: Settings, keys: KeyBindings, ke
                         Group {
                         val own = "This skin sets its own layout"
                         val edit = "Move and size every button and the game picture"
-                        NavRow(Icons.Filled.StayCurrentPortrait, "Edit upright layout", if (chosen?.upright == true) own else edit,
-                            enabled = chosen?.upright != true) { onEditLayout(false, false) }
-                        NavRow(Icons.Filled.StayCurrentLandscape, "Edit sideways layout", if (chosen?.sideways == true) own else edit,
-                            enabled = chosen?.sideways != true) { onEditLayout(true, false) }
-                        // Game Boy and Game Boy Color games: another picture shape and no L and R, so their own layouts
-                        // (an imported skin is a GBA skin: never in the way here).
+                        NavRow(Icons.Filled.StayCurrentPortrait, "Edit upright layout", if (chosenGba?.upright == true) own else edit,
+                            enabled = chosenGba?.upright != true) { onEditLayout(false, false) }
+                        NavRow(Icons.Filled.StayCurrentLandscape, "Edit sideways layout", if (chosenGba?.sideways == true) own else edit,
+                            enabled = chosenGba?.sideways != true) { onEditLayout(true, false) }
+                        // Game Boy and Game Boy Color games: another picture shape and no L and R, so their own layouts,
+                        // and their own imported skin (17c).
                         val gb = "For Game Boy and Game Boy Color games"
-                        NavRow(Icons.Filled.StayCurrentPortrait, "Edit Game Boy upright layout", gb) { onEditLayout(false, true) }
-                        NavRow(Icons.Filled.StayCurrentLandscape, "Edit Game Boy sideways layout", gb, last = true) { onEditLayout(true, true) }
+                        NavRow(Icons.Filled.StayCurrentPortrait, "Edit Game Boy upright layout", if (chosenGb?.upright == true) own else gb,
+                            enabled = chosenGb?.upright != true) { onEditLayout(false, true) }
+                        NavRow(Icons.Filled.StayCurrentLandscape, "Edit Game Boy sideways layout", if (chosenGb?.sideways == true) own else gb,
+                            enabled = chosenGb?.sideways != true, last = true) { onEditLayout(true, true) }
                         }
                     }
                     SettingsPage.SKIN -> {
-                        SkinGrid(if (chosen != null) -1 else s.skin, importedSkins, chosen?.number,
-                            onPick = { onChange(s.copy(skin = it, skinImport = 0)) },
-                            onPickImported = { onChange(s.copy(skinImport = it)) }, onImport = onImportSkin, onRemove = onRemoveSkin)
-                        Help("Import skins made for the Delta emulator (.deltaskin files). Press and hold an imported skin to remove it.")
+                        // The built-in skin is in use wherever a family has no imported one.
+                        SkinGrid(if (chosenGba != null && chosenGb != null) -1 else s.skin, importedSkins,
+                            setOfNotNull(chosenGba?.number, chosenGb?.number), onPick = { onChange(s.withBuiltIn(it)) },
+                            onPickImported = { n, family -> onChange(s.withImported(family, n)) }, onImport = onImportSkin,
+                            onRemove = onRemoveSkin)
+                        Help("Import skins made for the Delta emulator (.deltaskin files) for Game Boy, Game Boy Color or GBA. " +
+                            "Each console keeps its own imported skin; a built-in skin is for every console. " +
+                            "Press and hold an imported skin to remove it.")
                     }
                     SettingsPage.BACKUP -> {
                         Spacer(Modifier.height(8.dp))
@@ -396,12 +408,13 @@ private sealed interface Tile {
 
 /**
  * The Skin page (8b, 9): every built-in skin as a small phone in its colours, then the imported Delta skins (their
- * picture), then Import; the chosen one with an amber border. A tap picks it at once; pressing and holding an imported
+ * picture and their console's printed mark), then Import; the chosen ones — an imported skin per console family (17c),
+ * the built-in one where a family has none — with an accent border. A tap picks it at once; pressing and holding an imported
  * skin asks to remove it. Rows of tiles (the page already scrolls): 3 across upright, more on a wide screen.
  */
 @Composable
-private fun SkinGrid(selected: Int, imported: List<ImportedSkin>, selectedImported: Int?, onPick: (Int) -> Unit,
-                     onPickImported: (Int) -> Unit, onImport: () -> Unit, onRemove: (Int) -> Unit) {
+private fun SkinGrid(selected: Int, imported: List<ImportedSkin>, selectedImported: Set<Int>, onPick: (Int) -> Unit,
+                     onPickImported: (number: Int, family: String) -> Unit, onImport: () -> Unit, onRemove: (Int) -> Unit) {
     var removing by remember { mutableStateOf<ImportedSkin?>(null) }
     val tiles = Skins.ALL.indices.map { Tile.BuiltIn(it) } + imported.map { Tile.Imported(it) } + Tile.Import
     BoxWithConstraints(Modifier.fillMaxWidth().padding(top = 8.dp)) {
@@ -412,8 +425,8 @@ private fun SkinGrid(selected: Int, imported: List<ImportedSkin>, selectedImport
                     for (tile in row) when (tile) {
                         is Tile.BuiltIn -> SkinTile(Skins.ALL[tile.number], tile.number == selected, { onPick(tile.number) },
                             Modifier.weight(1f))
-                        is Tile.Imported -> ImportedTile(tile.skin, tile.skin.number == selectedImported,
-                            { onPickImported(tile.skin.number) }, { removing = tile.skin }, Modifier.weight(1f))
+                        is Tile.Imported -> ImportedTile(tile.skin, tile.skin.number in selectedImported,
+                            { onPickImported(tile.skin.number, tile.skin.family) }, { removing = tile.skin }, Modifier.weight(1f))
                         Tile.Import -> ImportTile(onImport, Modifier.weight(1f))
                     }
                     repeat(across - row.size) { Spacer(Modifier.weight(1f)) }
@@ -443,6 +456,13 @@ private fun ImportedTile(skin: ImportedSkin, chosen: Boolean, onClick: () -> Uni
                 skin.thumb?.let {
                     Image(it.asImageBitmap(), contentDescription = null, contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize())
                 }
+                // Whose games it is for: the console mark printed on label stock, as the cartridge labels print it
+                // (print, so the same in both themes; GB also means Game Boy Color).
+                Text(if (skin.family == Console.GBA.family) Console.GBA.mark else Console.GB.mark,
+                    style = MaterialTheme.typography.labelMedium, color = Color(Palette.LIGHT.ink),
+                    modifier = Modifier.align(Alignment.TopStart).padding(4.dp)
+                        .background(Color(Palette.LABEL_STOCK), RoundedCornerShape(3.dp))
+                        .padding(horizontal = 4.dp, vertical = 1.dp))
             }
             Text(skin.name, style = MaterialTheme.typography.labelLarge, maxLines = 1, overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.padding(top = 6.dp))

@@ -5,7 +5,8 @@
  * tag, a version and a length, followed by the bytes. A state loads only into the same ROM and only when every
  * chunk's tag, version and length match this build: everything is checked first, so a refused state leaves the
  * machine untouched. Bump a chunk's version by hand when the meaning of its struct changes without its size
- * changing.
+ * changing. A tilt cartridge's state has one chunk more, at the end (its chip, mbc7.c): every other cartridge's
+ * state is as it was before that chip was added.
  *
  * A state may come from a file someone else made, so the values that pick a place in memory or keep a loop going
  * are checked too (values_ok), and what can be worked out again (where the cartridge's banks are) is. The ROM and the
@@ -38,9 +39,10 @@ typedef struct {
 } chunk_t;
 
 enum { C_CPU, C_MEM, C_TIMER, C_SERIAL, C_JOYPAD, C_CART, C_PPU, C_APU, C_CGB, C_PICTURE, C_AUDIO, C_RAM, C_MISC,
-       CHUNK_COUNT };
+       C_MBC7, /* only in a tilt cartridge's state */
+       CHUNK_MAX };
 
-static const chunk_t chunks[CHUNK_COUNT] = {
+static const chunk_t chunks[CHUNK_MAX] = {
     [C_CPU] = {{'C', 'P', 'U', ' '}, 1, offsetof(struct gb, cpu), sizeof(gb_cpu_t)},
     [C_MEM] = {{'M', 'E', 'M', ' '}, 1, offsetof(struct gb, mem), sizeof(gb_mem_t)},
     [C_TIMER] = {{'T', 'M', 'R', ' '}, 1, offsetof(struct gb, timer), sizeof(gb_timer_t)},
@@ -55,7 +57,12 @@ static const chunk_t chunks[CHUNK_COUNT] = {
     [C_AUDIO] = {{'S', 'N', 'D', ' '}, 1, offsetof(struct gb, audio), sizeof(gb_audio_t)},
     [C_RAM] = {{'C', 'R', 'A', 'M'}, 1, 0, 0},
     [C_MISC] = {{'M', 'I', 'S', 'C'}, 1, 0, sizeof(misc_t)},
+    [C_MBC7] = {{'M', 'B', 'C', '7'}, 1, offsetof(struct gb, mbc7), sizeof(gb_mbc7_t)},
 };
+
+static int chunk_count(const gb_t *g) {
+    return g->info.mbc == MBC7 ? CHUNK_MAX : C_MBC7;
+}
 
 _Static_assert(offsetof(struct gb, back) == offsetof(struct gb, frame) + sizeof(((struct gb *)0)->frame),
                "the PICT chunk saves frame and back as one block: they must stay next to each other");
@@ -83,7 +90,12 @@ static uint64_t field_at(const uint8_t *data, size_t at, size_t n) {
 #define FIELD(data, type, member) field_at(data, offsetof(type, member), sizeof(((type *)0)->member))
 
 /* Every value that indexes memory, shifts by a count or sets how long a loop runs is in range. */
-static bool values_ok(const uint8_t *const data[]) {
+static bool values_ok(const gb_t *g, const uint8_t *const data[]) {
+    if (chunk_count(g) > C_MBC7) {
+        gb_mbc7_t m;
+        memcpy(&m, data[C_MBC7], sizeof m);
+        if (!gb_mbc7_values_ok(&m)) return false;
+    }
     const uint8_t *ppu = data[C_PPU], *apu = data[C_APU];
     uint64_t bank = FIELD(data[C_MEM], gb_mem_t, wram_bank);
     if (bank < 1 || bank > 7 || FIELD(data[C_CGB], gb_cgb_t, vbk) > 1) return false;
@@ -118,7 +130,7 @@ static bool values_ok(const uint8_t *const data[]) {
 
 size_t gb_state_size(const gb_t *g) {
     size_t n = HEADER_SIZE;
-    for (int i = 0; i < CHUNK_COUNT; i++) n += CHUNK_HEAD + chunk_size(g, i);
+    for (int i = 0; i < chunk_count(g); i++) n += CHUNK_HEAD + chunk_size(g, i);
     return n;
 }
 
@@ -129,9 +141,9 @@ size_t gb_state_save(const gb_t *g, void *buf, size_t cap) {
     memcpy(p, "GBCS", 4);
     put32(p + 4, STATE_FORMAT);
     put32(p + 8, g->info.crc32);
-    put32(p + 12, CHUNK_COUNT);
+    put32(p + 12, (uint32_t)chunk_count(g));
     p += HEADER_SIZE;
-    for (int i = 0; i < CHUNK_COUNT; i++) {
+    for (int i = 0; i < chunk_count(g); i++) {
         size_t size = chunk_size(g, i);
         memcpy(p, chunks[i].tag, 4);
         put32(p + 4, chunks[i].version);
@@ -155,20 +167,20 @@ static gb_err_t state_load(gb_t *g, const void *buf, size_t len) {
     const uint8_t *p = buf;
     if (!buf || len != gb_state_size(g)) return GB_ERR_STATE;
     if (memcmp(p, "GBCS", 4) != 0 || get32(p + 4) != STATE_FORMAT || get32(p + 8) != g->info.crc32 ||
-        get32(p + 12) != CHUNK_COUNT) {
+        get32(p + 12) != (uint32_t)chunk_count(g)) {
         return GB_ERR_STATE;
     }
     const uint8_t *q = p + HEADER_SIZE;
-    const uint8_t *data[CHUNK_COUNT];
-    for (int i = 0; i < CHUNK_COUNT; i++) { /* check everything before changing anything */
+    const uint8_t *data[CHUNK_MAX];
+    for (int i = 0; i < chunk_count(g); i++) { /* check everything before changing anything */
         size_t size = chunk_size(g, i);
         if (memcmp(q, chunks[i].tag, 4) != 0 || get32(q + 4) != chunks[i].version || get32(q + 8) != size)
             return GB_ERR_STATE;
         data[i] = q + CHUNK_HEAD;
         q += CHUNK_HEAD + size;
     }
-    if (!values_ok(data)) return GB_ERR_STATE;
-    for (int i = 0; i < CHUNK_COUNT; i++) {
+    if (!values_ok(g, data)) return GB_ERR_STATE;
+    for (int i = 0; i < chunk_count(g); i++) {
         size_t size = chunk_size(g, i);
         if (i == C_MISC) {
             misc_t m;

@@ -186,11 +186,41 @@ class ScreensTest {
         assertEquals(1, changed.skin) // a built-in skin: the imported one is no longer chosen
         assertEquals(0, changed.skinImport)
         page.value = SettingsPage.TOUCH
-        compose.onNodeWithText("Bumble").assertIsDisplayed() // the Skin row's summary
+        compose.onNodeWithText("GBA: Bumble · Game Boy: ${Skins.at(5).name}").assertIsDisplayed() // the Skin row names each family's skin
         compose.onNodeWithText("This skin sets its own layout").assertIsDisplayed() // upright: the skin covers it
         compose.onNodeWithText("Edit upright layout").performClick()
         compose.onNodeWithText("Edit sideways layout").performClick()
         assertEquals(listOf(true), edited) // only sideways opens
+    }
+
+    @Test
+    fun eachConsoleFamilyHasItsOwnImportedSkinOnTheSkinAndTouchPages() {
+        var changed = Settings()
+        val edited = ArrayList<Pair<Boolean, Boolean>>()
+        val page = mutableStateOf(SettingsPage.SKIN)
+        val skins = listOf(ImportedSkin(2, "Bumble", null, upright = true, sideways = true),
+            ImportedSkin(3, "Pocket", null, upright = true, sideways = false, family = "gb"))
+        compose.setContent {
+            AppTheme {
+                SettingsScreen(page.value, Settings(skinImportGb = 3), KeyBindings(MemoryStore()), 0, "Built-in",
+                    onPage = {}, onBack = {}, onChange = { changed = it }, onPickKey = { _, _ -> }, onResetKeys = {},
+                    onChooseBios = {}, onBuiltInBios = {}, onEditLayout = { side, gb -> edited += side to gb }, importedSkins = skins)
+            }
+        }
+        compose.onNodeWithText("GBA").performScrollTo().assertIsDisplayed() // each imported tile carries its console mark
+        compose.onNodeWithText("GB").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("Bumble").performScrollTo().performClick() // a GBA skin: the Game Boy choice stays
+        assertEquals(Settings(skinImport = 2, skinImportGb = 3), changed)
+        compose.onNodeWithText("Pocket").performScrollTo().performClick()
+        assertEquals(Settings(skinImportGb = 3), changed)
+        compose.onNodeWithText("Ice").performScrollTo().performClick() // a built-in skin: back from both
+        assertEquals(Settings(skin = 1), changed)
+        page.value = SettingsPage.TOUCH
+        compose.onNodeWithText("GBA: Plain · Game Boy: Pocket").assertIsDisplayed()
+        for (row in listOf("Edit upright layout", "Edit sideways layout", "Edit Game Boy upright layout", "Edit Game Boy sideways layout")) {
+            compose.onNodeWithText(row).performScrollTo().performClick()
+        }
+        assertEquals(listOf(false to false, true to false, true to true), edited) // only the Game Boy skin's upright row is off
     }
 
     @Test

@@ -178,9 +178,11 @@ class MainActivity : ComponentActivity() {
         fastSpeed = settings.fastSpeed
         skinFiles = SkinFiles(filesDir, SkinPicture::thumbnail)
         refreshSkins()
-        if (settings.skinImport != 0 && activeSkin() == null) { // its folder is gone or unreadable: the built-in skin
-            settings = settings.copy(skinImport = 0)
-            settings.save(settingsStore)
+        withoutMissingSkins(settings).let { // a chosen skin's folder is gone or unreadable: the built-in skin
+            if (it != settings) {
+                settings = it
+                settings.save(settingsStore)
+            }
         }
         applySettings(settings)
         // RetroAchievements (14): the internet (or, in a debug build with files/ra-fake, the pretend server) and the saved sign-in.
@@ -415,7 +417,9 @@ class MainActivity : ComponentActivity() {
                             if (!layoutStore.save(layouts)) toast("Couldn't save the layout.")
                             closeLayoutEditor()
                         },
-                        onCancel = ::closeLayoutEditor, skin = if (activeSkin() != null) Skins.PLAIN else Skins.at(settings.skin),
+                        onCancel = ::closeLayoutEditor,
+                        // (the family being edited, not the playing game's: a Delta skin lacking this direction uses Plain)
+                        skin = if (chosenSkin(settings, editConsole.family, importedSkins) != null) Skins.PLAIN else Skins.at(settings.skin),
                         fitMode = settings.size, console = editConsole)
                 }
                 waitingKey?.let { (bit, device) ->
@@ -862,6 +866,7 @@ class MainActivity : ComponentActivity() {
         sendCheats() // after the ROM, its save file and the automatic state: before the first frame
         NativeBridge.start()
         playing = true
+        applyBackground()
         setFullScreen(true)
         startExtras()
     }
@@ -883,6 +888,7 @@ class MainActivity : ComponentActivity() {
         rumble = null
         NativeBridge.stop() // writes the save
         playing = false
+        applyBackground()
         menu = null
         raPopups.clear()
         raView = raPopups.view()
@@ -949,20 +955,23 @@ class MainActivity : ComponentActivity() {
         if (!ok) toast("This state can't be loaded (damaged, or made by an older version).")
     }
 
-    /** The chosen imported Delta skin, or null (a built-in skin). */
     /** The console of the game being played (GBA with none): its picture's shape, its buttons, its layouts. */
     private val gameConsole: Console get() = if (playing) current?.console ?: Console.GBA else Console.GBA
 
-    /** The imported (Delta) skin in use — never in a Game Boy game: those skins are made for the GBA (17b). */
-    private fun activeSkin(): SkinFiles.Imported? =
-        if (settings.skinImport == 0 || gameConsole != Console.GBA) null
-        else importedSkins.firstOrNull { it.number == settings.skinImport }
+    /** The imported (Delta) skin in use, or null (a built-in skin): the one chosen for the game's console family (17c). */
+    private fun activeSkin(): SkinFiles.Imported? = chosenSkin(settings, gameConsole.family, importedSkins)
+
+    /** [s] without the imported skins that are chosen but not there (any more), family by family. */
+    private fun withoutMissingSkins(s: Settings): Settings =
+        listOf(Console.GBA.family, Console.GB.family).fold(s) { acc, family ->
+            if (acc.skinImportFor(family) != 0 && chosenSkin(acc, family, importedSkins) == null) acc.withImported(family, 0) else acc
+        }
 
     private fun refreshSkins() {
         importedSkins = skinFiles.list()
         skinTiles = importedSkins.map {
             ImportedSkin(it.number, it.skin.name, it.thumb.takeIf(File::isFile)?.let { f -> BitmapFactory.decodeFile(f.path) },
-                upright = it.skin.upright != null, sideways = it.skin.sideways != null)
+                upright = it.skin.upright != null, sideways = it.skin.sideways != null, family = it.skin.family)
         }
     }
 
@@ -979,7 +988,7 @@ class MainActivity : ComponentActivity() {
             runOnUiThread {
                 refreshSkins()
                 when (result) {
-                    is SkinFiles.Imported -> changeSettings(settings.copy(skinImport = result.number))
+                    is SkinFiles.Imported -> changeSettings(settings.withImported(result.skin.family, result.number))
                     is SkinException -> skinError = result.problem.message
                 }
             }
@@ -989,7 +998,7 @@ class MainActivity : ComponentActivity() {
     private fun removeSkin(number: Int) {
         skinFiles.remove(number)
         refreshSkins()
-        if (settings.skinImport == number) changeSettings(settings.copy(skinImport = 0))
+        settings.withoutImported(number).let { if (it != settings) changeSettings(it) }
     }
 
     /** The moment the player left, for resuming it next time (the game must be paused). */
@@ -1218,7 +1227,7 @@ class MainActivity : ComponentActivity() {
         keysChanged++
         layouts = layoutStore.load()
         refreshSkins()
-        if (settings.skinImport != 0 && activeSkin() == null) changeSettings(settings.copy(skinImport = 0))
+        withoutMissingSkins(settings).let { if (it != settings) changeSettings(it) }
         refreshBackupStatus()
         refreshLibrary()
         libraryRefresh++
@@ -1323,10 +1332,17 @@ class MainActivity : ComponentActivity() {
     }
 
     /** Picture and sound at once; rewind for the next game (the touch buttons read [settings] themselves). */
+    /**
+     * Round the game's picture: black with an imported skin, else the built-in skin's body. By the game's console
+     * family (out of a game the GBA games' choice, as before 17c), so it is set again when a game starts or stops.
+     */
+    private fun applyBackground(s: Settings = settings) =
+        NativeBridge.setBackground(if (chosenSkin(s, gameConsole.family, importedSkins) != null) 0xFF000000.toInt() else Skins.at(s.skin).body)
+
     private fun applySettings(s: Settings) {
         NativeBridge.setPicture(s.size, s.smooth)
         NativeBridge.setLook(Looks.forGame(s, current?.takeIf { playing }?.id?.let(gameSettings::of) ?: GameSettings.Game()))
-        NativeBridge.setBackground(if (s.skinImport != 0) 0xFF000000.toInt() else Skins.at(s.skin).body)
+        applyBackground(s)
         NativeBridge.setSound(s.sound, s.soundBursts)
         NativeBridge.setRewindBudget(s.rewindBudget)
         NativeBridge.raSetHardcore(s.hardcore)

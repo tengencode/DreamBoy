@@ -192,3 +192,36 @@ TEST(machine_cheats_go_to_the_right_core) { /* 17c */
     CHECK_EQ(machine_cheats_set(m, NULL, NULL, 0), MACHINE_OK);
     machine_destroy(m);
 }
+
+TEST(machine_tilt_reaches_each_core) { /* 17c part 2 */
+    uint8_t *rom = gbtu_rom(0x8000, 0x22, 0, 0); /* a Game Boy tilt cartridge */
+    machine_t *m = machine_create(MACHINE_GB);
+    CHECK_EQ(machine_load_rom(m, rom, 0x8000), MACHINE_OK);
+    free(rom);
+    CHECK_EQ(machine_has_tilt(m), 1);
+    CHECK_EQ(machine_has_rumble(m), 0);
+    machine_set_tilt(m, 32767, 0);
+    gb_t *g = machine_gb(m);
+    gb_bus_write(g, 0x0000, 0x0A);
+    gb_bus_write(g, 0x4000, 0x40);
+    gb_bus_write(g, 0xA000, 0x55);
+    gb_bus_write(g, 0xA010, 0xAA);
+    CHECK_EQ(gb_bus_peek(g, 0xA020), 0x60); /* level 0x81D0 less 1 g (0x70): the low byte */
+    CHECK_EQ(machine_save_size(m), 256);
+    machine_destroy(m);
+
+    rom = gbtu_rom(0x8000, 0x1B, 2, 0); /* any other cartridge: no sensor, and tilting it is harmless */
+    m = machine_create(MACHINE_GB);
+    CHECK_EQ(machine_load_rom(m, rom, 0x8000), MACHINE_OK);
+    free(rom);
+    CHECK_EQ(machine_has_tilt(m), 0);
+    machine_set_tilt(m, 32767, -32767);
+    machine_destroy(m);
+
+    m = machine_create(MACHINE_GBA);
+    CHECK_EQ(machine_has_tilt(m), 0);
+    gba_set_cart_hardware(machine_gba(m), GBA_HW_TILT);
+    CHECK_EQ(machine_has_tilt(m), 1);
+    machine_set_tilt(m, 1000, -1000);
+    machine_destroy(m);
+}

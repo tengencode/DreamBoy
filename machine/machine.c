@@ -170,6 +170,15 @@ int machine_rumble_active(const machine_t *m) {
     return m->gba ? gba_rumble_active(m->gba) : gb_rumble_active(m->gb);
 }
 
+int machine_has_tilt(const machine_t *m) {
+    return m->gba ? (gba_cart_hardware(m->gba) & GBA_HW_TILT) != 0 : gb_has_tilt(m->gb);
+}
+
+void machine_set_tilt(machine_t *m, int16_t x, int16_t y) {
+    if (m->gba) gba_set_tilt(m->gba, x, y);
+    else gb_set_tilt(m->gb, x, y);
+}
+
 void machine_set_look(machine_t *m, int look) {
     if (m->gb) gb_set_look(m->gb, look);
 }

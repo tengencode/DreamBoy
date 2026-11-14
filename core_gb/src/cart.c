@@ -1,4 +1,5 @@
-/* The cartridge: its header, and (cart_read / cart_write) the banking chips MBC1, MBC2, MBC3 and MBC5. */
+/* The cartridge: its header, and (cart_read / cart_write) the banking chips MBC1, MBC2, MBC3, MBC5 and MBC7
+ * (the tilt cartridge's: its registers at 0xA000 are in mbc7.c). */
 #include <stdlib.h>
 #include <string.h>
 
@@ -27,7 +28,7 @@ static bool read_type(uint8_t type, cart_info_t *c, bool *has_ram) {
         {0x10, MBC3, 1, 1, 1, 0},     {0x11, MBC3, 0, 0, 0, 0},     {0x12, MBC3, 1, 0, 0, 0},
         {0x13, MBC3, 1, 1, 0, 0},     {0x19, MBC5, 0, 0, 0, 0},     {0x1A, MBC5, 1, 0, 0, 0},
         {0x1B, MBC5, 1, 1, 0, 0},     {0x1C, MBC5, 0, 0, 0, 1},     {0x1D, MBC5, 1, 0, 0, 1},
-        {0x1E, MBC5, 1, 1, 0, 1},
+        {0x1E, MBC5, 1, 1, 0, 1},     {0x22, MBC7, 0, 1, 0, 0}, /* (its header names a motor the cartridges lack) */
     };
     for (size_t i = 0; i < sizeof types / sizeof types[0]; i++) {
         if (types[i].type != type) continue;
@@ -58,6 +59,7 @@ gb_err_t gb_cart_load(gb_t *g, const uint8_t *rom, size_t size) {
     c.rom_size = 0x8000;
     while (c.rom_size < size) c.rom_size <<= 1;
     if (c.mbc == MBC2) c.ram_size = 512;
+    else if (c.mbc == MBC7) c.ram_size = 256; /* the save chip */
     else if (has_ram && rom[0x149] < sizeof ram_sizes / sizeof ram_sizes[0]) c.ram_size = ram_sizes[rom[0x149]];
     c.rom = malloc(c.rom_size);
     uint8_t *ram = c.ram_size ? malloc(c.ram_size) : NULL;
@@ -101,6 +103,7 @@ static void map(gb_t *g) {
         bank1 = (uint32_t)(c->bank_hi << 8 | c->bank_lo);
         ram = c->ram_bank & (g->info.rumble ? 0x07 : 0x0F);
         break;
+    case MBC7: bank1 = c->bank_lo; break;
     }
     c->rom0 = (bank0 * 0x4000) & (g->info.rom_size - 1);
     c->rom1 = (bank1 * 0x4000) & (g->info.rom_size - 1);
@@ -119,6 +122,7 @@ void gb_cart_reset(gb_t *g) {
     memcpy(&g->cart.rtc, &rtc, sizeof rtc);
     g->cart.bank_lo = 1;
     g->cart.ram_on = g->info.mbc == MBC_NONE; /* without a chip there is no switch */
+    gb_mbc7_reset(g);
     map(g);
 }
 
@@ -131,6 +135,7 @@ uint8_t gb_cart_read(const gb_t *g, uint16_t addr) {
     const gb_cart_t *c = &g->cart;
     if (addr < 0x4000) return g->info.rom[c->rom0 + addr];
     if (addr < 0x8000) return g->info.rom[c->rom1 + (addr & 0x3FFF)];
+    if (g->info.mbc == MBC7) return gb_mbc7_read(g, addr);
     if (!c->ram_on) return 0xFF;
     if (g->info.mbc == MBC3 && c->ram_bank >= 8)
         return g->info.clock && c->ram_bank <= 0x0C ? gb_rtc_read(g, c->ram_bank) : 0xFF;
@@ -142,6 +147,10 @@ uint8_t gb_cart_read(const gb_t *g, uint16_t addr) {
 void gb_cart_write(gb_t *g, uint16_t addr, uint8_t value) {
     gb_cart_t *c = &g->cart;
     if (addr >= 0x8000) {
+        if (g->info.mbc == MBC7) {
+            gb_mbc7_write(g, addr, value);
+            return;
+        }
         if (!c->ram_on) return;
         if (g->info.mbc == MBC3 && c->ram_bank >= 8) {
             if (g->info.clock && c->ram_bank <= 0x0C) gb_rtc_write(g, c->ram_bank, value);
@@ -177,6 +186,11 @@ void gb_cart_write(gb_t *g, uint16_t addr, uint8_t value) {
         else if (addr < 0x4000) c->bank_hi = value & 1;
         else if (addr < 0x6000) c->ram_bank = value & 0x0F;
         break;
+    case MBC7: /* two switches guard its registers */
+        if (addr < 0x2000) c->ram_on = value == 0x0A;
+        else if (addr < 0x4000) c->bank_lo = value & 0x7F;
+        else if (addr < 0x6000) g->mbc7.ram_on2 = value == 0x40;
+        break;
     }
     map(g);
 }
@@ -190,7 +204,7 @@ int gb_rumble_active(const gb_t *g) { /* the motor is bit 3 of what the game las
 }
 
 void gb_cart_poke(gb_t *g, int bank, uint16_t addr, uint8_t value) {
-    if (!g->info.ram_size) return;
+    if (!g->info.ram_size || g->info.mbc == MBC7) return; /* (a tilt cartridge has registers there, no RAM) */
     uint32_t at;
     if (bank < 0) {
         if (g->info.mbc == MBC3 && g->cart.ram_bank >= 8) return; /* a clock register is mapped there now */

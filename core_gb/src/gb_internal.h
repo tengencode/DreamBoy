@@ -10,7 +10,7 @@
 
 #define GB_AUDIO_FRAMES 2048 /* stereo samples kept for gb_audio_read: about 3.7 frames */
 
-typedef enum { MBC_NONE, MBC1, MBC2, MBC3, MBC5 } mbc_t;
+typedef enum { MBC_NONE, MBC1, MBC2, MBC3, MBC5, MBC7 } mbc_t;
 
 /* What the loaded ROM is: set by gb_load_rom, never part of a save state. */
 typedef struct {
@@ -21,7 +21,7 @@ typedef struct {
     bool color;
     mbc_t mbc;
     bool battery, clock, rumble;
-    uint32_t ram_size; /* 0 or a power of two */
+    uint32_t ram_size; /* 0 or a power of two (MBC7: its save chip's 256 bytes) */
 } cart_info_t;
 
 /* CPU flags (register F). */
@@ -156,6 +156,21 @@ typedef struct {
     gb_rtc_t rtc;
 } gb_cart_t;
 
+/* The tilt cartridge's chip (mbc7.c): its own state chunk, written only for such a cartridge. */
+typedef struct {
+    uint16_t x, y;      /* the tilt reading as last latched; 0x8000 = erased */
+    uint16_t shift;     /* the save chip's bits coming in */
+    uint8_t ram_on2;    /* the second switch (cart.ram_on is the first) */
+    uint8_t latch_step; /* 1: erased, so a latch takes a reading */
+    uint8_t cs, clk, di, dout; /* the save chip's pins */
+    uint8_t phase;      /* of a command */
+    uint8_t count;      /* bits so far in the phase */
+    uint8_t write_on;   /* writing is enabled */
+    uint8_t address;    /* the word a command works on */
+    uint8_t all;        /* the data coming in is for every word */
+    uint8_t reserved;
+} gb_mbc7_t;
+
 /* One cheat code (cheats.c). */
 typedef struct {
     uint8_t genie;       /* 1: a ROM patch; 0: a GameShark write */
@@ -188,6 +203,8 @@ struct gb {
         } *patches; /* the ROM bytes Game Genie codes replaced, in the order they were */
         size_t npatches;
     } cheats;
+    gb_mbc7_t mbc7;          /* a tilt cartridge's chip */
+    int16_t tilt_x, tilt_y; /* the phone's tilt as last set (gb_set_tilt): an input, in no state chunk */
     uint16_t look[3][4]; /* a grey game's colours: the background's, sprites 0's, sprites 1's (17c); in no state chunk */
     int look_asked;      /* as last set: GB_LOOK_AUTO is worked out again for each loaded game */
     struct rewind_ring *rewind; /* rewind history (core_common), NULL while off; in no state chunk */
@@ -251,6 +268,11 @@ void gb_cheats_run(gb_t *g);   /* the end of a frame: the GameShark writes */
 /* A cheat's write into the cartridge RAM at addr (0xA000-0xBFFF): bank -1 = the one mapped now; nothing if the
  * cartridge has no such byte. Marks the save dirty. */
 void gb_cart_poke(gb_t *g, int bank, uint16_t addr, uint8_t value);
+void gb_mbc7_reset(gb_t *g);
+uint8_t gb_mbc7_read(const gb_t *g, uint16_t addr); /* 0xA000-0xBFFF of a tilt cartridge */
+void gb_mbc7_write(gb_t *g, uint16_t addr, uint8_t value);
+uint8_t gb_mbc7_peek(const gb_t *g, uint16_t addr); /* a register whatever the two switches say */
+bool gb_mbc7_values_ok(const gb_mbc7_t *m);
 void gb_look_refresh(gb_t *g); /* after a game is loaded: the automatic look is this game's */
 void gb_cart_free(gb_t *g);
 

@@ -75,6 +75,24 @@ class DeltaLayout(val face: DeltaSkin.Face, val width: Float, val height: Float,
 
         /** A nearly square item is a round button: darkened as the oval inside its frame. */
         fun round(r: DeltaSkin.Rect) = r.width / r.height in 0.8f..1.25f
+
+        /**
+         * The colour of each edge of a [w] × [h] picture ([TOP], [BOTTOM], [LEFT], [RIGHT]), for the leftover strips:
+         * from the middle of the edge, the first fully opaque pixel walking inward (a skin's outer pixels are often
+         * see-through or blended), at most a quarter of the way in; black if there is none.
+         */
+        fun edgeColours(w: Int, h: Int, pixel: (x: Int, y: Int) -> Int): IntArray {
+            fun firstOpaque(steps: Int, at: (Int) -> Int): Int =
+                (0 until steps).map(at).firstOrNull { it ushr 24 == 0xFF } ?: 0xFF000000.toInt()
+            val down = maxOf(1, h / 4)
+            val across = maxOf(1, w / 4)
+            return intArrayOf(
+                firstOpaque(down) { pixel(w / 2, it) },
+                firstOpaque(down) { pixel(w / 2, h - 1 - it) },
+                firstOpaque(across) { pixel(it, h / 2) },
+                firstOpaque(across) { pixel(w - 1 - it, h / 2) },
+            )
+        }
     }
 }
 

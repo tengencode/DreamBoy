@@ -14,7 +14,8 @@
  * --rtc <unix seconds> sets the cartridge clock; --hardware <rtc,solar,gyro,rumble,tilt|none> forces
  * the cartridge extras.
  * --keys holds buttons from the given frames on: "10:DOWN,12:-,14:A+B" (- = none). Key names: A B
- * SELECT START RIGHT LEFT UP DOWN R L, and CW / CCW turn the rotation sensor while held. --keys @file reads the script from a file (any length).
+ * SELECT START RIGHT LEFT UP DOWN R L; CW / CCW turn the rotation sensor while held, and TILT_LEFT / TILT_RIGHT /
+ * TILT_UP / TILT_DOWN tip a tilt cartridge. --keys @file reads the script from a file (any length).
  * --shots-every n (with --frames) writes a PNG every n frames into --shots-dir as <frame>.png (6 digits).
  * --notes prints the warning log as "NOTE <kind> <detail hex> <first frame> <count>" lines, and the game's own
  * debug messages (mGBA's print registers) as "PRINT <level> <first frame> <count> <text>" (GBA_NOTES builds only).
@@ -62,11 +63,16 @@
 enum { EXIT_PASS = 0, EXIT_FAILED = 1, EXIT_TIMEOUT = 2, EXIT_USAGE = 3, EXIT_SKIP = 77 };
 
 
-/* The buttons, and the rotation sensor while CW / CCW are held (as gbabench); the sensor is only touched
- * once a script has turned it. */
+/* The buttons, the tilt sensor while a TILT_ key is held (either console) and the rotation sensor while CW / CCW
+ * are (as gbabench); a sensor is only touched once a script has moved it. */
 static void set_input(machine_t *m, uint16_t keys) {
-    static bool turned;
+    static bool turned, tilted;
     machine_set_keys(m, keys & 0x3FF);
+    if (keys & KEY_TILT_ANY) tilted = true;
+    if (tilted) {
+        machine_set_tilt(m, (int16_t)(((keys & KEY_TILT_RIGHT) ? TILT_HELD : 0) - ((keys & KEY_TILT_LEFT) ? TILT_HELD : 0)),
+                         (int16_t)(((keys & KEY_TILT_DOWN) ? TILT_HELD : 0) - ((keys & KEY_TILT_UP) ? TILT_HELD : 0)));
+    }
     gba_t *g = machine_gba(m);
     if (!g) return;
     if (keys & (KEY_CW | KEY_CCW)) turned = true;

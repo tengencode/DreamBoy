@@ -61,6 +61,11 @@ int machine_cheats_set(machine_t *m, const char *const *texts, const int *types,
 int machine_has_rumble(const machine_t *m);
 int machine_rumble_active(const machine_t *m);
 
+/* A tilt cartridge (either console): whether the loaded game has the sensor, and the tilt it feels — ±32767 = 1 g
+ * along that edge, 0 = level; x > 0: the right edge down, y > 0: the bottom edge down. Nothing without the sensor. */
+int machine_has_tilt(const machine_t *m);
+void machine_set_tilt(machine_t *m, int16_t x, int16_t y);
+
 /* A grey Game Boy game's colours (gb.h: GB_LOOK_AUTO, 0 = grey, …); nothing for the other consoles' games. */
 void machine_set_look(machine_t *m, int look);
 

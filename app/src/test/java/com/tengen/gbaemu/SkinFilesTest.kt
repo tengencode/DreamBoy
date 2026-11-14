@@ -98,7 +98,7 @@ class SkinFilesTest {
         assertEquals(SkinProblem.NOT_A_SKIN, problem(f, ByteArrayInputStream("not a zip at all".toByteArray())))
         assertEquals(SkinProblem.NOT_A_SKIN, problem(f, zip("readme.txt" to "hi")))
         assertEquals(SkinProblem.NOT_A_SKIN, problem(f, zip("info.json" to "{ broken")))
-        assertEquals(SkinProblem.OTHER_CONSOLE, problem(f, zip("info.json" to info(type = "com.rileytestut.delta.game.gbc"), "p.png" to "a")))
+        assertEquals(SkinProblem.OTHER_CONSOLE, problem(f, zip("info.json" to info(type = "com.rileytestut.delta.game.nes"), "p.png" to "a")))
         assertEquals(SkinProblem.PICTURE_MISSING, problem(f, zip("info.json" to info())))
         assertEquals(SkinProblem.NOT_A_SKIN, problem(f, zip("info.json" to info(image = "../p.png"), "p.png" to "a")))
         assertEquals(SkinProblem.NOT_A_SKIN, problem(f, zip("info.json" to info(), "p.png" to "a", "../evil.txt" to "x")))
@@ -118,5 +118,24 @@ class SkinFilesTest {
         assertEquals(emptyList<SkinFiles.Imported>(), f.list())
         assertNull(f.get(7))
         assertEquals(8, f.import(zip("info.json" to info(), "p.png" to "a")).number)
+    }
+
+    @Test
+    fun aMissingSkinClearsOnlyItsOwnFamily() {
+        val f = files()
+        val gba = f.import(zip("info.json" to info(), "p.png" to "a"))
+        val s = Settings(skinImport = gba.number, skinImportGb = 9) // 9: its folder is gone
+        assertEquals(gba.number, chosenSkin(s, "gba", f.list())?.number)
+        assertNull(chosenSkin(s, "gb", f.list()))
+        assertNull(chosenSkin(Settings(), "gba", f.list())) // none chosen
+    }
+
+    @Test
+    fun aSkinOfTheOtherFamilyIsNotUsed() {
+        val f = files()
+        val gb = f.import(zip("info.json" to info(type = DeltaSkin.GBC), "p.png" to "a"))
+        assertEquals("gb", gb.skin.family)
+        assertNull(chosenSkin(Settings(skinImport = gb.number), "gba", f.list()))
+        assertEquals(gb.number, chosenSkin(Settings(skinImportGb = gb.number), "gb", f.list())?.number)
     }
 }

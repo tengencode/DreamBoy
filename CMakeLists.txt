@@ -64,6 +64,18 @@ if(NOT ANDROID)
                      --load-state ${PROJECT_SOURCE_DIR}/tests/states/snd_mix_95.state --frames 95
                      --expect-hash 80a69197c1fb9325 --expect-audio-hash 7120fcf05baa3095)
 
+    # Our own tilt cartridge (MBC7), steered by a key script: the ball right of the middle (through a save state),
+    # below and left of it then above (through a rewind), and START writing the save chip (the square in the corner).
+    # The level picture is in expected_frames.json like every other ROM's.
+    set(GB_TILT ${PROJECT_SOURCE_DIR}/tests/own_roms/gb_tilt.gb)
+    add_test(NAME own_gb_tilt_right
+             COMMAND testrunner ${GB_TILT} --frames 60 --keys 5:TILT_RIGHT --state-at 30 --expect-hash 988e5ea9e0c147a5)
+    add_test(NAME own_gb_tilt_down_left_then_up
+             COMMAND testrunner ${GB_TILT} --frames 60 --keys 5:TILT_DOWN+TILT_LEFT,50:TILT_UP --rewind-at 40:5
+                     --expect-hash 60c8ffd4e91d3ba5)
+    add_test(NAME own_gb_tilt_saves
+             COMMAND testrunner ${GB_TILT} --frames 60 --keys 5:START --state-at 30 --expect-hash e59526dba5898e25)
+
     # Approved frame fingerprints; each runs a ROM for N frames and compares the picture hash.
     set(FRAMES_FILE ${PROJECT_SOURCE_DIR}/tests/expected_frames.json)
     set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${FRAMES_FILE})
