@@ -294,7 +294,7 @@ says tilt or skins are GBA only, `PRIVACY.md` only if its date line is tied to t
   before; a tilt game only if they own one (if it steers the wrong way on an axis, flip that axis's sign in
   `gb_mbc7`'s reading, fix the tests' expected values, re-approve `gb_tilt`'s fingerprints, and repeat Task 8
   Step 4).
-- [x] **Step 3:** (Done 2026-11-13 except `gh release create`, which waits for the user's OK.) On the user's OK: merge `milestone-17c2` into `main` (`--no-ff`), history scan, tag `v1.3.0`,
+- [x] **Step 3:** (Done 2026-11-13; `gh release create` after the user's "Yes, publish it".) On the user's OK: merge `milestone-17c2` into `main` (`--no-ff`), history scan, tag `v1.3.0`,
   push, `gh release create v1.3.0` with the notes from `docs/RELEASE.md` §5.
 - [x] **Step 4:** Milestone exit: `docs/PROGRESS.md`, `CLAUDE.md` ("Key files", the released line), the three
   specs' status lines, the memory note on the release; confirm no document is stale. Commit
