@@ -280,8 +280,8 @@ says tilt or skins are GBA only, `PRIVACY.md` only if its date line is tied to t
   (the ball must go the way the phone tips in both); its save survives force-closing the app. Screenshots in
   `.impeccable/review/17c2-*`.
 - [ ] **Step 2:** impeccable finish review of the Skin page and the Touch buttons page: `ship`, or fix and repeat.
-- [ ] **Step 3:** `ponytail-review` of the diff from `main`; fix what it finds.
-- [ ] **Step 4:** All tests on a calm emulator (`adb shell uptime` first): `unit`, `test`, `jvmtest`,
+- [x] **Step 3:** `ponytail-review` of the diff from `main`; fix what it finds.
+- [x] **Step 4:** All tests on a calm emulator (`adb shell uptime` first): `unit`, `test`, `jvmtest`,
   `androidtest`, `games --check`, `bench --check`. Record the counts in `docs/PROGRESS.md`.
 - [ ] **Step 5:** Commit `17c part 2: the check on the emulator, the reviews`.
 
