@@ -74,48 +74,57 @@ better than being found out.
 
 ### r/EmulationOnAndroid
 
-> **Title:** DreamBoy: a new free, open-source Game Boy / Color / Advance emulator for Android (GPL)
+> **Title:** DreamBoy: a free, open-source Game Boy, Game Boy Color and GBA emulator for Android
 >
-> I've released DreamBoy, a Game Boy, Game Boy Color and Game Boy Advance emulator for Android. It's free, open
-> source (GPL-3.0) and has no ads or tracking.
+> I made DreamBoy, an emulator for Game Boy, Game Boy Color and Game Boy Advance games on Android. It's free and open
+> source (GPL-3.0). No ads, no tracking, no account needed.
 >
-> - Its own emulator cores in C (the GBA one with hand-written ARM64 assembly), so it runs well on cheap and older phones
-> - Save states, rewind, fast-forward, cheats (Game Genie, GameShark, Action Replay, CodeBreaker, libretro .cht files)
-> - Touch layout editor, console skins, controllers and keyboards; grey Game Boy games in colour
-> - Imported Delta skins, rumble and tilt cartridges and the real-time clock; for GBA games also the gyro and solar sensors
-> - RetroAchievements (sign in with your own account); leaderboard scores and Hardcore once RetroAchievements approves the app
-> - Box art, backup and restore of everything as one zip
+> What it has:
 >
-> Not there: link cable, and a few rare Game Boy cartridge types. No games or BIOS included.
+> - Its own cores in C. The GBA core's CPU loop is hand-written ARM64 assembly, so it runs full speed on cheap and old
+>   phones (3.4x to 6.4x real time on the small core of a 2018 phone).
+> - Save states, rewind and fast-forward
+> - Cheats: Game Genie, GameShark, Action Replay, CodeBreaker, and libretro .cht files
+> - RetroAchievements with your own account. Hardcore and leaderboard scores wait until RetroAchievements approves the app.
+> - Imported Delta skins (one for your GBA games, another for your Game Boy games), 13 built-in skins and a touch layout editor
+> - Controllers and keyboards
+> - Grey Game Boy games in Game Boy Color colours, or a palette you pick
+> - Rumble and tilt cartridges, the cartridge clock, and the GBA gyro and solar sensors
+> - Box art, and a backup of everything in one zip
 >
-> Full disclosure: I built it with a lot of help from an AI assistant (Claude). It's checked by nearly a thousand
-> automated tests, test ROMs and a 30-game check, but I'd love bug reports.
+> Missing: link cable, Super Game Boy borders and a few rare Game Boy cartridge types. You bring your own games. A
+> built-in GBA BIOS means you don't need a BIOS file.
 >
-> Download (APK, also works with Obtainium): https://github.com/tengencode/DreamBoy/releases/latest
+> I built it with a lot of help from an AI assistant (Claude), and the commits say so. Over 1,300 automated tests
+> and public test ROMs check it, and I ran 36 games through it. Bug reports are welcome.
+>
+> Download the APK (Obtainium works too): https://github.com/tengencode/DreamBoy/releases/latest
 
 ### Hacker News ("Show HN")
 
-> **Title:** Show HN: DreamBoy – a Game Boy / GBA emulator for Android with a hand-written ARM64 core
+> **Title:** Show HN: DreamBoy, a Game Boy and GBA emulator for Android with an ARM64 assembly core
 >
 > **URL:** https://github.com/tengencode/DreamBoy
 >
 > **Text:** DreamBoy is a free, open-source (GPL-3.0) Game Boy, Game Boy Color and Game Boy Advance emulator for
-> Android, with its own cores. The GBA core is C with hand-written ARM64 assembly and NEON for the CPU loop, drawing and sound — each fast path has a plain-C twin it is
-> tested against — so it runs at full speed on old phones' small cores. The app is Kotlin and Jetpack Compose. It was
-> built with heavy help from an AI assistant (Claude); every commit says so. Happy to answer questions about the
-> emulator, the testing, or working that way.
+> Android. It runs its own cores in C. The GBA core's CPU loop is hand-written ARM64 assembly, and it draws and mixes
+> sound with NEON. Each fast path has a plain C twin, and the tests check that both give the same pictures and sound.
+> That keeps it at full speed on the small cores of old phones. The app is Kotlin and Jetpack Compose.
+>
+> I built it with heavy help from an AI assistant (Claude), and every commit says so. Ask me about the emulator, the
+> testing, or working that way.
 
 ### Emulation General wiki
 
 On the wiki's Game Boy Advance emulators page (and the Game Boy / Game Boy Color one), in the Android table: DreamBoy,
 latest version, active, GPL-3.0, link to `https://github.com/tengencode/DreamBoy`, and a short note ("own cores, the GBA
-one with ARM64 assembly; RetroAchievements").
+one with ARM64 assembly; RetroAchievements; Delta skins").
 Follow the page's existing format.
 
 ### Awesome lists
 
 A pull request to a list that has an Android-emulator or GBA-emulator section, one line in the list's own format:
-`[DreamBoy](https://github.com/tengencode/DreamBoy) - Free, open-source Game Boy, Game Boy Color and GBA emulator for Android with RetroAchievements.`
+`[DreamBoy](https://github.com/tengencode/DreamBoy) - Free, open-source Game Boy, Game Boy Color and GBA emulator for Android with RetroAchievements and Delta skins.`
 
 ### Release notes and a short post for 1.1.0 (Game Boy and Game Boy Color)
 
@@ -142,7 +151,7 @@ A pull request to a list that has an Android-emulator or GBA-emulator section, o
 >   games, and each console keeps its own: pick one for your GBA games and another for your Game Boy games.
 >   Tapping a built-in colour skin goes back to the built-in buttons for all of them.
 > - **Tilt cartridges** now open and save: tilt the phone to steer (or use the I / J / K / L keys on a keyboard).
->   This is new and has only been tried with a test program, not with a real tilt game — if it steers the wrong
+>   This is new and has only been tried with a test program, not with a real tilt game. If it steers the wrong
 >   way or does not work for you, please open an issue.
 >
 > Nothing changes for your GBA skin, your saves or your states. Update by installing the new APK over the old one
